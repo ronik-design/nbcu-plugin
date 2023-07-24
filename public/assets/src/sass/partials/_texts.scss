@@ -1,0 +1,267 @@
+@use "../partials/variables" as var;
+
+.standard-text {
+  @include var.grid-layout();
+
+  .standard-text__content {
+    grid-column: 1 / -1;
+  }
+
+  @media screen and (max-width: 650px) {
+    max-width: calc(100% - 50px);
+  }
+}
+
+.text-content {
+  .text-content__title {
+    padding-bottom: 25px;
+    margin: 0;
+  }
+
+  .text-content__text {
+    margin: 0;
+  }
+
+  .text-content__buttons {
+    padding-top: 15px;
+    margin: 0;
+  }
+
+  &_left {
+    text-align: left;
+    .text-content__title {
+      text-align: left;
+    }
+
+    .text-content__text {
+      text-align: left;
+    }
+
+    .text-content__buttons {
+      text-align: left;
+    }
+  }
+
+  &_center {
+    text-align: center;
+    .text-content__title {
+      text-align: center;
+    }
+
+    .text-content__text {
+      text-align: center;
+    }
+
+    .text-content__buttons {
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+  &_right {
+    text-align: right;
+    .text-content__title {
+      text-align: right;
+    }
+
+    .text-content__text {
+      text-align: right;
+    }
+
+    .text-content__buttons {
+      text-align: right;
+      .buttons-wrapper {
+        display: inline-flex;
+      }
+    }
+  }
+
+  @media screen and (max-width: 850px) {
+    .text-content__title {
+      padding-bottom: 80px;
+    }
+
+    .text-content__text {
+    }
+
+    .text-content__buttons {
+      padding-top: 10px;
+    }
+
+    &_center {
+      text-align: left;
+      .text-content__title {
+        text-align: left;
+      }
+
+      .text-content__text {
+        text-align: left;
+      }
+
+      .text-content__buttons {
+        text-align: left;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+    }
+
+    &_right {
+      text-align: left;
+      .text-content__title {
+        text-align: left;
+      }
+
+      .text-content__text {
+        text-align: left;
+      }
+
+      .text-content__buttons {
+        text-align: left;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+    }
+  }
+  @media screen and (max-width: 650px) {
+    .text-content__title {
+      padding-bottom: 40px;
+    }
+    .text-content__text {
+    }
+    .text-content__buttons {
+    }
+  }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  // color: var.$quinaryColor;
+  // line-height: 1;
+  // margin: 0;
+}
+
+// h1 {
+//   // font-size: 112px;
+//   @include var.font-size(var.$f_xxxlarge);
+// }
+
+// h2 {
+//   // font-size: 112px;
+//   @include var.font-size(var.$f_xxxlarge);
+// }
+
+// h3 {
+//   // font-size: 112px;
+//   @include var.font-size(var.$f_xxxlarge);
+// }
+
+// h4 {
+//   // font-size: 40px;
+//   @include var.font-size(var.$f_xxlarge);
+// }
+
+// h5 {
+//   // font-size: 32px;
+//   @include var.font-size(var.$f_xlarge);
+// }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+span {
+  font-family: var.$quinaryFont;
+
+  &.h-style-alt {
+    color: var.$primaryColor;
+    font-family: var.$primaryFont;
+    font-weight: 500;
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  &.h-xxxsmall-font {
+    // font-size: 32px;
+    @include var.font-size(var.$f_xlarge);
+  }
+
+  &.h-xsmall-font {
+    // font-size: 40px;
+    @include var.font-size(var.$f_xxlarge);
+  }
+
+  &.h-xxsmall-font {
+    // font-size: 40px;
+    @include var.font-size(var.$f_xxxlarge_mod_small);
+  }
+
+  &.h-xxxsmall-font {
+    // font-size: 40px;
+    @include var.font-size(var.$f_large);
+  }
+
+  &.h-xxxxsmall-font {
+    // font-size: 40px;
+    @include var.font-size(var.$f_medium);
+  }
+}
+
+p,
+span {
+  padding-top: 0;
+  margin-top: 0;
+  font-size: 18px;
+  font-family: var.$primaryFont;
+
+  &:last-child {
+    padding-top: 0;
+    // padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  &.p-xxxsmall-font {
+    @include var.font-size(var.$f_xxxsmall);
+    font-family: var.$tertiaryFont;
+  }
+
+  &.p-xxsmall-font {
+    @include var.font-size(var.$f_xxsmall);
+    font-family: var.$tertiaryFont;
+  }
+
+  &.p-xsmall-font {
+    @include var.font-size(var.$f_xsmall);
+    font-family: var.$quaternaryFont;
+  }
+
+  &.p-small-font {
+    @include var.font-size(var.$f_small);
+  }
+
+  &.p-medium-font {
+    @include var.font-size(var.$f_medium);
+    font-family: var.$secondaryFont;
+  }
+
+  &.p-large-font {
+    @include var.font-size(var.$f_large);
+    font-family: var.$tertiaryFont;
+  }
+
+  &.p-xlarge-font {
+    @include var.font-size(var.$f_xlarge);
+  }
+
+  &.p-impact-font-sm {
+    @include var.font-size(var.$f_impact_sm);
+  }
+
+  &.p-impact-font-md {
+    @include var.font-size(var.$f_impact_md);
+  }
+}

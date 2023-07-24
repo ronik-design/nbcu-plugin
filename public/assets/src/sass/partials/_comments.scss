@@ -1,0 +1,108 @@
+@use "../partials/variables" as var;
+
+.comment-reply-title {
+  @include var.font-size(var.$f_xxsmall);
+
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+.comment-respond {
+  width: 609px;
+  margin: 0 auto;
+}
+
+.comment-form {
+  margin-top: 0;
+  width: 100%;
+
+  .form-submit {
+    float: left;
+  }
+}
+
+.comment-author a,
+.comment-author cite {
+  @include var.font-size(var.$f_xxsmall);
+
+  font-style: normal;
+  color: #404041;
+}
+
+.comment-meta {
+  color: #bbbdbf;
+}
+
+.comment-notes {
+  margin-top: 0;
+}
+
+.reply a {
+  text-transform: uppercase;
+}
+
+.comment {
+  max-width: 915px;
+  width: 100%;
+  margin: 0 auto 15px;
+  text-align: left;
+  display: table;
+  clear: both;
+  list-style-type: none;
+  position: relative;
+  border-top: 1px solid #bbbdbf;
+  padding-top: 20px;
+
+  .children {
+    display: table;
+    width: 100%;
+    padding-left: 111px;
+
+    .comment:first-child {
+      margin-top: 15px;
+    }
+  }
+
+  .comment-reply-title {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+  }
+
+  #cancel-comment-reply-link {
+    @include var.font-size(var.$f_xxxsmall);
+
+    visibility: visible;
+    position: absolute;
+    top: 116px;
+    left: 110px;
+    background-color: #fff;
+    text-transform: uppercase;
+  }
+
+  .comment-respond {
+    float: left;
+    clear: left;
+  }
+
+  .logged-in-as {
+    display: none;
+  }
+
+  .form-submit {
+    margin-top: 0;
+  }
+}
+
+.commentlist > .comment:first-child {
+  border-top: 0;
+}
+
+.comment-avatar {
+  float: left;
+}
+
+.comment-body {
+  float: left;
+  margin: 0 15px;
+}

@@ -1,0 +1,19 @@
+{
+    "name": "kevinmancuso/ronikdesign",
+    "autoload": {
+        "psr-4": {
+            "Kevinmancuso\\Ronikdesign\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "KmancusoRonik",
+            "email": "105605229+KmancusoRonik@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "pragmarx/google2fa": "^8.0",
+        "twilio/sdk": "^6.44",
+        "chillerlan/php-qrcode": "^4.3"
+    }
+}

@@ -1,0 +1,225 @@
+// Fonts
+$primaryFont: "arial", sans-serif;
+$secondaryFont: "arial", sans-serif;
+$tertiaryFont: "arial", sans-serif;
+$quaternaryFont: "arial", sans-serif;
+$quinaryFont: "arial", sans-serif;
+
+// Social Icon Size
+$social-icon-width: 30px;
+$social-icon-height: 30px;
+
+// Color
+$primaryColor: #333333;
+$secondaryColor: #000000;
+$tertiaryColor: #ffffff;
+$quaternaryColor: #1073f7;
+$quinaryColor: initial;
+$senaryColor: #afafaf;
+$septenaryColor: #dcdcdc;
+
+$facebookColor: #3a5a98;
+$twitterColor: #5fa8dc;
+$linkedInColor: #0078b5;
+$instagramColor: #833ab4;
+
+// Font Sizes
+$breakpoints: (
+  small: (
+    480px,
+  ),
+  medium: 700px,
+  large: 1050px,
+);
+
+// Font Sizes
+$f_xxxsmall: (
+  null: (
+    13px,
+    1.5,
+  ),
+  small: 13px,
+  medium: 14px,
+  large: 14px,
+);
+$f_xxsmall: (
+  null: (
+    16px,
+    1.5,
+  ),
+  small: 16px,
+  medium: 17px,
+  large: 18px,
+);
+$f_xsmall: (
+  null: (
+    20px,
+    1.5,
+  ),
+  small: 20px,
+  medium: 20px,
+  large: 20px,
+);
+$f_small: (
+  null: (
+    22px,
+    1.5,
+  ),
+  small: 22px,
+  medium: 22px,
+  large: 22px,
+);
+$f_medium: (
+  null: (
+    24px,
+    1.5,
+  ),
+  small: 24px,
+  medium: 24px,
+  large: 24px,
+);
+$f_xmedium: (
+  null: (
+    24px,
+    1.5,
+  ),
+  small: 24px,
+  medium: 24px,
+  large: 26px,
+);
+$f_large: (
+  null: (
+    18px,
+    1.5,
+  ),
+  small: 18px,
+  medium: 24px,
+  large: 28px,
+);
+$f_xlarge: (
+  null: (
+    32px,
+    1.5,
+  ),
+  small: 32px,
+  medium: 32px,
+  large: 32px,
+);
+$f_xxlarge: (
+  null: (
+    24px,
+    1.5,
+  ),
+  small: 24px,
+  medium: 34px,
+  large: 40px,
+);
+$f_xxxlarge_mod_small: (
+  null: (
+    24px,
+    1.5,
+  ),
+  small: 24px,
+  medium: 34px,
+  large: 44px,
+);
+$f_xxx_mod_large: (
+  null: (
+    24px,
+    1.5,
+  ),
+  small: 24px,
+  medium: 34px,
+  large: 60px,
+);
+$f_xxxlarge: (
+  null: (
+    60px,
+    1.5,
+  ),
+  small: 60px,
+  medium: 80px,
+  large: 112px,
+);
+$f_impact_sm: (
+  null: (
+    22px,
+    1.2,
+  ),
+  small: 24px,
+  medium: 28px,
+  large: 32px,
+);
+$f_impact_md: (
+  null: (
+    24px,
+    1.2,
+  ),
+  small: 24px,
+  medium: 34px,
+  large: 44px,
+);
+
+// 	@include font-size($p-font-sizes);
+@mixin font-size($fs-map, $fs-breakpoints: $breakpoints) {
+  @each $fs-breakpoint, $fs-font-size in $fs-map {
+    @if $fs-breakpoint == null {
+      @include make-font-size($fs-font-size);
+    } @else {
+      // If $fs-font-size is a key that exists in
+      // $fs-breakpoints, use the value
+      @if map-has-key($fs-breakpoints, $fs-breakpoint) {
+        $fs-breakpoint: map-get($fs-breakpoints, $fs-breakpoint);
+      }
+      @media screen and (min-width: $fs-breakpoint) {
+        @include make-font-size($fs-font-size);
+      }
+    }
+  }
+}
+
+// Utility function for mixin font-size
+@mixin make-font-size($fs-font-size) {
+  // If $fs-font-size is a list, include
+  // both font-size and line-height
+  @if type-of($fs-font-size) == "list" {
+    font-size: nth($fs-font-size, 1);
+    @if (length($fs-font-size) > 1) {
+      line-height: nth($fs-font-size, 2);
+    }
+  } @else {
+    font-size: $fs-font-size;
+  }
+}
+
+// @include font-sel('primary',500,'left');
+@mixin font-sel($font-type, $font-weight, $font-orientation) {
+  @if $font-type == "primary" {
+    font-family: $primaryFont;
+  } @else {
+    font-family: $secondaryFont;
+  }
+  font-weight: $font-weight;
+  text-align: $font-orientation;
+}
+
+// @mixin grid-layout(){
+//     display: grid;
+//     grid-template-columns: repeat(22, 1fr);
+//     grid-column-gap: 20px;
+// }
+@mixin grid-layout() {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 1fr;
+  grid-column-gap: 50px;
+  max-width: calc(100% - 80px);
+  margin: 0 auto;
+
+  @media screen and (max-width: 750px) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  @media screen and (max-width: 550px) {
+    max-width: calc(100% - 50px);
+  }
+}

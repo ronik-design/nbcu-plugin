@@ -1,0 +1,118 @@
+<?php 
+
+if( function_exists('acf_add_local_field_group') ):
+
+    acf_add_local_field_group(array(
+        'key' => 'group_624de6435bf1b_ronikdesign',
+        'title' => 'CLONE: Text Block',
+        'fields' => array(
+            array(
+                'key' => 'field_62c74b3e2d33e',
+                'label' => 'Content Alignment',
+                'name' => 'content-alignment',
+                'aria-label' => '',
+                'type' => 'button_group',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'choices' => array(
+                    'left' => '<span class="dashicons dashicons-editor-alignleft"></span>',
+                    'center' => '<span class="dashicons dashicons-editor-aligncenter"></span>',
+                    'right' => '<span class="dashicons dashicons-editor-alignright"></span>',
+                ),
+                'allow_null' => 0,
+                'default_value' => 'center',
+                'layout' => 'horizontal',
+                'return_format' => 'value',
+            ),
+            array(
+                'key' => 'field_624de64361005',
+                'label' => 'Title',
+                'name' => 'title',
+                'aria-label' => '',
+                'type' => 'text',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'default_value' => '',
+                'placeholder' => '',
+                'prepend' => '',
+                'append' => '',
+                'maxlength' => 100,
+            ),
+            array(
+                'key' => 'field_624de6436100c',
+                'label' => 'Text',
+                'name' => 'text',
+                'aria-label' => '',
+                'type' => 'wysiwyg',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'default_value' => '',
+                'tabs' => 'all',
+                'toolbar' => 'full',
+                'media_upload' => 0,
+                'delay' => 0,
+                'enable_strip_tags' => 0,
+                'enable_autoembed' => 0,
+            ),
+            array(
+                'key' => 'field_624de64361015',
+                'label' => 'Buttons',
+                'name' => 'buttons',
+                'aria-label' => '',
+                'type' => 'clone',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'clone' => array(
+                    0 => 'group_6247192d3bf80',
+                ),
+                'display' => 'seamless',
+                'layout' => 'block',
+                'prefix_label' => 0,
+                'prefix_name' => 0,
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'block',
+                    'operator' => '==',
+                    'value' => 'all',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => false,
+        'description' => '',
+        'show_in_rest' => 0,
+    ));
+    
+    endif;		

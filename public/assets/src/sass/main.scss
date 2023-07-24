@@ -1,0 +1,212 @@
+// Partials
+@use "../sass/partials/variables";
+@use "../sass/partials/reset";
+// @use "../sass/partials/images";
+// @use "../sass/partials/buttons";
+// @use "../sass/partials/icons";
+// @use "../sass/partials/comments";
+// @use "../sass/partials/texts";
+
+// Templates
+// @use "../sass/templates/content";
+
+html {
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: variables.$quaternaryColor;
+  color: variables.$tertiaryColor;
+}
+
+body {
+  color: variables.$primaryColor;
+  @include variables.font-sel("primary", 500, left);
+  @include variables.font-size(variables.$f_xxsmall);
+}
+.site-container {
+  position: relative;
+  overflow: hidden;
+  max-width: 2000px;
+  margin: 0 auto;
+}
+
+.screen-reader-text {
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  word-wrap: normal !important;
+}
+
+.screen-reader-text:focus {
+  background-color: #ddd;
+  clip: auto !important;
+  clip-path: none;
+  color: #444;
+  display: block;
+  font-size: 1em;
+  height: auto;
+  left: 5px;
+  line-height: normal;
+  padding: 15px 23px 14px;
+  text-decoration: none;
+  top: 5px;
+  width: auto;
+  z-index: 100000;
+}
+
+.reveal-disabled {
+  opacity: 0;
+}
+
+.reveal-enabled {
+  opacity: 1;
+  transition: all 0.4s;
+}
+
+.ronik-password-disabled{
+  pointer-events: none !important;
+  opacity: 0.4 !important;
+}
+
+.ronik-password__container{
+  position: relative;
+
+  .adv-passwordchecker{
+
+  }
+  .ronik-password__message{
+    padding: 5px;
+    position: relative;
+    display: inline-block;
+    color: #525252;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: italic;
+    transition: all .4s;
+
+    &.weak-password{
+      background-color: #ff00006b;
+    }
+    &.medium-password{
+      background-color: #ffff0099;
+    }
+    &.strong-password{
+      background-color: #00ff4099;
+    }
+  }
+  .ronik-password__message-additional{
+    padding: 5px;
+    position: relative;
+    display: inline-block;
+    color: #525252;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: italic;
+    transition: all .4s;
+  }
+}
+
+.twofa-wrapper{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 50px;
+
+  img{
+    width: 100%;
+    height: 100%;
+    max-width: 200px;
+    margin: 25px;
+  }
+}
+
+.pass-reset-wrapper{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 50px;
+
+  .pass-reset-message{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 400px;
+
+    div{
+      padding: 10px;
+      border-radius: 5px;
+      width: 100%;
+      color: black;
+      text-align: center;
+      font-style: italic;
+    }
+    .pass-reset-message__success{
+      color: #ffff;
+      background-color: green;
+    }
+    .pass-reset-message__nomatch{
+      background-color: orange;
+    }
+    .pass-reset-message__missing{
+      background-color: orange;
+    }
+  }
+  form{ 
+    width: 100%;
+    max-width: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .ronik-password__container{
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: column;
+      width: 100%;
+      
+      label{
+        padding-bottom: 5px;
+      }
+      input{
+        line-height: 1;
+        padding: 5px 10px;
+        margin: 5px 0px;
+        border: solid 1px;
+        border-radius: 2px;
+      }
+      .ronik-password__message{
+        width: 100%;
+        margin-top: 5px;
+        margin-bottom: 10px;
+      }
+    }
+    button{
+      transition: all .4s;
+      cursor: pointer;
+      background-color: #000;
+      color: #ffff;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      opacity: 1;
+
+      &:hover{
+        opacity: 0.8;
+      }
+    }
+  }
+}

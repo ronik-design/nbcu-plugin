@@ -1,0 +1,25 @@
+@use "../partials/variables" as var;
+
+button {
+  border: none;
+  background-color: transparent;
+}
+
+.buttons-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+
+  .buttons-wrapper__content {
+    padding: 0 10px;
+  }
+}
+
+a {
+  @include var.font-size(var.$f_xsmall);
+
+  font-family: var.$tertiaryFont;
+  text-decoration: none;
+  transition: color 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}

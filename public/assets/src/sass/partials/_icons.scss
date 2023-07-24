@@ -1,0 +1,57 @@
+@use "../partials/variables" as var;
+
+//Social SVG's
+.social-icon-svg {
+  max-width: var.$social-icon-width;
+  max-height: var.$social-icon-height;
+}
+
+.social {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+
+  &__item {
+    padding-right: 10px;
+    padding-bottom: 10px;
+
+    &:last-child {
+      padding-right: 0;
+    }
+
+    a {
+      .social__icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-items: center;
+
+        &:hover .social__icon-fill-light {
+          fill: var.$quaternaryColor;
+        }
+
+        &_facebook {
+          height: 18px;
+        }
+
+        &_twitter {
+          width: 18px;
+        }
+
+        &-fill {
+          transition: all 0.4s;
+        }
+
+        &-fill-light {
+          fill: var.$tertiaryColor;
+        }
+
+        &-fill-dark {
+          fill: var.$primaryColor;
+        }
+      }
+    }
+  }
+}
