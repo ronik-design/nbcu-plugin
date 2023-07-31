@@ -53,7 +53,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 $get_sms_status = 'sms_unverified';
             }
             // Get user phone number.
-            $get_phone_number = get_user_meta($_GET["user_id"], 'sms_user_phone', true);
+            $get_phone_number = get_user_meta($_GET["user"], 'sms_user_phone', true);
             if(!$get_phone_number){
                 $get_phone_number = false;
             }

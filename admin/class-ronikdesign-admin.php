@@ -282,6 +282,7 @@ class Ronikdesign_Admin
 		}
 		// Start the session
 		// temp session_start();
+		session_start();
 		$f_value = array();
 
 		$f_auth = get_field('mfa_settings', 'options');
