@@ -21,7 +21,7 @@ get_header();
 
 
 
-$f_header = apply_filters( 'ronikdesign_mfa_custom_header', false );
+$f_header = apply_filters( 'ronikdesign_auth_custom_header', false );
 $f_content = apply_filters( 'ronikdesign_mfa_custom_content', false );
 $f_instructions = apply_filters( 'ronikdesign_mfa_custom_instructions', false );
 $f_footer = apply_filters( 'ronikdesign_mfa_custom_footer', false );

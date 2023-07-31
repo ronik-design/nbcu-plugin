@@ -13,7 +13,7 @@
  * @package           Ronikdesign
  *
  * @wordpress-plugin
- * Plugin Name:       Ronik Designs Developer Toolbox
+ * Plugin Name:       Revamp 2023 | Ronik Designs Developer Toolbox
  * Plugin URI:        https://github.com/ronik-design/ronikdesign
  * Description:       Theme Code Optimizer. ACF is necessary for plugin to work correctly.
  * Version:           1.0.6.4

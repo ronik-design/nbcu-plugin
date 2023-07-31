@@ -4,7 +4,8 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 // Cleaning up the session variables.
-session_start();
+		// temp session_start();
+
 
 
 

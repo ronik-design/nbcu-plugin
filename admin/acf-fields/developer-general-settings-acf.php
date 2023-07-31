@@ -1416,7 +1416,7 @@ https://test.com/',
 						'required' => 0,
 						'conditional_logic' => 0,
 						'wrapper' => array(
-							'width' => '50',
+							'width' => '100',
 							'class' => '',
 							'id' => '',
 						),
@@ -1426,6 +1426,39 @@ https://test.com/',
 						'ui_on_text' => '',
 						'ui_off_text' => '',
 					),
+
+
+					array(
+						'key' => 'field_6372afa6da3f200cd12_ronikdesign',
+						'label' => '2fa Content:',
+						'name' => '2fa_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the 2fa main Content.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+					array(
+						'key' => 'field_6372afa6da3f200cd13_ronikdesign',
+						'label' => '2fa Instructions Content:',
+						'name' => '2fa_instructions_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the 2fa Instructions Content. Please note if left blank default content will be displayed.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+
 
 
 					array(

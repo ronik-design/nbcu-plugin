@@ -4,7 +4,8 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 // Cleaning up the session variables.
-session_start();
+		// temp session_start();
+
 
 
 add_action('auth-registration-page', function () {    
@@ -56,6 +57,7 @@ add_action('auth-registration-page', function () {
                 }
             }
         } else {
+            // unset($_SESSION["auth-select"]);
             // Based on the session conditions we check if valid if not we default back to the send SMS button.
             if( isset($_SESSION["auth-select"]) && $_SESSION["auth-select"] == '2fa'){
                 // Get user phone number.

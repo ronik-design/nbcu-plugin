@@ -181,6 +181,10 @@ class Ronikdesign_Admin
 
 	function ronikdesigns_acf_op_init_functions()
 	{
+		// Include the Wp Functions.
+		foreach (glob(dirname(__FILE__) . '/wp-functions/*.php') as $file) {
+			include $file;
+		}
 		// acf-icon-picker-master
 		include dirname(__FILE__) . '/acf-icon-picker-master/acf-icon-picker.php';
 
@@ -196,13 +200,14 @@ class Ronikdesign_Admin
 		foreach (glob(dirname(__FILE__) . '/wp-cleaner/*.php') as $file) {
 			include $file;
 		}
-		// Include the Wp Functions.
-		foreach (glob(dirname(__FILE__) . '/wp-functions/*.php') as $file) {
-			include $file;
-		}
 		// Include the auth.
 		foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
-			include $file;
+			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.  
+			// We add the logic into the theme.
+			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
+			if(!$f_bypasser){
+				include $file;
+			}
 		}
 		// Include the password reset.
 		foreach (glob(dirname(__FILE__) . '/password-reset/*.php') as $file) {
@@ -276,7 +281,7 @@ class Ronikdesign_Admin
 			return;
 		}
 		// Start the session
-		session_start();
+		// temp session_start();
 		$f_value = array();
 
 		$f_auth = get_field('mfa_settings', 'options');
@@ -437,7 +442,6 @@ class Ronikdesign_Admin
 			$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
 			$google2fa = new Google2FA();
 
-			error_log(print_r( 'abc', true));
 
 			if ( $mfa_status == 'mfa_unverified' ) {
                 // Lets save the google2fa_secret to the current user_meta.

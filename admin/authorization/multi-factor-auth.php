@@ -90,7 +90,7 @@ use Twilio\Rest\Client;
                 <?php } ?>
                 <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                    <input autocomplete="off" type="text" name="google2fa_code" value="">
+                    <input required autocomplete="off" type="text" name="google2fa_code" value="">
                     <input type="submit" name="submit" value="Submit">
                 </form>
                 
@@ -159,7 +159,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
                     $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
                     // If past date is greater than current date. We reset to unverified & start the process all over again.
                     if($past_date > $mfa_status ){
-                        session_destroy();
+                        // session_destroy();
                         update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
                         // Takes care of the redirection logic
                         ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");

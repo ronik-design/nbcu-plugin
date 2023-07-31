@@ -222,6 +222,8 @@ class Ronikdesign
 		// This will add styles to the admin dashboard side
 		// $this->loader->add_action('admin_enqueue_scripts', $plugin_public, 'enqueue_styles');
 
+		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
+
 		// Verification API AJAX.
 		$this->loader->add_action('wp_ajax_nopriv_do_verification', $plugin_public, 'ajax_do_verification');
 		$this->loader->add_action('wp_ajax_do_verification', $plugin_public, 'ajax_do_verification');

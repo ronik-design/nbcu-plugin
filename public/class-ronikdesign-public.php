@@ -395,4 +395,10 @@ class Ronikdesign_Public
 		// return get_stylesheet_directory_uri();	
 	}
 
+	function ronikdesigns_rest_api_init(){
+		// Include the Spam Blocker.
+		foreach (glob(dirname(__FILE__) . '/rest-api/*.php') as $file) {
+			include $file;
+		}
+	}
 }

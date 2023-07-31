@@ -57,7 +57,7 @@
             if(($get_auth_status == 'auth_select_mfa')){
                 if($f_admin_auth_select['mfa']){
                     // Include the mfa auth.
-                    error_log(print_r('ronikdesigns_redirect_non_registered_mfa', true));
+                    error_log(print_r('roniknbcu_ronikdesign_non_registered_mfa', true));
                     ronikdesigns_redirect_non_registered_mfa();
                 }
             }
@@ -67,9 +67,11 @@
                 // If the MFA && 2fa are enabled we auto redirect to the AUTH template for user selection.
                 if(($f_admin_auth_select['mfa']) && ($f_admin_auth_select['2fa'])){   
                     // Redirect Magic, custom function to prevent an infinite loop.
-                    $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
-                    $dataUrl['reDest'] = '/auth/';
-                    ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                    if(empty($get_auth_status)){
+                        $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
+                        $dataUrl['reDest'] = '/auth/';
+                        ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                    }
                 // Next we check if the MFA is set but not the 2fa. If so we include just the mfa.
                 } else if(($f_admin_auth_select['mfa']) && (!$f_admin_auth_select['2fa'])){
                     // Include the mfa auth.
@@ -89,7 +91,7 @@
 
 
     function your_function_name(){ ?>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
         <script>
             jQuery(document).ready(function(){
                 <?php 
