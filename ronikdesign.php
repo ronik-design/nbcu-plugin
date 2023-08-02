@@ -9,7 +9,7 @@
  * that starts the plugin.
  *
  * @link              https://www.ronikdesign.com/
- * @since             1.0.6.4
+ * @since             1.0.6.5
  * @package           Ronikdesign
  *
  * @wordpress-plugin
@@ -35,7 +35,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'RONIKDESIGN_VERSION', '1.0.6.4' );
+define( 'RONIKDESIGN_VERSION', '1.0.6.5' );
 
 
 

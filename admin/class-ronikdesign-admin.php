@@ -284,9 +284,10 @@ class Ronikdesign_Admin
 		// temp session_start();
 		session_start();
 		$f_value = array();
-
 		$f_auth = get_field('mfa_settings', 'options');
 		$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
+		$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
+
 		$sms_2fa_status = get_user_meta( get_current_user_id(),'sms_2fa_status', true );
 		$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
 		$get_current_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
@@ -299,218 +300,193 @@ class Ronikdesign_Admin
 		$sms_2fa_secret = wp_rand( 1000000, 9999999 );
 
 
-
-		// Lets check to see if the user is idealing to long.
-		if(isset($_POST['smsExpired']) && $_POST['smsExpired']){
-			error_log(print_r( 'Expired', true));
-			update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-			//Lets wipe out the session for sms_2fa_status
-			unset($_SESSION['send-sms']);
-			unset($_SESSION['sms-valid']);
-			wp_send_json_success('reload');
-		}
-
-
-
-		// Lets check to see if the user is idealing to long.
-		if(isset($_POST['timeChecker']) && $_POST['timeChecker']){
-			// Lets check if user is accessing a locked page.
-			if($f_auth['auth_page_enabled']){
-				foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
-					// We check the current page id and also the page title of the 2fa.
-					if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
-						if($mfa_status !== 'mfa_unverified'){
-							update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-							//Lets wipe out the session for sms_2fa_status
-							unset($_SESSION['send-mfa']);
-							wp_send_json_success('reload');
+		// AUTH Section:
+			// First Check: 
+				// Lets get the auth-select value.
+				if(isset($_POST['auth-select']) && $_POST['auth-select']){
+					// Check if value is 2fa.
+					if($_POST['auth-select'] == '2fa'){
+						// Check if user has a phone number.
+						if($get_phone_number){ 
+							update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
+							$f_value['auth-select'] = "2fa";
+							$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+							// We build a query and redirect back to 2fa route.
+							wp_redirect( esc_url(home_url($r_redirect)) );
+							exit;
+						} else {	
+							// If user has no phone number. We set the auth_status to auth_select_sms-missing.
+							update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
+							$f_value['auth-select'] = "2fa";
+							$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+							// We build a query and redirect back to 2fa route.
+							wp_redirect( esc_url(home_url($r_redirect)) );
+							exit;
 						}
-						if($sms_2fa_status !== 'sms_2fa_unverified'){
-							update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-							//Lets wipe out the session for sms_2fa_status
-							unset($_SESSION['send-sms']);
-							unset($_SESSION['sms-valid']);
-							wp_send_json_success('reload');
-						}
+					// Check if value is mfa.
 					} else {
-						wp_send_json_success('noreload');
+						update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_mfa');
+						$f_value['auth-select'] = "mfa";
+						$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
+						// We build a query and redirect back to 2fa route.
+						wp_redirect( esc_url(home_url($r_redirect)) );
+						exit;	
 					}
 				}
-			}
-			// Catch ALL 
-			wp_send_json_success('noreload');
-		}
-
-
-
-
-		// Lets get the auth-select value.
-		if(isset($_POST['auth-select']) && $_POST['auth-select']){
-			if($_POST['auth-select'] == '2fa'){
-                if($get_phone_number){ 
+			// Second Check:
+				// Lets check the auth-phone_number.
+				if(isset($_POST['auth-phone_number']) && $_POST['auth-phone_number']){
+					// This is where api validation will be performed...
+					update_user_meta(get_current_user_id(), 'sms_user_phone', $_POST['auth-phone_number']);
+					// End api validation
 					update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
-					$f_value['auth-select'] = "2fa";
-					$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
-					// We build a query and redirect back to 2fa route.
-					wp_redirect( esc_url(home_url($r_redirect)) );
-					exit;
-				} else {	
-					// Set session variables
-					$_SESSION["auth-select"] = "2fa";
-					$f_value['auth-select'] = "2fa";
+					// Update the status with sms_2fa_unverified
+					update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+					
+					$f_value['auth-phone_number'] = "valid";
 					$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
 					// We build a query and redirect back to 2fa route.
 					wp_redirect( esc_url(home_url($r_redirect)) );
 					exit;
 				}
-			} else {
-				update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_mfa');
-				// Set session variables
-				$_SESSION["auth-select"] = "mfa";
-				$f_value['auth-select'] = "mfa";
-				$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
-				// We build a query and redirect back to 2fa route.
-				wp_redirect( esc_url(home_url($r_redirect)) );
-				exit;	
-			}
-		}
-
-
-
-
-
-
-
-		if(isset($_POST['auth-phone_number']) && $_POST['auth-phone_number']){
-			// This is where api validation will be performed...
-			update_user_meta(get_current_user_id(), 'sms_user_phone', $_POST['auth-phone_number']);
-			// End api validation
-			update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
-			// Update the status with timestamp.
-			// Keep in mind all timestamp are within the UTC timezone. For constant all around.
-			// https://www.timestamp-converter.com/
-			// Get the current time.
-			update_user_meta(get_current_user_id(), 'sms_2fa_status', $current_date);
-			// Set session variables
-			// $_SESSION["auth-phone_number"] = "valid";
-			$f_value['auth-phone_number'] = "valid";
-			$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
-			// We build a query and redirect back to 2fa route.
-			wp_redirect( esc_url(home_url($r_redirect)) );
-			exit;
-		}
 		
+				
+		// SMS Section:
+			// First Check:
+				// Lets store the sms code and then we also send the sms code.
+				if(isset($_POST['send-sms']) && $_POST['send-sms']){
+					// Lets store the sms_2fa_secret data inside the current usermeta. 
+					if( $get_current_secret ){
+						update_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
+					} else {
+						add_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
+					}
+					// We generate a sms message and send it to the current user
+					if( $f_auth['twilio_id'] && $f_auth['twilio_token'] && $f_auth['twilio_number'] ){
+						$account_sid = $f_auth['twilio_id'];
+						$auth_token = $f_auth['twilio_token'];
+						// A Twilio number you own with SMS capabilities
+						$twilio_number = $f_auth['twilio_number'];
+						// Current user phone number.
+						$to_number = '6316174271';
+						$client = new Client($account_sid, $auth_token);
+						$client->messages->create(
+							// Where to send a text message (your cell phone?)
+							$to_number,
+							array(
+								'from' => $twilio_number,
+								'body' => 'Your verification code is '.$sms_2fa_secret
+							)
+						);
+					}
+					$f_value['send-sms'] = "true";
+					$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
+					// We build a query and redirect back to 2fa route.
+					wp_redirect( esc_url(home_url($r_redirect)) );
+					exit;
+				}
+			// Second Check:
+				// Lets validate-sms-code
+				if(isset($_POST['validate-sms-code']) && $_POST['validate-sms-code']){
+					if($get_current_secret == $_POST['validate-sms-code']){
+						update_user_meta(get_current_user_id(), 'sms_2fa_status', $current_date);
+						$f_value['sms-success'] = "success";
+						// $f_value['sms-valid'] = "true";
+						$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
+						// We build a query and redirect back to 2fa route.
+						wp_redirect( esc_url(home_url($r_redirect)) );
+						exit;
+					} else {
+						$f_value['sms-error'] = "nomatch";
+					}
+					$f_value['sms-valid'] = "false";
+					$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
+					// We build a query and redirect back to 2fa route.
+					wp_redirect( esc_url(home_url($r_redirect)) );
+					exit;
+				}
+			// Third Check:
+				// Lets check to see if the user is idealing to long.
+				if(isset($_POST['smsExpired']) && $_POST['smsExpired']){
+					error_log(print_r( 'Expired', true));
+					update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+					update_user_meta(get_current_user_id(), 'sms_2fa_secret', '');
+					wp_send_json_success('reload');
+				}
 
 
 
+		// MFA Section:
+			// First Check:	
+				// Lets check the POST parameter to see if we want to send the MFA code.
+				if(isset($_POST['google2fa_code']) && $_POST['google2fa_code']){
+					$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
+					$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
+					$google2fa = new Google2FA();
+
+					if ( $mfa_status == 'mfa_unverified' ) {
+						// Lets save the google2fa_secret to the current user_meta.
+						$code = $_POST["google2fa_code"];
+						$valid = $google2fa->verifyKey($get_current_secret, $code);
+						if ($valid) {
+							// Lets store the mfa validation data inside the current usermeta. 
+							if( $mfa_validation ){
+								update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
+							} else {
+								add_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
+							}
+							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
+							// $f_value['send-mfa'] = "true";
+						}
+					}  else {
+						$valid = false;
+						// Lets store the mfa validation data inside the current usermeta. 
+						if( $mfa_validation ){
+							update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+						} else {
+							add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+						}
+						// $f_value['send-mfa'] = "false";
+					}
+					$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
+					// We build a query and redirect back to 2fa route.
+					wp_redirect( esc_url(home_url($r_redirect)) );
+					exit;
+				}
 
 
 
-
-
-
-		if(isset($_POST['send-sms-code']) && $_POST['send-sms-code']){
-			if($get_current_secret == $_POST['send-sms-code']){
-				update_user_meta(get_current_user_id(), 'sms_2fa_status', $current_date);
-				$f_value['sms-success'] = "success";
-				// Set session variables
-				$_SESSION["sms-valid"] = "valid";
-				// $f_value['sms-valid'] = "true";
-				$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
-
-				// We build a query and redirect back to 2fa route.
-				wp_redirect( esc_url(home_url($r_redirect)) );
-				exit;
-			} else {
-				$f_value['sms-error'] = "nomatch";
-			}
-			// Set session variables
-			$_SESSION["send-sms"] = "invalid";
-			$_SESSION["sms-valid"] = "invalid";
-			$f_value['sms-valid'] = "false";
-			$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
-			// We build a query and redirect back to 2fa route.
-			wp_redirect( esc_url(home_url($r_redirect)) );
-			exit;
-		}
-
-
-
-
-		// Lets check the POST parameter to see if we want to send the MFA code.
-		if(isset($_POST['google2fa_code']) && $_POST['google2fa_code']){
-			$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
-			$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
-			$google2fa = new Google2FA();
-
-
-			if ( $mfa_status == 'mfa_unverified' ) {
-                // Lets save the google2fa_secret to the current user_meta.
-                $code = $_POST["google2fa_code"];
-                $valid = $google2fa->verifyKey($get_current_secret, $code);
-                if ($valid) {
-					update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
-                    update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
-					// Set session variables
-					$_SESSION["send-mfa"] = "valid";
-					// $f_value['send-mfa'] = "true";
-                }
-            }  else {
-                $valid = false;
-				// Set session variables
-				$_SESSION["send-mfa"] = "invalid";
-				// $f_value['send-mfa'] = "false";
-            }
-
-			$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
-			// We build a query and redirect back to 2fa route.
-			wp_redirect( esc_url(home_url($r_redirect)) );
-			exit;
-		}
-
-
-
-
-		// Lets check the POST parameter to see if we want to send the sms code.
-		if(isset($_POST['send-sms']) && $_POST['send-sms']){
-			// Lets store the sms_2fa_secret data inside the current usermeta. 
-			if(get_user_meta(get_current_user_id(),'sms_2fa_secret', true)){
-				update_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
-			} else {
-				add_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
-			}
-
-			// The phone stuff.. We generate a sms message and send it to the current user
-			if( $f_auth['twilio_id'] && $f_auth['twilio_token'] && $f_auth['twilio_number'] ){
-				$account_sid = $f_auth['twilio_id'];
-				$auth_token = $f_auth['twilio_token'];
-				// A Twilio number you own with SMS capabilities
-				$twilio_number = $f_auth['twilio_number'];
-				// Current user phone number.
-				$to_number = '6316174271';
-				$client = new Client($account_sid, $auth_token);
-				$client->messages->create(
-					// Where to send a text message (your cell phone?)
-					$to_number,
-					array(
-						'from' => $twilio_number,
-						'body' => 'Your verification code is '.$sms_2fa_secret
-					)
-				);
-			}
-
-			// Set session variables
-			$_SESSION["send-sms"] = "valid";
-			$f_value['send-sms'] = "true";
-			$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
-			// We build a query and redirect back to 2fa route.
-			wp_redirect( esc_url(home_url($r_redirect)) );
-			exit;
-		}
+		// Global Validation Section:		
+			// Second Check:
+				// Lets check to see if the user is idealing to long.
+				if(isset($_POST['timeChecker']) && $_POST['timeChecker']){
+					// Lets check if user is accessing a locked page.
+					if($f_auth['auth_page_enabled']){
+						foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
+							// We check the current page id and also the page title of the 2fa.
+							if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
+								if($mfa_status !== 'mfa_unverified'){
+									update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+									if( $mfa_validation ){
+										update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+									} else {
+										add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+									}
+									wp_send_json_success('reload');
+								}
+								if($sms_2fa_status !== 'sms_2fa_unverified'){
+									update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+									wp_send_json_success('reload');
+								}
+							} else {
+								wp_send_json_success('noreload');
+							}
+						}
+					}
+					// Catch ALL 
+					wp_send_json_success('noreload');
+				}
 	}
-
-
-
 
 
 

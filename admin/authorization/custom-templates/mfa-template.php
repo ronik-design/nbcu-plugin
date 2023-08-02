@@ -12,7 +12,6 @@ if(!$f_auth['enable_mfa_settings']){
 	$dataUrl['reDest'] = '';
 	ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
 }
-// unset($_SESSION["auth-select"]);
 
 ?>
 

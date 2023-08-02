@@ -73,48 +73,39 @@ add_action('2fa-registration-page', function () {
         } else { ?>
             <p><?= $get_registration_status; ?></p>
             <?php
-            // Based on the session conditions we check if valid if not we default back to the send SMS button.
-            if( isset($_SESSION["send-sms"]) && $_SESSION["send-sms"] == 'valid'){ 
-                $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-                $get_phone_number = substr($get_phone_number, -4);
-                // Update the status with timestamp.
-                // Keep in mind all timestamp are within the UTC timezone. For constant all around.
-                // https://www.timestamp-converter.com/
-                // Get the current time.
-                $current_date = strtotime((new DateTime())->format( 'd-m-Y H:i:s' ));
-                $f_mfa_settings = get_field('mfa_settings', 'options');
-
-                $f_expiration_time = $f_mfa_settings['sms_expiration_time'];
-                if($f_expiration_time){
-                    $f_sms_expiration_time = $f_expiration_time;
-                } else{
-                    $f_sms_expiration_time = 10;
-                }
-                $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-                // Lets store the sms code timestamp in user meta.
-                $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
-                // Lets also store within the session.
-                $_SESSION["sms-code-timestamp"] = $current_date;
-                if (!$sms_code_timestamp) {
-                    add_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
-                }
-                if( $past_date > $sms_code_timestamp ){
-                    error_log(print_r( 'Expired', true));
-                    update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                    //Lets wipe out the session for sms_2fa_status
-                    unset($_SESSION['send-sms']);
-                    unset($_SESSION['sms-valid']);
-                    unset($_SESSION["sms-code-timestamp"]);
-                    // update_user_meta(get_current_user_id(), 'sms_code_timestamp', time());
-                }            
-            ?>
-
+                $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+                // Based on the session conditions we check if valid if not we default back to the send SMS button.
+                if( $sms_2fa_secret ){ 
+                    $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+                    $get_phone_number = substr($get_phone_number, -4);
+                    // Update the status with timestamp.
+                    // Keep in mind all timestamp are within the UTC timezone. For constant all around.
+                    // https://www.timestamp-converter.com/
+                    // Get the current time.
+                    $current_date = strtotime((new DateTime())->format( 'd-m-Y H:i:s' ));
+                    $f_mfa_settings = get_field('mfa_settings', 'options');
+                    $f_expiration_time = $f_mfa_settings['sms_expiration_time'];
+                    if($f_expiration_time){
+                        $f_sms_expiration_time = $f_expiration_time;
+                    } else{
+                        $f_sms_expiration_time = 10;
+                    }
+                    $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
+                    // Lets store the sms code timestamp in user meta.
+                    $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
+                    if (!$sms_code_timestamp) {
+                        add_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
+                    }
+                    if( $past_date > $sms_code_timestamp ){
+                        error_log(print_r( 'Expired', true));
+                        update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+                        update_user_meta(get_current_user_id(), 'sms_2fa_secret', '');
+                    }            
+                ?>
                 <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                     <p>Last 4 digits of phone number associated with the account:</br> <?= 'xxx-xxx-'.$get_phone_number; ?></p>
-
                     <div id="sms-expiration"></div>
                     <script>
-
                         document.addEventListener("visibilitychange", (event) => {
                         if (document.visibilityState == "visible") {
                             console.log("tab is active");
@@ -123,16 +114,11 @@ add_action('2fa-registration-page', function () {
                             console.log("tab is inactive")
                         }
                         });
-
-
-
-
                         var timeleft = <?= ($f_sms_expiration_time*60); ?>;
                         var downloadTimer = setInterval(function(){
                             if(timeleft <= 0){
                                 clearInterval(downloadTimer);
                                 document.getElementById("sms-expiration").innerHTML = "SMS is Expired.";
-
                                 setTimeout(() => {
                                     jQuery.ajax({
                                         type: 'post',
@@ -177,9 +163,7 @@ add_action('2fa-registration-page', function () {
                             timeleft -= 1;
                         }, 1000);
                     </script>
-
-
-                    <input type="text" name="send-sms-code" value="" required>
+                    <input type="text" name="validate-sms-code" value="" required>
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                     <p>If you don't receive a text message, please reach out to the <a href="mailto:together@nbcuni.com?subject=2fa SMS Issue">together@nbcuni.com</a> for support. </p>
                     <button type="submit" value="Reset Password">Submit SMS Code</button>
@@ -200,11 +184,6 @@ add_action('2fa-registration-page', function () {
 function ronikdesigns_redirect_registered_2fa() {
     $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
     $f_mfa_settings = get_field('mfa_settings', 'options');
-    // if( isset($f_mfa_settings['sms_expiration_time']) || $f_mfa_settings['sms_expiration_time'] ){
-    //     $f_sms_expiration_time = $f_mfa_settings['sms_expiration_time'];
-    // } else {
-    //     $f_sms_expiration_time = 30;
-    // }
     if( isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time'] ){
         $f_auth_expiration_time = $f_mfa_settings['auth_expiration_time'];
     } else {
@@ -228,9 +207,6 @@ function ronikdesigns_redirect_registered_2fa() {
                     $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
                     // If past date is greater than current date. We reset to unverified & start the process all over again.
                     if($past_date > $get_registration_status ){
-                        unset($_SESSION['send-sms']);
-                        unset($_SESSION['sms-valid']);
-                        session_destroy();
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         // Takes care of the redirection logic
                         ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
