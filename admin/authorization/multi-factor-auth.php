@@ -55,11 +55,10 @@ add_action('mfa-registration-page', function () {
         );
         $qrcode = (new QRCode($options))->render($g2faUrl);
         
-        if( isset($mfa_validation) && $mfa_validation == 'valid'){ 
+        if( isset($mfa_validation) && $mfa_validation == 'valid'){
             update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
         ?>
             <p>Yikes an error has occured! </br>Please reload the page. </br>If the error continues to happen. </br>Please contact system administrator.</p>
-            <div class="">Authorization Saved!</div>
             <div id="countdown"></div>
             <script>
                 var timeleft = 5;
@@ -90,7 +89,6 @@ add_action('mfa-registration-page', function () {
             
         <?php }?>
     <?php } else{ ?>
-        <p>Yikes an error has occured! </br>Please reload the page. </br>If the error continues to happen. </br>Please contact system administrator.</p>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
         <script>
@@ -103,74 +101,35 @@ add_action('mfa-registration-page', function () {
                         window.location = window.location.pathname + "?mfaredirect=home";
                     }, 1000);
                 } else {
-                document.getElementById("countdown").innerHTML = "Page will reload in: " + timeleft + " seconds";
+                    document.getElementById("countdown").innerHTML = "Page will reload in: " + timeleft + " seconds";
                 }
                     timeleft -= 1;
             }, 1000);
         </script>
+
+
+
+
+        <?php 
+        // Lets Check for the password reset url cookie.
+            $cookie_name = "ronik-2fa-reset-redirect";
+            if(isset($_COOKIE[$cookie_name])) {
+                wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+                exit;
+            } else {
+                // We run our backup plan for redirecting back to previous page.
+                // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
+                add_action('wp_footer', 'ronikdesigns_redirect_js');
+                function ronikdesigns_redirect_js(){ ?>
+                    <script type="text/javascript">
+                        var x = JSON.parse(window.localStorage.getItem("ronik-url-reset"));
+                        window.location.replace(x.redirect);
+                    </script>
+                <?php };
+            }
+
+            ?>
+
+
     <?php }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // This function block is responsible for detecting the time expiration of the MFA on page specific pages.
-function ronikdesigns_redirect_non_registered_mfa() {
-    $mfa_status = get_user_meta(get_current_user_id(), $key = 'mfa_status', true);
-    $f_mfa_settings = get_field('mfa_settings', 'options');
-    if( isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time'] ){
-        $f_auth_expiration_time = $f_mfa_settings['auth_expiration_time'];
-    } else {
-        $f_auth_expiration_time = 30;
-    }
-    $f_auth = get_field('mfa_settings', 'options');
-    // Redirect Magic, custom function to prevent an infinite loop.
-    $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/', '/mfa/');
-    $dataUrl['reDest'] = '/mfa/';
-    if($f_auth['auth_page_enabled']){
-        foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
-            // We check the current page id and also the page title of the 2fa.
-            if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('mfa') || ronikdesigns_get_page_by_title('2fa')){
-                // Check if user has mfa_status if not add secret.
-                if (!$mfa_status) {
-                    add_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-                }
-                // Check if mfa_status is not equal to unverified.
-                if (($mfa_status !== 'mfa_unverified')) {
-                    $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-                    // If past date is greater than current date. We reset to unverified & start the process all over again.
-                    if($past_date > $mfa_status ){
-                        // session_destroy();
-                        update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-                        // Takes care of the redirection logic
-                        ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                    } else {
-                        if (str_contains($_SERVER['REQUEST_URI'], '/mfa/')) {
-                        // if($_SERVER['REQUEST_URI'] == '/mfa/'){
-                            // Lets block the user from accessing the 2fa if already authenticated.
-                            $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/', '/mfa/');
-                            $dataUrl['reDest'] = '/';
-                            ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                        }
-                    }
-                } else {
-                    update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-                    // Takes care of the redirection logic
-                        // Redirect Magic, custom function to prevent an infinite loop.
-                        $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/');
-                        $dataUrl['reDest'] = '/mfa/';
-                    ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                }
-            }
-        }
-    }
-}

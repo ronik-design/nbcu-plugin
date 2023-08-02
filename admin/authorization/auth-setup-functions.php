@@ -90,7 +90,9 @@ $f_auth = get_field('mfa_settings', 'options');
 
 
     // A custom function that will prevent infinite loops.
+    // This is the brain of the application. 
     function ronikRedirectLoopApproval($dataUrl, $cookieName){
+        global $post;
         $f_auth = get_field('mfa_settings', 'options');
 
         // If user is not logged in we continue to redirect to home page.
@@ -103,13 +105,13 @@ $f_auth = get_field('mfa_settings', 'options');
                     }
                 }
         } else {
-
             // We add the slash to the reUrl to prevent infinite loops.
             if($f_auth['auth_page_enabled']){
+                $f_id_array = array();
                 foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
                     $postId = $auth_page_enabled['page_selection'][0];
                     $slug = basename(get_permalink($postId));
-
+                    $f_id_array[] = $postId;
                     if(strstr($slug, '/')){
                         $f_url = strstr($slug, '/');
                     } else {
@@ -117,7 +119,58 @@ $f_auth = get_field('mfa_settings', 'options');
                     }
                     array_push($dataUrl['reUrl'], $f_url);
                 }
-            }
+                
+                // First lets check if the the property_exists.
+                if( $post && property_exists($post, 'post_title') ){
+                    // Lets get the current post title. & Check if the post title are NOT EQUAL to mfa || 2fa.
+                    if($post->post_title == 'mfa' || $post->post_title == '2fa'){
+                        $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
+                        error_log(print_r($get_auth_status , true));
+
+                        if($get_auth_status == 'auth_select_sms'){
+                            if($post->post_title == 'mfa'){
+                                error_log(print_r('MFA Hit' , true));
+                                    wp_redirect( esc_url(home_url()) );
+                                    exit;
+                            }
+                        }
+                        if($get_auth_status == 'auth_select_mfa'){
+                            if($post->post_title == '2fa'){
+                                error_log(print_r('2fa Hit' , true));
+                                    wp_redirect( esc_url(home_url()) );
+                                    exit;
+                            }
+                        }
+
+                    } else {
+                        // The magic part we check if any id are within the
+                        // Lets check the id both ids dont match we kill the redirect.
+                        if( $post && property_exists($post, 'ID') ){
+                            // error_log(print_r( 'ronikRedirectLoopApproval', true));
+                            if( !in_array($post->ID, $f_id_array) ){
+                                return false;                  
+                            } else {
+                                // This checks if the user is inside wp-admin
+                                if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                                    return false;
+                                }
+                            }
+                        } else {
+                            // This checks if the user is inside wp-admin
+                            if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                                return false;
+                            }
+                        }
+                    }
+                } else {
+                    // This checks if the user is inside wp-admin
+                    if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                        return false;
+                    }
+                }
+            }    
+
+
             // First lets loop through all the provided urls.
             foreach ($dataUrl['reUrl'] as $value) {
                 // If value matches with the request_url
@@ -142,49 +195,6 @@ $f_auth = get_field('mfa_settings', 'options');
                     }
                 }
             }
-
-
-
-
-
-
-
-
-            // $condition = '';
-            // foreach ($dataUrl['reUrl'] as $value) {
-            //     if($_SERVER['REQUEST_URI'] !== $value){
-            //         $condition .= ' valid ';
-            //     } else {
-            //         $condition .= ' invalid ';
-            //     }
-            // }
-
-        
-            // if (!str_contains($condition, 'invalid')) {
-
-            //     if($_SERVER['REQUEST_URI'] !== '/favicon.ico'){
-            //         $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-            //     } else {
-            //         $cookie_value =  '/';
-            //     }
-            //     // if(!$cookie_value){ $cookie_value =  '/'; }
-            //     // Lets expire the cookie after 1 day.
-            //     setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
-            //     // Pause server.
-            //     sleep(.5);
-         
-            //     if(get_permalink() !== home_url($dataUrl['reDest'])){
-
-            //         wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
-            //         exit;
-            //     }
-            // }   
-            
-            
-
-
-
-
 
         }
     }

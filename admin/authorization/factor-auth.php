@@ -5,7 +5,7 @@ use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 // Cleaning up the session variables.
 		// temp session_start();
-        session_start();
+        // session_start();
 
 
 add_action('auth-registration-page', function () {    

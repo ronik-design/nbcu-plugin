@@ -290,7 +290,7 @@ class Ronikdesign_Admin
 
 		$sms_2fa_status = get_user_meta( get_current_user_id(),'sms_2fa_status', true );
 		$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-		$get_current_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
+		$get_current_secret_2fa = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
 		// Update the status with timestamp.
 		// Keep in mind all timestamp are within the UTC timezone. For constant all around.
 		// https://www.timestamp-converter.com/
@@ -298,7 +298,7 @@ class Ronikdesign_Admin
 		$current_date = strtotime((new DateTime())->format( 'd-m-Y H:i:s' ));
 		// Lets generate the sms_2fa_secret key.
 		$sms_2fa_secret = wp_rand( 1000000, 9999999 );
-
+		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
 
 		// AUTH Section:
 			// First Check: 
@@ -356,11 +356,23 @@ class Ronikdesign_Admin
 				// Lets store the sms code and then we also send the sms code.
 				if(isset($_POST['send-sms']) && $_POST['send-sms']){
 					// Lets store the sms_2fa_secret data inside the current usermeta. 
-					if( $get_current_secret ){
-						update_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
-					} else {
-						add_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
-					}
+					// if( $get_current_secret_2fa ){
+					// 	update_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
+					// } else {
+					// 	add_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
+					// }
+					update_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
+
+
+					// Lets store the sms code timestamp in user meta.
+					// if (!$sms_code_timestamp) {
+					// 	add_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
+					// } else {
+					// 	update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
+					// }
+					update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
+
+
 					// We generate a sms message and send it to the current user
 					if( $f_auth['twilio_id'] && $f_auth['twilio_token'] && $f_auth['twilio_number'] ){
 						$account_sid = $f_auth['twilio_id'];
@@ -388,7 +400,7 @@ class Ronikdesign_Admin
 			// Second Check:
 				// Lets validate-sms-code
 				if(isset($_POST['validate-sms-code']) && $_POST['validate-sms-code']){
-					if($get_current_secret == $_POST['validate-sms-code']){
+					if($get_current_secret_2fa == $_POST['validate-sms-code']){
 						update_user_meta(get_current_user_id(), 'sms_2fa_status', $current_date);
 						$f_value['sms-success'] = "success";
 						// $f_value['sms-valid'] = "true";
@@ -421,13 +433,13 @@ class Ronikdesign_Admin
 				// Lets check the POST parameter to see if we want to send the MFA code.
 				if(isset($_POST['google2fa_code']) && $_POST['google2fa_code']){
 					$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
-					$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
+					$get_current_secret_mfa = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
 					$google2fa = new Google2FA();
 
 					if ( $mfa_status == 'mfa_unverified' ) {
 						// Lets save the google2fa_secret to the current user_meta.
 						$code = $_POST["google2fa_code"];
-						$valid = $google2fa->verifyKey($get_current_secret, $code);
+						$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
 						if ($valid) {
 							// Lets store the mfa validation data inside the current usermeta. 
 							if( $mfa_validation ){
@@ -436,7 +448,7 @@ class Ronikdesign_Admin
 								add_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 							}
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
-							// $f_value['send-mfa'] = "true";
+							$f_value['send-mfa'] = "true";
 						}
 					}  else {
 						$valid = false;
@@ -446,7 +458,7 @@ class Ronikdesign_Admin
 						} else {
 							add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 						}
-						// $f_value['send-mfa'] = "false";
+						$f_value['send-mfa'] = "false";
 					}
 					$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
 					// We build a query and redirect back to 2fa route.
@@ -476,6 +488,7 @@ class Ronikdesign_Admin
 								}
 								if($sms_2fa_status !== 'sms_2fa_unverified'){
 									update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+									update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 									wp_send_json_success('reload');
 								}
 							} else {
@@ -487,8 +500,6 @@ class Ronikdesign_Admin
 					wp_send_json_success('noreload');
 				}
 	}
-
-
 
 
 

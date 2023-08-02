@@ -5,7 +5,6 @@ use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 // Cleaning up the session variables.
 		// temp session_start();
-        session_start();
 
 
 
@@ -73,9 +72,15 @@ add_action('2fa-registration-page', function () {
         } else { ?>
             <p><?= $get_registration_status; ?></p>
             <?php
+            
+            $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
+
                 $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+                error_log(print_r($sms_2fa_status, true));
+                error_log(print_r($sms_2fa_secret, true));
+
                 // Based on the session conditions we check if valid if not we default back to the send SMS button.
-                if( $sms_2fa_secret ){ 
+                if(  isset($sms_2fa_secret) && $sms_2fa_secret !== 'invalid'  ){ 
                     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
                     $get_phone_number = substr($get_phone_number, -4);
                     // Update the status with timestamp.
@@ -98,6 +103,8 @@ add_action('2fa-registration-page', function () {
                     }
                     if( $past_date > $sms_code_timestamp ){
                         error_log(print_r( 'Expired', true));
+                        error_log(print_r( $past_date, true));
+                        error_log(print_r( $sms_code_timestamp, true));
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', '');
                     }            
@@ -177,55 +184,3 @@ add_action('2fa-registration-page', function () {
             <?php }
         }
     });
-
-
-
-// This function block is responsible for detecting the time expiration of the 2fa on page specific pages.
-function ronikdesigns_redirect_registered_2fa() {
-    $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-    $f_mfa_settings = get_field('mfa_settings', 'options');
-    if( isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time'] ){
-        $f_auth_expiration_time = $f_mfa_settings['auth_expiration_time'];
-    } else {
-        $f_auth_expiration_time = 30;
-    }
-
-    $f_auth = get_field('mfa_settings', 'options');
-    // Redirect Magic, custom function to prevent an infinite loop.
-    $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/');
-    $dataUrl['reDest'] = '/2fa/';
-    if($f_auth['auth_page_enabled']){
-        foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
-            // We check the current page id and also the page title of the 2fa.
-            if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa')){
-                // Check if user has sms_2fa_status if not add secret.
-                if (!$get_registration_status) {
-                    add_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                }
-                // Check if sms_2fa_status is not equal to unverified.
-                if (($get_registration_status !== 'sms_2fa_unverified')) {
-                    $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-                    // If past date is greater than current date. We reset to unverified & start the process all over again.
-                    if($past_date > $get_registration_status ){
-                        update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                        // Takes care of the redirection logic
-                        ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                    } else {
-                        if (str_contains($_SERVER['REQUEST_URI'], '/2fa/')) {
-                        // if($_SERVER['REQUEST_URI'] == '/2fa/'){
-                            // Lets block the user from accessing the 2fa if already authenticated.
-                            $dataUrl['reUrl'] = array('/');
-                            $dataUrl['reDest'] = '/';
-                            ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                        }
-                    }
-                } else {
-                    error_log(print_r( $get_registration_status, true));
-                    update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                    // Takes care of the redirection logic
-                    ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                }
-            }
-        }
-    }
-}
