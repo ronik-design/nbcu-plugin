@@ -106,13 +106,16 @@ add_action('2fa-registration-page', function () {
                         error_log(print_r( $past_date, true));
                         error_log(print_r( $sms_code_timestamp, true));
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                        update_user_meta(get_current_user_id(), 'sms_2fa_secret', '');
+                        update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
                     }            
                 ?>
                 <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                     <p>Last 4 digits of phone number associated with the account:</br> <?= 'xxx-xxx-'.$get_phone_number; ?></p>
                     <div id="sms-expiration"></div>
                     <script>
+                         console.log('Init Timevalidation');
+                         smsExpiredChecker();
+
                         document.addEventListener("visibilitychange", (event) => {
                         if (document.visibilityState == "visible") {
                             console.log("tab is active");
@@ -127,48 +130,55 @@ add_action('2fa-registration-page', function () {
                                 clearInterval(downloadTimer);
                                 document.getElementById("sms-expiration").innerHTML = "SMS is Expired.";
                                 setTimeout(() => {
-                                    jQuery.ajax({
-                                        type: 'post',
-                                        url: '/wp-admin/admin-post.php',
-                                        data: {
-                                            action: 'ronikdesigns_admin_auth_verification',
-                                            smsExpired: true,
-                                            // nonce: wpVars.nonce,
-                                        },
-                                        dataType: 'json',
-                                        success: data => {
-                                            if(data.success){
-                                                console.log('SMS Code Expired.');
-                                                console.log(data);
-                                                alert('The SMS Code Expired. Page will auto reload.');
-                                                setTimeout(() => {
-                                                    window.location.reload(true);
-                                                }, 500);
-                                            } else{
-                                                console.log('error');
-                                                console.log(data);
-                                                alert('Whoops! Something went wrong! Please try again later!');
-                                                setTimeout(() => {
-                                                    window.location.reload(true);
-                                                }, 500);
-                                            }
-                                        },
-                                        error: err => {
-                                            console.log(err);
-                                            alert('Whoops! Something went wrong! Please try again later!');
-                                            // Lets Reload.
+                                    smsExpiredChecker();
+                                    // window.location = window.location.pathname + "?sms-success=success";
+                                }, 1000);
+                            } else {
+                                document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + timeleft + " seconds";
+                                // document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + Math.floor(timeleft/60 ) + " minutes";
+                            }
+                            timeleft -= 1;
+                        }, 1000);
+
+                        function smsExpiredChecker(){
+                            jQuery.ajax({
+                                type: 'post',
+                                url: '/wp-admin/admin-post.php',
+                                data: {
+                                    action: 'ronikdesigns_admin_auth_verification',
+                                    smsExpired: true,
+                                    // nonce: wpVars.nonce,
+                                },
+                                dataType: 'json',
+                                success: data => {
+                                    if(data.success){
+                                        console.log('SMS Code Expired.');
+                                        console.log(data);
+                                        if(data.data !== 'noreload'){
+                                            alert('The SMS Code Expired. Page will auto reload.');
                                             setTimeout(() => {
                                                 window.location.reload(true);
                                             }, 500);
                                         }
-                                    });
-                                    // window.location = window.location.pathname + "?sms-success=success";
-                                }, 1000);
-                            } else {
-                                document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + Math.floor(timeleft/60 ) + " minutes";
-                            }
-                            timeleft -= 1;
-                        }, 1000);
+                                    } else{
+                                        console.log('error');
+                                        console.log(data);
+                                        alert('Whoops! Something went wrong! Please try again later!');
+                                        setTimeout(() => {
+                                            window.location.reload(true);
+                                        }, 500);
+                                    }
+                                },
+                                error: err => {
+                                    console.log(err);
+                                    alert('Whoops! Something went wrong! Please try again later!');
+                                    // Lets Reload.
+                                    setTimeout(() => {
+                                        window.location.reload(true);
+                                    }, 500);
+                                }
+                            }); 
+                        }
                     </script>
                     <input type="text" name="validate-sms-code" value="" required>
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">

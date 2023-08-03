@@ -6,3 +6,17 @@
  .mfa-wrapper, .auth-wrapper, .twofa-wrapper {
     padding: 50px;
  }
+
+ form button{
+   margin-top: 15px;
+   padding: 5px;
+   background-color: transparent;
+   border: solid 1px #000000; 
+   font-size: 1em;
+   opacity: 1;
+   cursor: pointer;
+   transition: all .4s;
+ }
+ form button:hover{
+   opacity: 0.8;
+ }

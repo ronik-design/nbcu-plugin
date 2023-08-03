@@ -299,6 +299,7 @@ class Ronikdesign_Admin
 		// Lets generate the sms_2fa_secret key.
 		$sms_2fa_secret = wp_rand( 1000000, 9999999 );
 		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
+		$f_expiration_time = $f_auth['sms_expiration_time'];
 
 		// AUTH Section:
 			// First Check: 
@@ -421,9 +422,34 @@ class Ronikdesign_Admin
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['smsExpired']) && $_POST['smsExpired']){
 					error_log(print_r( 'Expired', true));
-					update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-					update_user_meta(get_current_user_id(), 'sms_2fa_secret', '');
-					wp_send_json_success('reload');
+                    if($f_expiration_time){
+                        $f_sms_expiration_time = $f_expiration_time;
+                    } else{
+                        $f_sms_expiration_time = 10;
+                    }
+					$f_sms_expiration_time = 1;
+                    $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
+					
+
+					error_log(print_r( $past_date, true));
+					error_log(print_r( $sms_code_timestamp, true));
+
+                    if( $past_date > $sms_code_timestamp ){
+                        error_log(print_r( 'Expired', true));
+                        error_log(print_r( $past_date, true));
+                        error_log(print_r( $sms_code_timestamp, true));
+                        update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+                        update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+						wp_send_json_success('reload');
+                    }  else {
+						wp_send_json_success('noreload');
+					}
+
+
+
+					// update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+					// update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+					// wp_send_json_success('reload');
 				}
 
 

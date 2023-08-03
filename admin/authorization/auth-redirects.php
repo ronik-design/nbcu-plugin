@@ -236,6 +236,8 @@ function ronikdesigns_redirect_registered_2fa() {
                 var timeoutTime = <?= $auth_idle_time; ?>;
                 var timeoutTimer = setTimeout(idleTimeValidation, timeoutTime);
                 jQuery(document).ready(function() {
+                    console.log('Init Timevalidation');
+                    timeValidationAjax();
                     // Okay lets check for mousemove, mousedown, keydown
                     $('body').bind('mousemove mousedown keydown', function(event) {
                         clearTimeout(timeoutTimer);
