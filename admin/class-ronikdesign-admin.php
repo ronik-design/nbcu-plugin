@@ -278,6 +278,7 @@ class Ronikdesign_Admin
 	function ronikdesigns_admin_auth_verification() {
 		// Check if user is logged in.
 		if (!is_user_logged_in()) {
+			wp_send_json_success('noreload');
 			return;
 		}
 		// Start the session

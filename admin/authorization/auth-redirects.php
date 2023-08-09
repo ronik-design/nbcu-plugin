@@ -209,7 +209,12 @@ function ronikdesigns_redirect_registered_2fa() {
 
 
 
-    function timeValidationExcution(){ ?>
+    function timeValidationExcution(){ 
+		// Check if user is logged in.
+		if (!is_user_logged_in()) {
+			return;
+		}
+    ?>
         <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
         <script>
             // This guy triggers a reload when user leaves page.
@@ -287,6 +292,6 @@ function ronikdesigns_redirect_registered_2fa() {
             });
         </script>
     <?php };
-    // add_action('wp_footer', 'timeValidationExcution');
+    add_action('wp_footer', 'timeValidationExcution');
 
 ?>
