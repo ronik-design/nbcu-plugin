@@ -528,6 +528,8 @@ class Ronikdesign_Admin
 				}
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
+					// q4sMtL8Ni7nNvxz7iGiCeuvFt
+					
 					if( isset($f_auth['auth_expiration_time']) || $f_auth['auth_expiration_time'] ){
 						$f_auth_expiration_time = $f_auth['auth_expiration_time'];
 					} else {
@@ -541,6 +543,8 @@ class Ronikdesign_Admin
 
 						wp_send_json_success('reload');
 					} else {
+						update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
+
 						// Catch ALL
 						wp_send_json_success('noreload');
 					}
