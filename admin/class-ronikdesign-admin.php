@@ -536,11 +536,8 @@ class Ronikdesign_Admin
 
 					if($past_date > $mfa_status ){
                         update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-						if( $mfa_validation ){
-							update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-						} else {
-							add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-						}
+						update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+
 						wp_send_json_success('reload');
 					} else {
 						// Catch ALL

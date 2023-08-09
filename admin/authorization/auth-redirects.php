@@ -236,7 +236,7 @@ function ronikdesigns_redirect_registered_2fa() {
                 var timeoutTime = <?= $auth_idle_time; ?>;
                 var timeoutTimer = setTimeout(idleTimeValidation, timeoutTime);
                 jQuery(document).ready(function() {
-                    console.log('Init Timevalidation');
+                    console.log('Init Time Validation');
                     timeValidationAjax('invalid', 'valid');
                     // Okay lets check for mousemove, mousedown, keydown
                     $('body').bind('mousemove mousedown keydown', function(event) {
@@ -245,14 +245,14 @@ function ronikdesigns_redirect_registered_2fa() {
                     });
                     setTimeout(function() {
                         console.log('ExpirationTimerExpiration');
-                        alert('Expiration Timer Expiration');
+                        // alert('Expiration Timer Expiration');
                         timeValidationAjax('valid', 'invalid');
                     }, timeoutTime);
 
                 });
                 function idleTimeValidation(){
                     console.log('idleTimeValidation');
-                    alert('Idle Time Expiration');
+                    // alert('Idle Time Expiration');
                     timeValidationAjax('valid', 'invalid');
                 }
                 function timeValidationAjax( killValidation, timeChecker ){
