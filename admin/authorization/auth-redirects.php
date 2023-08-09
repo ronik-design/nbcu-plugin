@@ -155,7 +155,7 @@ function ronikdesigns_redirect_registered_2fa() {
     // Redirect Magic, custom function to prevent an infinite loop.
     $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/');
     $dataUrl['reDest'] = '/2fa/';
-    
+
     // if($f_auth['auth_page_enabled']){
     //     foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
             // We check the current page id and also the page title of the 2fa.
@@ -237,7 +237,7 @@ function ronikdesigns_redirect_registered_2fa() {
                 var timeoutTimer = setTimeout(idleTimeValidation, timeoutTime);
                 jQuery(document).ready(function() {
                     console.log('Init Timevalidation');
-                    timeValidationAjax();
+                    timeValidationAjax('invalid', 'valid');
                     // Okay lets check for mousemove, mousedown, keydown
                     $('body').bind('mousemove mousedown keydown', function(event) {
                         clearTimeout(timeoutTimer);
@@ -245,21 +245,24 @@ function ronikdesigns_redirect_registered_2fa() {
                     });
                     setTimeout(function() {
                         console.log('ExpirationTimerExpiration');
-                        timeValidationAjax();
+                        alert('Expiration Timer Expiration');
+                        timeValidationAjax('valid', 'invalid');
                     }, timeoutTime);
 
                 });
                 function idleTimeValidation(){
                     console.log('idleTimeValidation');
-                    timeValidationAjax();
+                    alert('Idle Time Expiration');
+                    timeValidationAjax('valid', 'invalid');
                 }
-                function timeValidationAjax(){
+                function timeValidationAjax( killValidation, timeChecker ){
                     jQuery.ajax({
                         type: 'POST',
                         url: "<?php echo esc_url( admin_url('admin-post.php') ); ?>",
                         data: {
                             action: 'ronikdesigns_admin_auth_verification',
-                            timeChecker: true
+                            killValidation: killValidation,
+                            timeChecker: timeChecker,
                         },
                         success: data => {
                             if(data.success){

@@ -100,7 +100,7 @@ class Ronikdesign_Admin
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-		
+
 		 if ( ! wp_script_is( 'jquery', 'enqueued' )) {
 			wp_enqueue_script($this->plugin_name.'jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js', array(), null, true);
 			$scriptName = $this->plugin_name.'jquery';
@@ -134,7 +134,7 @@ class Ronikdesign_Admin
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-		
+
 		// Detect if jQuery is included if not lets modernize with the latest stable version.
 		if ( ! wp_script_is( 'jquery', 'enqueued' )) {
 			wp_enqueue_script($this->plugin_name.'jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js', array(), null, true);
@@ -202,7 +202,7 @@ class Ronikdesign_Admin
 		}
 		// Include the auth.
 		foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
-			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.  
+			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
 			// We add the logic into the theme.
 			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
 			if(!$f_bypasser){
@@ -265,11 +265,11 @@ class Ronikdesign_Admin
 			remove_menu_page('acf-options-developer-settings');
 		}
 		if ($curr_experience !== 'advanced') {
-			remove_menu_page('index.php'); //Dashboard  
-			remove_menu_page('options-general.php'); //Settings  
-			remove_menu_page('tools.php'); //Tools  
-			remove_menu_page('edit.php?post_type=acf-field-group');  //Hide ACF Field Groups  
-			remove_menu_page('themes.php'); //Appearance  
+			remove_menu_page('index.php'); //Dashboard
+			remove_menu_page('options-general.php'); //Settings
+			remove_menu_page('tools.php'); //Tools
+			remove_menu_page('edit.php?post_type=acf-field-group');  //Hide ACF Field Groups
+			remove_menu_page('themes.php'); //Appearance
 			remove_menu_page('plugins.php'); //Plugins
 			remove_menu_page('acf-options-developer-settings');
 		}
@@ -302,20 +302,20 @@ class Ronikdesign_Admin
 		$f_expiration_time = $f_auth['sms_expiration_time'];
 
 		// AUTH Section:
-			// First Check: 
+			// First Check:
 				// Lets get the auth-select value.
 				if(isset($_POST['auth-select']) && $_POST['auth-select']){
 					// Check if value is 2fa.
 					if($_POST['auth-select'] == '2fa'){
 						// Check if user has a phone number.
-						if($get_phone_number){ 
+						if($get_phone_number){
 							update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
 							$f_value['auth-select'] = "2fa";
 							$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
 							// We build a query and redirect back to 2fa route.
 							wp_redirect( esc_url(home_url($r_redirect)) );
 							exit;
-						} else {	
+						} else {
 							// If user has no phone number. We set the auth_status to auth_select_sms-missing.
 							update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
 							$f_value['auth-select'] = "2fa";
@@ -331,7 +331,7 @@ class Ronikdesign_Admin
 						$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
 						// We build a query and redirect back to 2fa route.
 						wp_redirect( esc_url(home_url($r_redirect)) );
-						exit;	
+						exit;
 					}
 				}
 			// Second Check:
@@ -343,20 +343,20 @@ class Ronikdesign_Admin
 					update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
 					// Update the status with sms_2fa_unverified
 					update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-					
+
 					$f_value['auth-phone_number'] = "valid";
 					$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
 					// We build a query and redirect back to 2fa route.
 					wp_redirect( esc_url(home_url($r_redirect)) );
 					exit;
 				}
-		
-				
+
+
 		// SMS Section:
 			// First Check:
 				// Lets store the sms code and then we also send the sms code.
 				if(isset($_POST['send-sms']) && $_POST['send-sms']){
-					// Lets store the sms_2fa_secret data inside the current usermeta. 
+					// Lets store the sms_2fa_secret data inside the current usermeta.
 					// if( $get_current_secret_2fa ){
 					// 	update_user_meta(get_current_user_id(), 'sms_2fa_secret', $sms_2fa_secret);
 					// } else {
@@ -429,7 +429,7 @@ class Ronikdesign_Admin
                     }
 					$f_sms_expiration_time = 1;
                     $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-					
+
 
 					error_log(print_r( $past_date, true));
 					error_log(print_r( $sms_code_timestamp, true));
@@ -455,7 +455,7 @@ class Ronikdesign_Admin
 
 
 		// MFA Section:
-			// First Check:	
+			// First Check:
 				// Lets check the POST parameter to see if we want to send the MFA code.
 				if(isset($_POST['google2fa_code']) && $_POST['google2fa_code']){
 					$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
@@ -467,7 +467,7 @@ class Ronikdesign_Admin
 						$code = $_POST["google2fa_code"];
 						$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
 						if ($valid) {
-							// Lets store the mfa validation data inside the current usermeta. 
+							// Lets store the mfa validation data inside the current usermeta.
 							if( $mfa_validation ){
 								update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 							} else {
@@ -478,7 +478,7 @@ class Ronikdesign_Admin
 						}
 					}  else {
 						$valid = false;
-						// Lets store the mfa validation data inside the current usermeta. 
+						// Lets store the mfa validation data inside the current usermeta.
 						if( $mfa_validation ){
 							update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 						} else {
@@ -494,10 +494,10 @@ class Ronikdesign_Admin
 
 
 
-		// Global Validation Section:		
+		// Global Validation Section:
 			// Second Check:
 				// Lets check to see if the user is idealing to long.
-				if(isset($_POST['timeChecker']) && $_POST['timeChecker']){
+				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
 					// Lets check if user is accessing a locked page.
 					if($f_auth['auth_page_enabled']){
 						foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
@@ -522,8 +522,30 @@ class Ronikdesign_Admin
 							}
 						}
 					}
-					// Catch ALL 
+					// Catch ALL
 					wp_send_json_success('noreload');
+				}
+				// Lets check to see if the user is idealing to long.
+				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
+					if( isset($f_auth['auth_expiration_time']) || $f_auth['auth_expiration_time'] ){
+						$f_auth_expiration_time = $f_auth['auth_expiration_time'];
+					} else {
+						$f_auth_expiration_time = 30;
+					}
+                    $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
+
+					if($past_date > $mfa_status ){
+                        update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+						if( $mfa_validation ){
+							update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+						} else {
+							add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+						}
+						wp_send_json_success('reload');
+					} else {
+						// Catch ALL
+						wp_send_json_success('noreload');
+					}
 				}
 	}
 
@@ -570,7 +592,7 @@ class Ronikdesign_Admin
 					wp_set_auth_cookie($user->ID);
 					wp_set_current_user($user->ID);
 					do_action('wp_login', $user->user_login, $user);
-	
+
 					$f_value['pr-success'] = "success";
 				}
 
@@ -585,7 +607,7 @@ class Ronikdesign_Admin
 		exit;
 	}
 
-	
+
 
 	/**
 	 * Init Page Migration, Basically swap out the original link with the new link.
@@ -667,9 +689,9 @@ class Ronikdesign_Admin
 		add_filter( 'http_request_timeout', 'ronikdesigns_timeout_extend' );
 
 		function recursive_delete($number){
-			$post_type = get_field('page_media_cleaner_post_type_field_ronikdesign', 'options');	
+			$post_type = get_field('page_media_cleaner_post_type_field_ronikdesign', 'options');
 			$select_post_type = $post_type;
-			$post_mime_type = get_field('page_media_cleaner_post_mime_type_field_ronikdesign', 'options');			
+			$post_mime_type = get_field('page_media_cleaner_post_mime_type_field_ronikdesign', 'options');
 			// https://developer.wordpress.org/reference/hooks/mime_types/
 			if($post_mime_type){
 				$select_attachment_type = array();
@@ -677,36 +699,36 @@ class Ronikdesign_Admin
 					if($type == 'jpg'){
 						$select_attachment_type['jpg'] = "image/jpg";
 						$select_attachment_type['jpeg'] = "image/jpeg";
-						$select_attachment_type['jpe'] = "image/jpe";			
+						$select_attachment_type['jpe'] = "image/jpe";
 					} else if($type == 'gif'){
-						$select_attachment_type['gif'] = "image/gif";	
+						$select_attachment_type['gif'] = "image/gif";
 					} else if($type == 'png'){
-						$select_attachment_type['png'] = "image/png";	
+						$select_attachment_type['png'] = "image/png";
 					} else if($type == 'pdf'){
-						$select_attachment_type['pdf'] = "application/pdf";	
+						$select_attachment_type['pdf'] = "application/pdf";
 					} else if($type == 'video'){
-						$select_attachment_type['asf|asx'] = "video/x-ms-asf";	
-						$select_attachment_type['wmv'] = "video/x-ms-wmv";	
-						$select_attachment_type['wmx'] = "video/x-ms-wmx";	
-						$select_attachment_type['wm'] = "video/x-ms-wm";	
-						$select_attachment_type['avi'] = "video/avi";	
-						$select_attachment_type['divx'] = "video/divx";	
-						$select_attachment_type['flv'] = "video/x-flv";	
-						$select_attachment_type['mov|qt'] = "video/quicktime";	
-						$select_attachment_type['mpeg|mpg|mpe'] = "video/mpeg";	
-						$select_attachment_type['mp4|m4v'] = "video/mp4";	
-						$select_attachment_type['ogv'] = "video/ogg";	
-						$select_attachment_type['webm'] = "video/webm";	
+						$select_attachment_type['asf|asx'] = "video/x-ms-asf";
+						$select_attachment_type['wmv'] = "video/x-ms-wmv";
+						$select_attachment_type['wmx'] = "video/x-ms-wmx";
+						$select_attachment_type['wm'] = "video/x-ms-wm";
+						$select_attachment_type['avi'] = "video/avi";
+						$select_attachment_type['divx'] = "video/divx";
+						$select_attachment_type['flv'] = "video/x-flv";
+						$select_attachment_type['mov|qt'] = "video/quicktime";
+						$select_attachment_type['mpeg|mpg|mpe'] = "video/mpeg";
+						$select_attachment_type['mp4|m4v'] = "video/mp4";
+						$select_attachment_type['ogv'] = "video/ogg";
+						$select_attachment_type['webm'] = "video/webm";
 						$select_attachment_type['mkv'] = "video/x-matroska";
 					} else if($type == 'misc'){
-						$select_attachment_type['js'] = "application/javascript";	
-						$select_attachment_type['pdf'] = "application/pdf";	
-						$select_attachment_type['tar'] = "application/x-tar";	
-						$select_attachment_type['zip'] = "application/zip";	
-						$select_attachment_type['gz|gzip'] = "application/x-gzip";	
-						$select_attachment_type['rar'] = "application/rar";	
-						$select_attachment_type['txt|asc|c|cc|h|srt'] = "text/plain";	
-						$select_attachment_type['csv'] = "text/csv";	
+						$select_attachment_type['js'] = "application/javascript";
+						$select_attachment_type['pdf'] = "application/pdf";
+						$select_attachment_type['tar'] = "application/x-tar";
+						$select_attachment_type['zip'] = "application/zip";
+						$select_attachment_type['gz|gzip'] = "application/x-gzip";
+						$select_attachment_type['rar'] = "application/rar";
+						$select_attachment_type['txt|asc|c|cc|h|srt'] = "text/plain";
+						$select_attachment_type['csv'] = "text/csv";
 					}
 				}
 			}
@@ -726,7 +748,7 @@ class Ronikdesign_Admin
 					'numberposts' => $select_numberposts,
 					'fields' => 'ids',
 					'post_mime_type' => $select_attachment_type,
-					'orderby' => 'date', 
+					'orderby' => 'date',
 					'order'  => 'DESC',
 				));
 				// This will allow us to collect all the image ids.
@@ -747,9 +769,9 @@ class Ronikdesign_Admin
 					'numberposts' => -1,
 					'fields' => 'ids',
 					'post_status'  => $select_post_status,
-					'orderby' => 'date', 
+					'orderby' => 'date',
 					'order'  => 'DESC',
-				));				
+				));
 				$all_post_thumbnail_ids = array();
 				$all_image_attachement_ids = array();
 				if ($get_all_post_pages) {
@@ -760,7 +782,7 @@ class Ronikdesign_Admin
 							'fields' => 'ids',
 							'post_parent' => $pageID,
 							'post_mime_type' => $select_attachment_type,
-							'orderby' => 'date', 
+							'orderby' => 'date',
 							'order'  => 'DESC',
 						));
 						if ($attachments) {
@@ -773,7 +795,7 @@ class Ronikdesign_Admin
 						}
 					}
 				}
-	
+
 			// Lets remove any duplicated matches & set to new array.
 				// First let remove the thumbnail id from the bulk main id array
 				if($all_post_thumbnail_ids){
@@ -806,10 +828,10 @@ class Ronikdesign_Admin
 							array(
 								'post_status'  => $select_post_status,
 								'post_type' => $select_post_type,
-								'fields' => 'ids',		
+								'fields' => 'ids',
 								'posts_per_page' => -1,
 								's'  => ':'.$image_id,
-								'orderby' => 'date', 
+								'orderby' => 'date',
 								'order'  => 'DESC',
 							),
 						);
@@ -825,10 +847,10 @@ class Ronikdesign_Admin
 						$f_postsattached = get_posts( array(
 							'post_status'  => $select_post_status,
 							'post_type' => $select_post_type,
-							'fields' => 'ids',		
+							'fields' => 'ids',
 							'posts_per_page' => -1,
 							's'  => end($pieces),
-							'orderby' => 'date', 
+							'orderby' => 'date',
 							'order'  => 'DESC',
 						) );
 						if($f_postsattached){
@@ -840,7 +862,7 @@ class Ronikdesign_Admin
 						}
 					}
 				}
-				
+
 			// Lets remove any duplicated matches & set to new array.
 				// First let remove the Gutenberg id from the bulk main id array
 				if($wp_postsid_gutenberg_image_array){
@@ -854,7 +876,7 @@ class Ronikdesign_Admin
 					$arr_checkpoint_2b = $arr_checkpoint_2a;
 				}
 				// 'reindex' array to cleanup...
-				$arr_checkpoint_2c = array_values(array_filter($arr_checkpoint_2b)); 
+				$arr_checkpoint_2c = array_values(array_filter($arr_checkpoint_2b));
 
 			// CHECKPOINT COMPLETE
 				error_log(print_r('Remove Gutenberg id from bulk main id array: '.count($arr_checkpoint_2a) , true));
@@ -865,7 +887,7 @@ class Ronikdesign_Admin
 
 			// CHECKPOINT 3
 				error_log(print_r('CHECKPOINT 3' , true));
-			
+
 				$wp_postsmeta_acf_repeater_image_array = array();
 				$wp_postsmeta_acf_repeater_image_url_array = array();
 				if($arr_checkpoint_2c){
@@ -883,7 +905,7 @@ class Ronikdesign_Admin
 								'compare' => 'LIKE',
 								)
 							),
-							'orderby' => 'date', 
+							'orderby' => 'date',
 							'order'  => 'DESC',
 						) );
 						if($f_posts){
@@ -894,7 +916,7 @@ class Ronikdesign_Admin
 							}
 						}
 
-						// This part is critical we check all the postmeta for any image ids in the acf serialized array. AKA any repeater fields or gallery fields.		
+						// This part is critical we check all the postmeta for any image ids in the acf serialized array. AKA any repeater fields or gallery fields.
 						$f_posts_2 = get_posts( array(
 							'fields' => 'ids',
 							'post_type' => $select_post_type,
@@ -906,7 +928,7 @@ class Ronikdesign_Admin
 									'compare' => 'LIKE',
 								)
 							),
-							'orderby' => 'date', 
+							'orderby' => 'date',
 							'order'  => 'DESC',
 						));
 						if($f_posts_2){
@@ -916,8 +938,8 @@ class Ronikdesign_Admin
 								}
 							}
 						}
-					}	
-				}	
+					}
+				}
 
 
 			// Lets remove any duplicated matches & set to new array.
@@ -957,7 +979,7 @@ class Ronikdesign_Admin
 								'compare' => '==',
 								)
 							),
-							'orderby' => 'date', 
+							'orderby' => 'date',
 							'order'  => 'DESC',
 						));
 						if($f_posts){
@@ -966,9 +988,9 @@ class Ronikdesign_Admin
 									$wp_postsmeta_acf_array[] = $image_id;
 								}
 							}
-						}		
-					}	
-				}	
+						}
+					}
+				}
 
 			// This part is critical we check all the postmeta for any image ids in the meta value
 				if($wp_postsmeta_acf_array){
@@ -987,13 +1009,13 @@ class Ronikdesign_Admin
 
 			// CHECKPOINT 5
 				error_log(print_r('CHECKPOINT 5' , true));
-										
+
 				$wp_infiles_array = array();
 				if($arr_checkpoint_4b){
 					foreach($arr_checkpoint_4b as $image_id){
-						$wp_infiles_array[] = ronikdesigns_receiveAllFiles_ronikdesigns($image_id);						
-					}	
-				}	
+						$wp_infiles_array[] = ronikdesigns_receiveAllFiles_ronikdesigns($image_id);
+					}
+				}
 
 			// This part is critical we check all the php files within the active theme directory.
 				if($wp_infiles_array){
@@ -1072,8 +1094,8 @@ class Ronikdesign_Admin
 				$upload_dir   = wp_upload_dir();
 				$link = wp_get_attachment_image_url( $media_cleaner['image_id'], 'full' );
 				$file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $link);
-				$file_name = explode('/', $link);	
-				
+				$file_name = explode('/', $link);
+
 				//Year in YYYY format.
 				$year = date("Y");
 				//Month in mm format, with leading zeros.
@@ -1104,7 +1126,7 @@ class Ronikdesign_Admin
 				if( $media_cleaner == end($f_media_cleaner) ){
 					// Get the array count..
 					update_option( 'options_page_media_cleaner_field' , '' );
-					// sleep(1);				
+					// sleep(1);
 					// Send sucess message!
 					wp_send_json_success('Done');
 				}
@@ -1150,7 +1172,7 @@ class Ronikdesign_Admin
 
 		// }
 	}
-	
+
 
 
 	function ajax_do_init_analytics() {
