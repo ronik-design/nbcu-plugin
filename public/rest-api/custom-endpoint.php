@@ -23,8 +23,8 @@ function ronikdesigns_apikey_data( $data ) {
             case "ronik_media_cleaner":
                 $f_apikey_field_retrieval = 'ronik_media_cleaner';
                 break;
-            case "ronik_second_addon":
-                $f_apikey_field_retrieval = 'ronik_second_addon';
+            case "ronik_optimization":
+                $f_apikey_field_retrieval = 'ronik_optimization';
                 break;
             case "ronik_third_addon":
                 $f_apikey_field_retrieval = 'ronik_third_addon';
