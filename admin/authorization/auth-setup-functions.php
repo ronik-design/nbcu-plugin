@@ -9,6 +9,8 @@ use Twilio\Rest\Client;
 
 
 $f_auth = get_field('mfa_settings', 'options');
+
+error_log(print_r($f_auth, true));
 // Frontend Creation of Authentication Pages.
     // This basically auto create the page it doesnt already exist. It will also auto assign the specific template.
     function ronikdesigns_add_custom_auth_page($f_auth) {
