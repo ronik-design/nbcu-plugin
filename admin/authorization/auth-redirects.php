@@ -295,12 +295,10 @@ function ronikdesigns_redirect_registered_2fa() {
                             } else{
                                 console.log('error');
                                 console.log(data);
-                                console.log(err);
+                                console.log(data.data);
                                 // window.location.reload(true);
                             }
-                            console.log('error');
                             console.log(data);
-                            console.log(err);
                         },
                         error: err => {
                             console.log(err);

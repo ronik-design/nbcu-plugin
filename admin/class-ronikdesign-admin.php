@@ -530,8 +530,9 @@ class Ronikdesign_Admin
 				}
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
-					error_log(print_r('Time Checker Noewww' , true));
-					wp_send_json_success('noreload');
+					error_log(print_r('Time Checker New' , true));
+
+					error_log(print_r($f_auth_expiration_time , true));
 
 					// q4sMtL8Ni7nNvxz7iGiCeuvFt
 					if( isset($f_auth_expiration_time) || $f_auth_expiration_time ){
@@ -539,7 +540,14 @@ class Ronikdesign_Admin
 					} else {
 						$f_auth_expiration_time = 30;
 					}
+					error_log(print_r($f_auth_expiration_time , true));
+
                     $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
+
+					error_log(print_r($past_date , true));
+
+					error_log(print_r('Time Checker Noewww' , true));
+					wp_send_json_success('noreload');
 
 
 					// // Lets check if user is accessing a locked page.
