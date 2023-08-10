@@ -437,15 +437,7 @@ class Ronikdesign_Admin
                     }
 					$f_sms_expiration_time = 1;
                     $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-
-
-					error_log(print_r( $past_date, true));
-					error_log(print_r( $sms_code_timestamp, true));
-
                     if( $past_date > $sms_code_timestamp ){
-                        error_log(print_r( 'Expired', true));
-                        error_log(print_r( $past_date, true));
-                        error_log(print_r( $sms_code_timestamp, true));
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 						wp_send_json_success('reload');
@@ -538,7 +530,9 @@ class Ronikdesign_Admin
 				}
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
-					error_log(print_r('Time Checker' , true));
+					error_log(print_r('Time Checker Noewww' , true));
+					wp_send_json_success('noreload');
+
 					// q4sMtL8Ni7nNvxz7iGiCeuvFt
 					if( isset($f_auth_expiration_time) || $f_auth_expiration_time ){
 						$f_auth_expiration_time = $f_auth_expiration_time;
@@ -553,12 +547,8 @@ class Ronikdesign_Admin
 					// 	foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
 					// 		// We check the current page id and also the page title of the 2fa.
 					// 		if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
-								error_log(print_r('Time Checker 2' , true));
-								error_log(print_r($past_date , true));
-								error_log(print_r($mfa_status , true));
 								if($mfa_status !== 'mfa_unverified'){
 									if($past_date > $mfa_status ){
-										error_log(print_r('Time Checker 3' , true));
 										update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
 										update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 										wp_send_json_success('reload');
