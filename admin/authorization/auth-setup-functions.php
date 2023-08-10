@@ -14,7 +14,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
 
 // Frontend Creation of Authentication Pages.
     // This basically auto create the page it doesnt already exist. It will also auto assign the specific template.
-    function ronikdesigns_add_custom_auth_page($f_auth) {
+    function ronikdesigns_add_custom_auth_page() {
         // Check if MFA && 2fa is enabled.
         if( isset($f_enable_mfa_settings) && isset($f_enable_2fa_settings) ){
             if($f_enable_mfa_settings && $f_enable_2fa_settings){
@@ -75,7 +75,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
             }
         }
     }
-    ronikdesigns_add_custom_auth_page($f_auth);
+    ronikdesigns_add_custom_auth_page();
 
     // If page template assignment fails we add a backup plan to auto assing the page template.
     function ronikdesigns_reserve_auth_page_template( $page_template ){
