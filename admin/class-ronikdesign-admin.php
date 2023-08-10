@@ -291,10 +291,8 @@ class Ronikdesign_Admin
 		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
 		$f_twilio_number = get_option('options_mfa_settings_twilio_number');
 
-
 		// $f_auth_page_enabled = get_field('options_mfa_settings_auth_page_enabled', 'options');
 		$f_auth_expiration_time = get_option('options_mfa_settings_auth_expiration_time');
-		
 
 		$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
 		$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
