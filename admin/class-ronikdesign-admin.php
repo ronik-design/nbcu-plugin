@@ -499,25 +499,28 @@ class Ronikdesign_Admin
 			// Second Check:
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
+					error_log(print_r('Kill Validation' , true));
 					// Lets check if user is accessing a locked page.
 					if($f_auth['auth_page_enabled']){
 						foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
 							// We check the current page id and also the page title of the 2fa.
 							if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
+								error_log(print_r('Kill Validation 2' , true));
+								error_log(print_r($mfa_status , true));
 								if($mfa_status !== 'mfa_unverified'){
+									error_log(print_r('Kill Validation 3' , true));
 									update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-									if( $mfa_validation ){
-										update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-									} else {
-										add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-									}
+									update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 									wp_send_json_success('reload');
 								}
 								if($sms_2fa_status !== 'sms_2fa_unverified'){
 									update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
 									update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+
 									wp_send_json_success('reload');
 								}
+								error_log(print_r('Kill Validation 4' , true));
+								wp_send_json_success('noreload');
 							} else {
 								wp_send_json_success('noreload');
 							}
@@ -528,8 +531,8 @@ class Ronikdesign_Admin
 				}
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
+					error_log(print_r('Time Checker' , true));
 					// q4sMtL8Ni7nNvxz7iGiCeuvFt
-					
 					if( isset($f_auth['auth_expiration_time']) || $f_auth['auth_expiration_time'] ){
 						$f_auth_expiration_time = $f_auth['auth_expiration_time'];
 					} else {
@@ -537,17 +540,33 @@ class Ronikdesign_Admin
 					}
                     $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
 
-					if($past_date > $mfa_status ){
-                        update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-						update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 
-						wp_send_json_success('reload');
-					} else {
-						update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
-
-						// Catch ALL
-						wp_send_json_success('noreload');
+					// Lets check if user is accessing a locked page.
+					if($f_auth['auth_page_enabled']){
+						foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
+							// We check the current page id and also the page title of the 2fa.
+							if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
+								error_log(print_r('Time Checker 2' , true));
+								error_log(print_r($past_date , true));
+								error_log(print_r($mfa_status , true));
+								if($mfa_status !== 'mfa_unverified'){
+									if($past_date > $mfa_status ){
+										error_log(print_r('Time Checker 3' , true));
+										update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+										update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+										wp_send_json_success('reload');
+									}
+								}
+								if($sms_2fa_status !== 'sms_2fa_unverified'){
+									update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+									update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+									wp_send_json_success('reload');
+								}
+							}
+						}
 					}
+					// Catch ALL
+					wp_send_json_success('noreload');
 				}
 	}
 

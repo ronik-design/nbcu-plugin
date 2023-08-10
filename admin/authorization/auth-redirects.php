@@ -227,37 +227,52 @@ function ronikdesigns_redirect_registered_2fa() {
             }
             });
             jQuery(document).ready(function(){
+                console.log('Lets check the timeout');
+                // Lets trigger the validation on page load.
+                timeValidationAjax('invalid', 'valid');
                 <?php
                 	$f_auth = get_field('mfa_settings', 'options');
                     $auth_idle_time = $f_auth['auth_idle_time'];
-                	// $auth_idle_time = get_user_meta(get_current_user_id(), 'auth_idle_time', true);
                     if($auth_idle_time){
                         $auth_idle_time = $auth_idle_time * 60000; // milliseconds to minutes conversion.
-                        // $auth_idle_time = $auth_idle_time * 10;
+                        // $auth_idle_time = $auth_idle_time * 5000; // milliseconds to minutes conversion.
                     } else{
                         $auth_idle_time = 15000;
                     }
-                ?>
-                var timeoutTime = <?= $auth_idle_time; ?>;
-                var timeoutTimer = setTimeout(idleTimeValidation, timeoutTime);
-                jQuery(document).ready(function() {
-                    console.log('Init Time Validation');
-                    // timeValidationAjax('invalid', 'valid');
-                    // Okay lets check for mousemove, mousedown, keydown
-                    $('body').bind('mousemove mousedown keydown', function(event) {
-                        clearTimeout(timeoutTimer);
-                        timeoutTimer = setTimeout(idleTimeValidation, timeoutTime);
-                    });
-                    setTimeout(function() {
-                        console.log('ExpirationTimerExpiration');
-                        // alert('Expiration Timer Expiration');
-                        timeValidationAjax('valid', 'invalid');
-                    }, timeoutTime);
 
+                    $auth_max_time = $f_auth['auth_expiration_time'];
+                    if($auth_max_time){
+                        $auth_max_time = $auth_max_time * 60000; // milliseconds to minutes conversion.
+                        // $auth_max_time = $auth_max_time * 5000; // milliseconds to minutes conversion.
+                    } else{
+                        $auth_max_time = 15000;
+                    }
+
+
+
+                ?>
+                var timeoutTimeMax = <?= $auth_max_time; ?>;
+                var timeoutTimeIdle = <?= $auth_idle_time; ?>;
+                console.log(timeoutTimeIdle);
+                console.log(timeoutTimeMax);
+
+                var timeoutTimer = setTimeout(idleTimeValidation, timeoutTimeIdle);
+                  // This is a simple countdown function. That when the function time is up we trigger the kill code on mfa status..
+                $('body').bind('mousemove mousedown keydown', function(event) {
+                    clearTimeout(timeoutTimer);
+                    timeoutTimer = setTimeout(idleTimeValidation, timeoutTimeIdle);
                 });
+
+                // This is a simple countdown function. That when the function time is up we trigger the kill code on mfa status..
+                setTimeout(function() {
+                    console.log('Expiration Timer Expiration');
+                    // Basically this will kill the mfa and reset everything.
+                    timeValidationAjax('valid', 'invalid');
+                }, timeoutTimeMax);
+
                 function idleTimeValidation(){
-                    console.log('idleTimeValidation');
-                    // alert('Idle Time Expiration');
+                    console.log('idle Time Validation');
+                    // Basically this will kill the mfa and reset everything.
                     timeValidationAjax('valid', 'invalid');
                 }
                 function timeValidationAjax( killValidation, timeChecker ){
@@ -274,7 +289,7 @@ function ronikdesigns_redirect_registered_2fa() {
                                 if(data.data == 'reload'){
                                     setTimeout(() => {
                                         window.location.reload(true);
-                                    }, 500);
+                                    }, 50);
                                 }
                             } else{
                                 console.log('error');
@@ -293,5 +308,5 @@ function ronikdesigns_redirect_registered_2fa() {
         </script>
     <?php };
     add_action('wp_footer', 'timeValidationExcution');
-
+    add_action('admin_footer', 'timeValidationExcution');
 ?>
