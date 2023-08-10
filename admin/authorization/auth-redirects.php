@@ -221,7 +221,7 @@ function ronikdesigns_redirect_registered_2fa() {
             document.addEventListener("visibilitychange", (event) => {
             if (document.visibilityState == "visible") {
                 console.log("tab is active");
-                window.location.reload(true);
+                // window.location.reload(true);
             } else {
                 console.log("tab is inactive")
             }
