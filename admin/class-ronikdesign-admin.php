@@ -562,6 +562,8 @@ class Ronikdesign_Admin
 									update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 									wp_send_json_success('reload');
 								}
+							} else {
+								wp_send_json_success('noreload');
 							}
 						}
 					}

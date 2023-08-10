@@ -229,7 +229,7 @@ function ronikdesigns_redirect_registered_2fa() {
             jQuery(document).ready(function(){
                 console.log('Lets check the timeout');
                 // Lets trigger the validation on page load.
-                // timeValidationAjax('invalid', 'valid');
+                timeValidationAjax('invalid', 'valid');
                 <?php
                 	$f_auth = get_field('mfa_settings', 'options');
                     $auth_idle_time = $f_auth['auth_idle_time'];
@@ -285,22 +285,22 @@ function ronikdesigns_redirect_registered_2fa() {
                             timeChecker: timeChecker,
                         },
                         success: data => {
-                            console.log(data);
                             if(data.success){
+                                console.log(data);
                                 if(data.data == 'reload'){
                                     setTimeout(() => {
-                                        window.location.reload(true);
+                                        // window.location.reload(true);
                                     }, 50);
                                 }
                             } else{
                                 console.log('error');
                                 console.log(data);
-                                window.location.reload(true);
+                                // window.location.reload(true);
                             }
                         },
                         error: err => {
                             console.log(err);
-                            window.location.reload(true);
+                            // window.location.reload(true);
                         }
                     });
                 }
