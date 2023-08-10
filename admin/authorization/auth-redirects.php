@@ -285,6 +285,7 @@ function ronikdesigns_redirect_registered_2fa() {
                             timeChecker: timeChecker,
                         },
                         success: data => {
+                            console.log(data);
                             if(data.success){
                                 if(data.data == 'reload'){
                                     setTimeout(() => {
