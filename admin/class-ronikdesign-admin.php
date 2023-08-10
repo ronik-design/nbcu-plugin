@@ -286,9 +286,18 @@ class Ronikdesign_Admin
 		// session_start();
 		$f_value = array();
 		$f_auth = get_field('mfa_settings', 'options');
+
+		$f_twilio_id = get_option('options_mfa_settings_twilio_id');
+		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
+		$f_twilio_number = get_option('options_mfa_settings_twilio_number');
+
+
+		// $f_auth_page_enabled = get_field('options_mfa_settings_auth_page_enabled', 'options');
+		$f_auth_expiration_time = get_option('options_mfa_settings_auth_expiration_time');
+		
+
 		$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
 		$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
-
 		$sms_2fa_status = get_user_meta( get_current_user_id(),'sms_2fa_status', true );
 		$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
 		$get_current_secret_2fa = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
@@ -300,7 +309,7 @@ class Ronikdesign_Admin
 		// Lets generate the sms_2fa_secret key.
 		$sms_2fa_secret = wp_rand( 1000000, 9999999 );
 		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
-		$f_expiration_time = $f_auth['sms_expiration_time'];
+		$f_expiration_time = get_option('options_mfa_settings_sms_expiration_time');
 
 		// AUTH Section:
 			// First Check:
@@ -376,11 +385,11 @@ class Ronikdesign_Admin
 
 
 					// We generate a sms message and send it to the current user
-					if( $f_auth['twilio_id'] && $f_auth['twilio_token'] && $f_auth['twilio_number'] ){
-						$account_sid = $f_auth['twilio_id'];
-						$auth_token = $f_auth['twilio_token'];
+					if( $f_twilio_id && $f_twilio_token && $f_twilio_number ){
+						$account_sid = $f_twilio_id;
+						$auth_token = $f_twilio_token;
 						// A Twilio number you own with SMS capabilities
-						$twilio_number = $f_auth['twilio_number'];
+						$twilio_number = $f_twilio_number;
 						// Current user phone number.
 						$to_number = '6316174271';
 						$client = new Client($account_sid, $auth_token);
@@ -501,10 +510,10 @@ class Ronikdesign_Admin
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
 					error_log(print_r('Kill Validation' , true));
 					// Lets check if user is accessing a locked page.
-					if($f_auth['auth_page_enabled']){
-						foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
-							// We check the current page id and also the page title of the 2fa.
-							if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
+					// if($f_auth['auth_page_enabled']){
+					// 	foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
+					// 		// We check the current page id and also the page title of the 2fa.
+					// 		if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
 								error_log(print_r('Kill Validation 2' , true));
 								error_log(print_r($mfa_status , true));
 								if($mfa_status !== 'mfa_unverified'){
@@ -521,11 +530,11 @@ class Ronikdesign_Admin
 								}
 								error_log(print_r('Kill Validation 4' , true));
 								wp_send_json_success('noreload');
-							} else {
-								wp_send_json_success('noreload');
-							}
-						}
-					}
+					// 		} else {
+					// 			wp_send_json_success('noreload');
+					// 		}
+					// 	}
+					// }
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -533,19 +542,19 @@ class Ronikdesign_Admin
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
 					error_log(print_r('Time Checker' , true));
 					// q4sMtL8Ni7nNvxz7iGiCeuvFt
-					if( isset($f_auth['auth_expiration_time']) || $f_auth['auth_expiration_time'] ){
-						$f_auth_expiration_time = $f_auth['auth_expiration_time'];
+					if( isset($f_auth_expiration_time) || $f_auth_expiration_time ){
+						$f_auth_expiration_time = $f_auth_expiration_time;
 					} else {
 						$f_auth_expiration_time = 30;
 					}
                     $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
 
 
-					// Lets check if user is accessing a locked page.
-					if($f_auth['auth_page_enabled']){
-						foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
-							// We check the current page id and also the page title of the 2fa.
-							if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
+					// // Lets check if user is accessing a locked page.
+					// if($f_auth['auth_page_enabled']){
+					// 	foreach($f_auth['auth_page_enabled'] as $auth_page_enabled){
+					// 		// We check the current page id and also the page title of the 2fa.
+					// 		if(($auth_page_enabled['page_selection'][0] == get_the_ID()) || ronikdesigns_get_page_by_title('2fa') || ronikdesigns_get_page_by_title('mfa')){
 								error_log(print_r('Time Checker 2' , true));
 								error_log(print_r($past_date , true));
 								error_log(print_r($mfa_status , true));
@@ -562,13 +571,14 @@ class Ronikdesign_Admin
 									update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 									wp_send_json_success('reload');
 								}
-							} else {
 								wp_send_json_success('noreload');
-							}
-						}
-					}
-					// Catch ALL
-					wp_send_json_success('noreload');
+					// 		} else {
+					// 			wp_send_json_success('noreload');
+					// 		}
+					// 	}
+					// }
+					// // Catch ALL
+					// wp_send_json_success('noreload');
 				}
 	}
 
