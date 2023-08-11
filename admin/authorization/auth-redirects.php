@@ -289,7 +289,7 @@ function ronikdesigns_redirect_registered_2fa() {
                                 console.log(data);
                                 if(data.data == 'reload'){
                                     setTimeout(() => {
-                                        // window.location.reload(true);
+                                        window.location.reload(true);
                                     }, 50);
                                 }
                             } else{
