@@ -77,7 +77,13 @@ add_action('mfa-registration-page', function () {
             </script>
 
         <?php } else {
-            if( !$mfa_validation || $mfa_validation == 'not_valid'){ ?>
+            if( !$mfa_validation || ($mfa_validation == 'not_valid' || $mfa_validation == 'invalid')  ){ ?>
+                <!-- We check if the get_current_secret is empty or false if so we reload the page.  -->
+                <?php if(!$get_current_secret){ ?>
+                    <script>
+                        location.reload();
+                    </script>
+                <?php } ?>
                 <p><?= $get_current_secret; ?></p>
                 <img src='<?= $qrcode ?>' alt='QR Code' width='100' height='100'>
             <?php } ?>
