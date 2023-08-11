@@ -229,7 +229,7 @@ function ronikdesigns_redirect_registered_2fa() {
             jQuery(document).ready(function(){
                 console.log('Lets check the timeout');
                 // Lets trigger the validation on page load.
-                timeValidationAjax('invalid', 'valid');
+                // timeValidationAjax('invalid', 'valid');
                 <?php
                 	$f_auth = get_field('mfa_settings', 'options');
                     $auth_idle_time = $f_auth['auth_idle_time'];
