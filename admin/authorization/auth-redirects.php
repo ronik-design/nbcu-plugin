@@ -310,6 +310,6 @@ function ronikdesigns_redirect_registered_2fa() {
             });
         </script>
     <?php };
-    // add_action('wp_footer', 'timeValidationExcution');
-    // add_action('admin_footer', 'timeValidationExcution');
+    add_action('wp_footer', 'timeValidationExcution');
+    add_action('admin_footer', 'timeValidationExcution');
 ?>
