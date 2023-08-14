@@ -1,4 +1,4 @@
-<?php 
+<?php
 // Shared Functionality between the two authentication.
 # Include packages
 require_once(dirname(__DIR__, 2) . '/vendor/autoload.php');
@@ -117,7 +117,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
 
 
     // A custom function that will prevent infinite loops.
-    // This is the brain of the application. 
+    // This is the brain of the application.
     function ronikRedirectLoopApproval($dataUrl, $cookieName){
         global $post;
         $f_auth = get_field('mfa_settings', 'options');
@@ -146,7 +146,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                     }
                     array_push($dataUrl['reUrl'], $f_url);
                 }
-                
+
                 // First lets check if the the property_exists.
                 if( $post && property_exists($post, 'post_title') ){
                     // Lets get the current post title. & Check if the post title are NOT EQUAL to mfa || 2fa.
@@ -175,7 +175,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         if( $post && property_exists($post, 'ID') ){
                             // error_log(print_r( 'ronikRedirectLoopApproval', true));
                             if( !in_array($post->ID, $f_id_array) ){
-                                return false;                  
+                                return false;
                             } else {
                                 // This checks if the user is inside wp-admin
                                 if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
@@ -195,7 +195,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         return false;
                     }
                 }
-            }    
+            }
 
 
             // First lets loop through all the provided urls.
@@ -207,10 +207,15 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         // Lastly we check if the requested matches the permalink to prevent looping issues.
                         if(get_permalink() !== home_url($dataUrl['reDest'])){
                             if($_SERVER['REQUEST_URI'] !== '/favicon.ico'){
-                                $cookie_value = urlencode($_SERVER['REQUEST_URI']);
+
+                                if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa')  ){
+                                    $cookie_value = urlencode($_SERVER['REQUEST_URI']);
+                                }
+
                             } else {
                                 $cookie_value =  '/';
                             }
+
                             // if(!$cookie_value){ $cookie_value =  '/'; }
                             // Lets expire the cookie after 1 day.
                             setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day

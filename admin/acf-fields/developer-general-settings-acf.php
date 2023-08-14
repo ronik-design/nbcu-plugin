@@ -1407,6 +1407,41 @@ https://test.com/',
 					),
 
 
+
+					array(
+						'key' => 'field_6372afa6da3f200c3_ronikdesign',
+						'label' => 'MFA Post Registration Content:',
+						'name' => 'mfa_post_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the MFA main Content.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+					array(
+						'key' => 'field_6372afa6da3f200c4_ronikdesign',
+						'label' => 'MFA Post Registration Instructions Content:',
+						'name' => 'mfa_post_instructions_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the MFA Instructions Content. Please note if left blank default content will be displayed.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+
+
+
+
 					array(
 						'key' => 'field_6372afa6da3f200cd_ronikdesign',
 						'label' => 'Enable 2fa Settings',

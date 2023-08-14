@@ -305,7 +305,7 @@ class Ronikdesign_Admin
 		// Get the current time.
 		$current_date = strtotime((new DateTime())->format( 'd-m-Y H:i:s' ));
 		// Lets generate the sms_2fa_secret key.
-		$sms_2fa_secret = wp_rand( 1000000, 9999999 );
+		$sms_2fa_secret = wp_rand( 1000, 9999 );
 		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
 		$f_expiration_time = get_option('options_mfa_settings_sms_expiration_time');
 
@@ -474,7 +474,11 @@ class Ronikdesign_Admin
 								add_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 							}
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
-							$f_value['send-mfa'] = "true";
+							// $f_value['send-mfa'] = "true";
+							$f_value['mfa-success'] = "success";
+						} else {
+							// $f_value['send-mfa'] = "false";
+							$f_value['mfa-error'] = "nomatch";
 						}
 					}  else {
 						$valid = false;
@@ -484,7 +488,8 @@ class Ronikdesign_Admin
 						} else {
 							add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 						}
-						$f_value['send-mfa'] = "false";
+						// $f_value['send-mfa'] = "false";
+						$f_value['mfa-error'] = "nomatch";
 					}
 					$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
 					// We build a query and redirect back to 2fa route.
@@ -509,7 +514,7 @@ class Ronikdesign_Admin
 								if($mfa_status !== 'mfa_unverified'){
 									error_log(print_r('Kill Validation 3' , true));
 									update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-									update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+									// update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 									wp_send_json_success('reload');
 								}
 								if($sms_2fa_status !== 'sms_2fa_unverified'){
@@ -547,14 +552,16 @@ class Ronikdesign_Admin
 								if($mfa_status !== 'mfa_unverified'){
 									if($past_date > $mfa_status ){
 										update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-										update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+										// update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 										wp_send_json_success('reload');
 									}
 								}
-								if($sms_2fa_status !== 'sms_2fa_unverified'){
-									update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-									update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-									wp_send_json_success('reload');
+								if(isset($sms_2fa_status) && $sms_2fa_status && ($sms_2fa_status !== 'sms_2fa_unverified')){
+									if($past_date > $sms_2fa_status ){
+										update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+										update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+										wp_send_json_success('reload');
+									}
 								}
 								wp_send_json_success('noreload');
 					// 		} else {

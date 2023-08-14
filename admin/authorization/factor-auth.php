@@ -80,7 +80,7 @@ add_action('auth-registration-page', function () {
                 <input type="radio" id="2fa" name="auth-select" value="2fa">
                 <label for="2fa">2fa</label><br>  
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                <input type="submit" value="Submit">
+                <button type="submit" value="Submit">Submit</button>
             </form>
         <?php }
     }

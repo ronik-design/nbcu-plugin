@@ -70,17 +70,16 @@ add_action('2fa-registration-page', function () {
                     }
                 }
         } else { ?>
-            <p><?= $get_registration_status; ?></p>
-            <?php
-            
-            $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-
+            <?php            
+                $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
                 $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
-                error_log(print_r($sms_2fa_status, true));
-                error_log(print_r($sms_2fa_secret, true));
-
-                // Based on the session conditions we check if valid if not we default back to the send SMS button.
-                if(  isset($sms_2fa_secret) && $sms_2fa_secret !== 'invalid'  ){ 
+            ?>
+                Testing Purposes:<br>
+                SMS Secret: <?php echo $sms_2fa_secret; ?><br>
+                SMS Status: <?php echo $sms_2fa_status; ?><br>
+            <?php
+            // Based on the session conditions we check if valid if not we default back to the send SMS button.
+            if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){ 
                     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
                     $get_phone_number = substr($get_phone_number, -4);
                     // Update the status with timestamp.
@@ -128,14 +127,13 @@ add_action('2fa-registration-page', function () {
                         var downloadTimer = setInterval(function(){
                             if(timeleft <= 0){
                                 clearInterval(downloadTimer);
-                                document.getElementById("sms-expiration").innerHTML = "SMS is Expired.";
+                                // document.getElementById("sms-expiration").innerHTML = "SMS is Expired.";
                                 setTimeout(() => {
                                     smsExpiredChecker();
                                     // window.location = window.location.pathname + "?sms-success=success";
                                 }, 1000);
                             } else {
-                                document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + timeleft + " seconds";
-                                // document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + Math.floor(timeleft/60 ) + " minutes";
+                                // document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + timeleft + " seconds";
                             }
                             timeleft -= 1;
                         }, 1000);

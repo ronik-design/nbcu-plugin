@@ -35,7 +35,7 @@ add_action('mfa-registration-page', function () {
     }
     // Check if user has mfa_validation if not add secret.
     if (!$mfa_validation) {
-        add_user_meta(get_current_user_id(), 'mfa_validation', 'not_valid');
+        add_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
     }
 
     var_dump(get_current_user_id());
@@ -57,8 +57,14 @@ add_action('mfa-registration-page', function () {
         
         if( isset($mfa_validation) && $mfa_validation == 'valid'){
             update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+            // Lets Check for the password reset url cookie.
+            $cookie_name = "ronik-2fa-reset-redirect";
+            if(isset($_COOKIE[$cookie_name])) {
+                wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+                exit;
+            }
         ?>
-            <p>Yikes an error has occured! </br>Please reload the page. </br>If the error continues to happen. </br>Please contact system administrator.</p>
+            <p>Authorization has expired.</p>
             <div id="countdown"></div>
             <script>
                 var timeleft = 5;
@@ -70,14 +76,14 @@ add_action('mfa-registration-page', function () {
                             window.location = window.location.pathname + "?mfaredirect=home";
                         }, 1000);
                     } else {
-                    document.getElementById("countdown").innerHTML = "Page will reload in: " + timeleft + " seconds";
+                    document.getElementById("countdown").innerHTML = "Page will auto reload in: " + timeleft + " seconds";
                     }
                         timeleft -= 1;
                 }, 1000);
             </script>
 
         <?php } else {
-            if( !$mfa_validation || ($mfa_validation == 'not_valid' || $mfa_validation == 'invalid')  ){ ?>
+            if( !$mfa_validation || ($mfa_validation == 'not_registered' )  ){ ?>
                 <!-- We check if the get_current_secret is empty or false if so we reload the page.  -->
                 <?php if(!$get_current_secret){ ?>
                     <script>
