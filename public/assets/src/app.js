@@ -337,7 +337,7 @@
 	function previousLocationUrl(){
 		const url = window.location.href;
 		let domain = (new URL(url));
-		if((domain.pathname !== '/password-reset/') && (domain.pathname !== '/2fa/')){
+		if((domain.pathname !== '/password-reset/') && (domain.pathname !== '/2fa/') && (domain.pathname !== '/mfa/' )){
 			console.log(domain.pathname);
 			var urlBuilder;
 			if(domain.pathname){
@@ -358,7 +358,7 @@
 			window.localStorage.setItem('ronik-url-reset', JSON.stringify(urlRester));
 		} else {
 			// If the pathnames are a match lets remove the items.
-			window.localStorage.removeItem("ronik-url-reset");
+			// window.localStorage.removeItem("ronik-url-reset");
 		}
 	}
 		

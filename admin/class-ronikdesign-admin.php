@@ -420,7 +420,7 @@ class Ronikdesign_Admin
 					} else {
 						$f_value['sms-error'] = "nomatch";
 					}
-					$f_value['sms-valid'] = "false";
+					// $f_value['sms-valid'] = "false";
 					$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
 					// We build a query and redirect back to 2fa route.
 					wp_redirect( esc_url(home_url($r_redirect)) );

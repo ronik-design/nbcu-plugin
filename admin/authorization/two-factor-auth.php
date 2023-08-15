@@ -74,9 +74,11 @@ add_action('2fa-registration-page', function () {
                 $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
                 $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
             ?>
-                Testing Purposes:<br>
-                SMS Secret: <?php echo $sms_2fa_secret; ?><br>
-                SMS Status: <?php echo $sms_2fa_status; ?><br>
+                <div class="dev-notice">
+                    <h4>Dev Message:</h4>
+                    <p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
+                    <p>SMS Status: <?php echo $sms_2fa_status; ?></p>
+                </div>
             <?php
             // Based on the session conditions we check if valid if not we default back to the send SMS button.
             if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){ 

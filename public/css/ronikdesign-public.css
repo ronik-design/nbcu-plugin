@@ -20,3 +20,39 @@
  form button:hover{
    opacity: 0.8;
  }
+
+.twofa-content, .mfa-content{
+
+}
+.twofa-message, .mfa-message{
+  font-size: 16px;
+  font-style: italic;
+  text-align: center;
+  color: #fff;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 25px;
+  width: 100%;
+}
+.twofa-message__nomatch, .mfa-message__nomatch {
+  padding: 15px 20px;
+  background-color: #ff6060;
+}
+
+.dev-notice{
+  width: 100%;
+  background-color: #acff7b;
+  border-radius: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+}
+.dev-notice h4, .dev-notice p{
+  padding-bottom: 5px;
+}

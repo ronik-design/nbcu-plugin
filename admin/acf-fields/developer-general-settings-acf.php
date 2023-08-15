@@ -1340,6 +1340,39 @@ https://test.com/',
 
 
 
+					array(
+						'key' => 'field_6372afa6da3f200c1asasaqwaqwq2a_ronikdesign',
+						'label' => 'Auth Missing SMS Content:',
+						'name' => 'auth_missing-sms_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the Auth main Content.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+					array(
+						'key' => 'field_6372afa6da3f200c1asasaqwaqwq12a_ronikdesign',
+						'label' => 'Auth Missing SMS Instructions Content:',
+						'name' => 'auth_missing-sms_instructions_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the Auth Instructions Content. Please note if left blank default content will be displayed.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+
+
+					
 
 
 
@@ -1493,6 +1526,42 @@ https://test.com/',
 						),
 						'message' => '',
 					),
+
+
+					array(
+						'key' => 'field_6372afa6da3f200cd1212_ronikdesign',
+						'label' => '2fa Post Content:',
+						'name' => '2fa_post_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the 2fa main Content.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+					array(
+						'key' => 'field_6372afa6da3f200cd1312_ronikdesign',
+						'label' => '2fa Post Instructions Content:',
+						'name' => '2fa_post_instructions_content',
+						'type' => 'wysiwyg',
+						'instructions' => 'This will display as the 2fa Instructions Content. Please note if left blank default content will be displayed.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+					),
+
+
+
+
 
 
 

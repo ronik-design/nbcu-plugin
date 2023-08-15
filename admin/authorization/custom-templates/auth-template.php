@@ -50,10 +50,32 @@ $f_content = apply_filters( 'ronikdesign_auth_custom_content', false );
 $f_instructions = apply_filters( 'ronikdesign_auth_custom_instructions', false );
 $f_footer = apply_filters( 'ronikdesign_auth_custom_footer', false );
 $f_mfa_settings = get_field( 'mfa_settings', 'options');
+$get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
 $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 ?>
 	<?php if($f_header){ ?><?= $f_header(); ?><?php } ?>
 	<div class="auth-wrapper">
+
+	<?php if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
+		
+		<?php if($f_content){ ?>
+			<?= $f_content(); ?>
+		<?php } 
+		if($f_mfa_settings['auth_missing-sms_content']){ ?>
+			<?= $f_mfa_settings['auth_missing-sms_content']; ?>
+		<?php } ?>
+		<br></br>
+		<?php if($f_instructions){ ?>
+			<?= $f_instructions(); ?>
+		<?php } else { ?>
+			<div class="instructions">
+				<?php if($f_mfa_settings['auth_missing-sms_instructions_content']){ ?>
+					<?= $f_mfa_settings['auth_missing-sms_instructions_content']; ?>
+				<?php } ?>
+			</div>
+		<?php } ?>
+
+	<?php } else { ?>
 		<?php if($f_content){ ?>
 			<?= $f_content(); ?>
 		<?php } 
@@ -70,6 +92,12 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 				<?php } ?>
 			</div>
 		<?php } ?>
+
+	<?php } ?>
+	
+
+
+
 		<br><br>
 		<?php do_action('auth-registration-page'); ?>
 	</div>

@@ -66,7 +66,7 @@ add_action('auth-registration-page', function () {
         // Check the $get_auth_status if sms-missing is set.
         if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
             <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
-                <p>Please enter a phone number capable of receiving text messages:</p>
+                <p>Please enter a valid phone number to receive authentication codes by text message:</p><br>
                 <label for="auth-phone_number">Phone Number:</label>
                 <input type="text" id="auth-phone_number" name="auth-phone_number" required><br><br>
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
@@ -74,11 +74,11 @@ add_action('auth-registration-page', function () {
             </form>
         <?php } else { ?>
             <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">      
-                <p>Please Select the type of authentication:</p>
+                <p>Please select the type of authentication:</p><br>
                 <input type="radio" id="mfa" name="auth-select" value="mfa" checked="checked">
-                <label for="mfa">MFA</label><br><br>
+                <label for="mfa">Authenticate with authenticator app (recommended)</label><br>
                 <input type="radio" id="2fa" name="auth-select" value="2fa">
-                <label for="2fa">2fa</label><br>  
+                <label for="2fa">Authenticate with a code received to SMS</label><br>  
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <button type="submit" value="Submit">Submit</button>
             </form>

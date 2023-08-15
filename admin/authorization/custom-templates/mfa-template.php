@@ -49,44 +49,45 @@ if( isset($_GET["mfaredirect"]) ){
 				<div class="mfa-message__success">Verification Success!</div>
 			<?php } ?>
 			<?php if($f_error == 'nomatch'){ ?>
-				<div class="mfa-message__nomatch">Sorry your verification code does not match!</div>
+				<div class="mfa-message__nomatch">Sorry, the verification code entered is invalid.</div>
 			<?php } ?>
 		</div>
-
-		<?php if($f_content){ ?>
-			<?= $f_content(); ?>
-		<?php } 
-
-		if($mfa_validation !== 'not_registered'){
-			if($f_mfa_settings['mfa_post_content']){ ?>
-				<?= $f_mfa_settings['mfa_post_content']; ?>
-			<?php } ?>
-			<br></br>
-			<?php if($f_post_instructions){ ?>
-				<?= $f_post_instructions(); ?>
-			<?php } else { ?>
-				<div class="instructions">
-					<?php if($f_mfa_settings['mfa_post_instructions_content']){ ?>
-						<?= $f_mfa_settings['mfa_post_instructions_content']; ?>
-					<?php } ?>
-				</div>
+		<div class="mfa-content">
+			<?php if($f_content){ ?>
+				<?= $f_content(); ?>
 			<?php } 
-		} else {
-			if($f_mfa_settings['mfa_content']){ ?>
-				<?= $f_mfa_settings['mfa_content']; ?>
-			<?php } ?>
-			<br></br>
-			<?php if($f_instructions){ ?>
-				<?= $f_instructions(); ?>
-			<?php } else { ?>
-				<div class="instructions">
-					<?php if($f_mfa_settings['mfa_instructions_content']){ ?>
-						<?= $f_mfa_settings['mfa_instructions_content']; ?>
-					<?php } ?>
-				</div>
-			<?php } 
-		}
-		?>
+
+			if($mfa_validation !== 'not_registered'){
+				if($f_mfa_settings['mfa_post_content']){ ?>
+					<?= $f_mfa_settings['mfa_post_content']; ?>
+				<?php } ?>
+				<br></br>
+				<?php if($f_post_instructions){ ?>
+					<?= $f_post_instructions(); ?>
+				<?php } else { ?>
+					<div class="instructions">
+						<?php if($f_mfa_settings['mfa_post_instructions_content']){ ?>
+							<?= $f_mfa_settings['mfa_post_instructions_content']; ?>
+						<?php } ?>
+					</div>
+				<?php } 
+			} else {
+				if($f_mfa_settings['mfa_content']){ ?>
+					<?= $f_mfa_settings['mfa_content']; ?>
+				<?php } ?>
+				<br></br>
+				<?php if($f_instructions){ ?>
+					<?= $f_instructions(); ?>
+				<?php } else { ?>
+					<div class="instructions">
+						<?php if($f_mfa_settings['mfa_instructions_content']){ ?>
+							<?= $f_mfa_settings['mfa_instructions_content']; ?>
+						<?php } ?>
+					</div>
+				<?php } 
+			}
+			?>
+		</div>
 		<br><br>
 		<?php do_action('mfa-registration-page'); ?>
 	</div>

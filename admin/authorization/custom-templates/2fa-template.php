@@ -55,8 +55,13 @@ $f_header = apply_filters( 'ronikdesign_2fa_custom_header', false );
 $f_content = apply_filters( 'ronikdesign_2fa_custom_content', false );
 $f_instructions = apply_filters( 'ronikdesign_2fa_custom_instructions', false );
 $f_footer = apply_filters( 'ronikdesign_2fa_custom_footer', false );
-
+$f_mfa_settings = get_field( 'mfa_settings', 'options');
+$f_post_instructions = apply_filters( 'ronikdesign_2fa_post_custom_instructions', false );
 $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
+
+$sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
+$sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+
 
 
 ?>
@@ -69,29 +74,57 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 				<div class="twofa-message__success">Verification Success!</div>
 			<?php } ?>
 			<?php if($f_error == 'nomatch'){ ?>
-				<div class="twofa-message__nomatch">Sorry your verification code does not match!</div>
+				<div class="twofa-message__nomatch">Sorry, the verification code entered is invalid.</div>
 			<?php } ?>
 		</div>
+		<div class="twofa-content">	
 
-		<?php if($f_content){ ?><?= $f_content(); ?><?php } ?>
-		<br></br>
-		<?php if($f_instructions){ ?>
-			<?= $f_instructions(); ?>
-		<?php } else { ?>
-			<div class="instructions">
-				<strong>Please follow the instructions below:</strong>
-				<br><br>
-				<ul>
-	
-					<li>Clicking the "Send SMS Code" button will auto send out an SMS code to the phone number associated with your account.
-						<ul>
-							<li>Please stay on the page while the code is being sent. </li>
-							<li>Once received please enter the code below. *The code will expire within a few minutes. </li>
-						</ul>
-					</li>
-				</ul>
-			</div>
-		<?php } ?>
+
+			<?php if($f_content){ ?>
+				<?= $f_content(); ?>
+			<?php } ?>
+
+		    <?php 
+			if( ($sms_2fa_secret !== 'invalid') && $sms_2fa_secret ){
+				if($f_mfa_settings['2fa_post_content']){ ?>
+					<?= $f_mfa_settings['2fa_post_content']; ?>
+				<?php } ?>
+				<br></br>
+				<?php if($f_post_instructions){ ?>
+					<?= $f_post_instructions(); ?>
+				<?php } else { ?>
+					<div class="instructions">
+						<?php if($f_mfa_settings['2fa_post_instructions_content']){ ?>
+							<?= $f_mfa_settings['2fa_post_instructions_content']; ?>
+						<?php } ?>
+					</div>
+				<?php } 
+			} else {
+				if($f_mfa_settings['2fa_content']){ ?>
+					<?= $f_mfa_settings['2fa_content']; ?>
+				<?php } ?>
+				<br></br>
+				<?php if($f_instructions){ ?>
+					<?= $f_instructions(); ?>
+				<?php } else { ?>
+					<div class="instructions">
+						<?php if($f_mfa_settings['2fa_instructions_content']){ ?>
+							<?= $f_mfa_settings['2fa_instructions_content']; ?>
+						<?php } ?>
+					</div>
+				<?php } 
+			}
+			?>
+
+
+
+
+
+
+
+
+
+		</div>
 		<br><br>
 		<?php do_action('2fa-registration-page'); ?>
 	</div>

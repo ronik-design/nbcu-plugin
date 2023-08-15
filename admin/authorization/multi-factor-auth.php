@@ -38,10 +38,17 @@ add_action('mfa-registration-page', function () {
         add_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
     }
 
-    var_dump(get_current_user_id());
-    var_dump($get_current_secret);
-    var_dump($mfa_status);
-    var_dump($mfa_validation);
+    ?>
+        <div class="dev-notice">
+            <h4>Dev Message:</h4>
+            <p>Current UserID: <?php echo get_current_user_id(); ?></p>
+            <p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
+            <p>MFA Status: <?php echo $mfa_status; ?></p>
+            <p>MFA Validation: <?php echo $mfa_validation; ?></p>
+
+        </div>
+
+    <?php 
 
     // Check if mfa_status is not equal to verified.
     if ($mfa_status == 'mfa_unverified' && is_user_logged_in()) {

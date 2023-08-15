@@ -335,7 +335,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
   function previousLocationUrl() {
     var url = window.location.href;
     var domain = new URL(url);
-    if (domain.pathname !== '/password-reset/' && domain.pathname !== '/2fa/') {
+    if (domain.pathname !== '/password-reset/' && domain.pathname !== '/2fa/' && domain.pathname !== '/mfa/') {
       console.log(domain.pathname);
       var urlBuilder;
       if (domain.pathname) {
@@ -353,10 +353,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       var urlRester = {
         redirect: urlBuilder
       };
+
       window.localStorage.setItem('ronik-url-reset', JSON.stringify(urlRester));
     } else {
       // If the pathnames are a match lets remove the items.
-      window.localStorage.removeItem("ronik-url-reset");
+      // window.localStorage.removeItem("ronik-url-reset");
     }
   }
 
