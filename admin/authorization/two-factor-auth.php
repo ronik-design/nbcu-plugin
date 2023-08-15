@@ -111,6 +111,7 @@ add_action('2fa-registration-page', function () {
                     }            
                 ?>
                 <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                    <p>Please enter the 6-digit code received by text message:</p>
                     <?= 'xxx-xxx-'.$get_phone_number; ?></p>
                     <div id="sms-expiration"></div>
                     <script>
