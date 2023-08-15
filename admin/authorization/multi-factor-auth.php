@@ -45,7 +45,6 @@ add_action('mfa-registration-page', function () {
             <p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
             <p>MFA Status: <?php echo $mfa_status; ?></p>
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
-
         </div>
 
     <?php 

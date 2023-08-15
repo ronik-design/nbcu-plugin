@@ -5,6 +5,8 @@
 
  .mfa-wrapper, .auth-wrapper, .twofa-wrapper {
     padding: 50px;
+    max-width: 1360px;
+    margin: 0 auto;
  }
 
  form button{
@@ -21,8 +23,9 @@
    opacity: 0.8;
  }
 
+ 
 .twofa-content, .mfa-content{
-
+  width: 100%;
 }
 .twofa-message, .mfa-message{
   font-size: 16px;

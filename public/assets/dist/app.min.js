@@ -353,7 +353,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       var urlRester = {
         redirect: urlBuilder
       };
-
       window.localStorage.setItem('ronik-url-reset', JSON.stringify(urlRester));
     } else {
       // If the pathnames are a match lets remove the items.
