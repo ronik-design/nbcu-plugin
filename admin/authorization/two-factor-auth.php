@@ -8,7 +8,7 @@ use Twilio\Rest\Client;
 
 
 
-add_action('2fa-registration-page', function () {    
+add_action('2fa-registration-page', function () {
         $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
         $f_mfa_settings = get_field('mfa_settings', 'options');
         if( isset($f_mfa_settings['sms_expiration_time']) || $f_mfa_settings['sms_expiration_time'] ){
@@ -50,27 +50,8 @@ add_action('2fa-registration-page', function () {
             </script>
             <?php
                 $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
-                // Success message
-                if($f_success){
-                    // Lets Check for the password reset url cookie.
-                    $cookie_name = "ronik-2fa-reset-redirect";
-                    if(isset($_COOKIE[$cookie_name])) {
-                        wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-                        exit;
-                    } else {
-                        // We run our backup plan for redirecting back to previous page.
-                        // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-                        add_action('wp_footer', 'ronikdesigns_redirect_js');
-                        function ronikdesigns_redirect_js(){ ?>
-                            <script type="text/javascript">
-                                var x = JSON.parse(window.localStorage.getItem("ronik-url-reset"));
-                                window.location.replace(x.redirect);
-                            </script>
-                        <?php };
-                    }
-                }
         } else { ?>
-            <?php            
+            <?php
                 $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
                 $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
             ?>
@@ -81,7 +62,7 @@ add_action('2fa-registration-page', function () {
                 </div>
             <?php
             // Based on the session conditions we check if valid if not we default back to the send SMS button.
-            if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){ 
+            if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){
                     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
                     $get_phone_number = substr($get_phone_number, -4);
                     // Update the status with timestamp.
@@ -100,7 +81,8 @@ add_action('2fa-registration-page', function () {
                     // Lets store the sms code timestamp in user meta.
                     $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
                     if (!$sms_code_timestamp) {
-                        add_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
+                        // add_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
+                        update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
                     }
                     if( $past_date > $sms_code_timestamp ){
                         error_log(print_r( 'Expired', true));
@@ -108,7 +90,10 @@ add_action('2fa-registration-page', function () {
                         error_log(print_r( $sms_code_timestamp, true));
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-                    }            
+                        // This is mostly for messaging purposes..
+                        wp_redirect( esc_url(home_url('/2fa?2faredirect=expired')) );
+                        exit;
+                    }
                 ?>
                 <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                     <p>Please enter the 6-digit code received by text message:</p>
@@ -158,7 +143,14 @@ add_action('2fa-registration-page', function () {
                                         if(data.data !== 'noreload'){
                                             alert('The SMS Code Expired. Page will auto reload.');
                                             setTimeout(() => {
-                                                window.location.reload(true);
+                                                let url = window.location.href;
+                                                if (url.indexOf('?') > -1){
+                                                    url += '&2faredirect=expired'
+                                                } else {
+                                                    url += '?2faredirect=expired'
+                                                }
+                                                window.location.href = url;
+                                                // window.location.reload(true);
                                             }, 500);
                                         }
                                     } else{
@@ -166,7 +158,14 @@ add_action('2fa-registration-page', function () {
                                         console.log(data);
                                         alert('Whoops! Something went wrong! Please try again later!');
                                         setTimeout(() => {
-                                            window.location.reload(true);
+                                            // window.location.reload(true);
+                                            let url = window.location.href;
+                                            if (url.indexOf('?') > -1){
+                                                url += '&2faredirect=error'
+                                            } else {
+                                                url += '?2faredirect=error'
+                                            }
+                                            window.location.href = url;
                                         }, 500);
                                     }
                                 },
@@ -175,10 +174,16 @@ add_action('2fa-registration-page', function () {
                                     alert('Whoops! Something went wrong! Please try again later!');
                                     // Lets Reload.
                                     setTimeout(() => {
-                                        window.location.reload(true);
+                                        let url = window.location.href;
+                                            if (url.indexOf('?') > -1){
+                                                url += '&2faredirect=error'
+                                            } else {
+                                                url += '?2faredirect=error'
+                                            }
+                                            window.location.href = url;
                                     }, 500);
                                 }
-                            }); 
+                            });
                         }
                     </script>
                     <input type="text" name="validate-sms-code" value="" required>
@@ -191,6 +196,12 @@ add_action('2fa-registration-page', function () {
                     <input type="hidden" name="send-sms" value="send-sms">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                     <button type="submit" value="Send SMS Code">Send SMS Code</button>
+                </form>
+                <br><br>
+                <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                    <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                    <input type="hidden" type="text" name="re-auth" value="RESET">
+                    <input type="submit" name="submit" value="Change Authentication Selection.">
                 </form>
             <?php }
         }

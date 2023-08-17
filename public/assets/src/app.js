@@ -374,7 +374,7 @@
 			checkPasswordStrength($);
 			dynImageAttr($);
 			dynAttr($);
-			previousLocationUrl($);
+			// previousLocationUrl($);
 		}, 50);
 	});
 })( jQuery );

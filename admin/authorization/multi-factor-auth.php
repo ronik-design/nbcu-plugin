@@ -6,12 +6,6 @@ use Twilio\Rest\Client;
 
 // do_action('2fa-registration-page');
 add_action('mfa-registration-page', function () {
-    if(isset($_GET["mfaredirect"])){
-        if($_GET["mfaredirect"] == 'home'){
-            header("Location:".home_url());
-            die();
-        }
-    }
     $options = new QROptions([
         'eccLevel' => QRCode::ECC_L,
         'outputType' => QRCode::OUTPUT_MARKUP_SVG,
@@ -27,15 +21,18 @@ add_action('mfa-registration-page', function () {
 
     // Check if user has secret if not add secret.
     if (!$get_current_secret) {
-        add_user_meta(get_current_user_id(), 'google2fa_secret', $google2fa_secret);
+        // add_user_meta(get_current_user_id(), 'google2fa_secret', $google2fa_secret);
+        update_user_meta(get_current_user_id(), 'google2fa_secret', $google2fa_secret);
     }
     // Check if user has mfa_status if not add secret.
     if (!$mfa_status) {
-        add_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+        // add_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+        update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
     }
     // Check if user has mfa_validation if not add secret.
     if (!$mfa_validation) {
-        add_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
+        // add_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
+        update_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
     }
 
     ?>
@@ -47,7 +44,7 @@ add_action('mfa-registration-page', function () {
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
         </div>
 
-    <?php 
+    <?php
 
     // Check if mfa_status is not equal to verified.
     if ($mfa_status == 'mfa_unverified' && is_user_logged_in()) {
@@ -60,15 +57,18 @@ add_action('mfa-registration-page', function () {
             $get_current_secret // Lets use the $google2fa_secret we created earlier.
         );
         $qrcode = (new QRCode($options))->render($g2faUrl);
-        
+
         if( isset($mfa_validation) && $mfa_validation == 'valid'){
             update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
             // Lets Check for the password reset url cookie.
-            $cookie_name = "ronik-2fa-reset-redirect";
-            if(isset($_COOKIE[$cookie_name])) {
-                wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-                exit;
-            }
+            // $cookie_name = "ronik-2fa-reset-redirect";
+            // if(isset($_COOKIE[$cookie_name])) {
+            //     // wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+            //     // exit();
+            // }
+            // This is mostly for messaging purposes..
+            wp_redirect( esc_url(home_url('/mfa?mfaredirect=expired')) );
+            exit;
         ?>
             <p>Authorization has expired.</p>
             <div id="countdown"></div>
@@ -79,7 +79,7 @@ add_action('mfa-registration-page', function () {
                         clearInterval(downloadTimer);
                         document.getElementById("countdown").innerHTML = "Reloading";
                         setTimeout(() => {
-                            window.location = window.location.pathname + "?mfaredirect=home";
+                            window.location = window.location.pathname + "?mfaredirect=expired";
                         }, 1000);
                     } else {
                     document.getElementById("countdown").innerHTML = "Page will auto reload in: " + timeleft + " seconds";
@@ -104,7 +104,12 @@ add_action('mfa-registration-page', function () {
                 <input required autocomplete="off" type="text" name="google2fa_code" value="">
                 <input type="submit" name="submit" value="Submit">
             </form>
-            
+            <br><br>
+            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                <input type="hidden" type="text" name="re-auth" value="RESET">
+                <input type="submit" name="submit" value="Change Authentication Selection.">
+            </form>
         <?php }?>
     <?php } else{ ?>
         <div class="">Authorization Saved!</div>
@@ -116,7 +121,7 @@ add_action('mfa-registration-page', function () {
                     clearInterval(downloadTimer);
                     document.getElementById("countdown").innerHTML = "Reloading";
                     setTimeout(() => {
-                        window.location = window.location.pathname + "?mfaredirect=home";
+                        window.location = window.location.pathname + "?mfaredirect=saved";
                     }, 1000);
                 } else {
                     document.getElementById("countdown").innerHTML = "Page will reload in: " + timeleft + " seconds";
@@ -124,30 +129,5 @@ add_action('mfa-registration-page', function () {
                     timeleft -= 1;
             }, 1000);
         </script>
-
-
-
-
-        <?php 
-        // Lets Check for the password reset url cookie.
-            $cookie_name = "ronik-2fa-reset-redirect";
-            if(isset($_COOKIE[$cookie_name])) {
-                wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-                exit;
-            } else {
-                // We run our backup plan for redirecting back to previous page.
-                // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-                add_action('wp_footer', 'ronikdesigns_redirect_js');
-                function ronikdesigns_redirect_js(){ ?>
-                    <script type="text/javascript">
-                        var x = JSON.parse(window.localStorage.getItem("ronik-url-reset"));
-                        window.location.replace(x.redirect);
-                    </script>
-                <?php };
-            }
-
-            ?>
-
-
     <?php }
 });

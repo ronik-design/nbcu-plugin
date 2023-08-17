@@ -309,6 +309,16 @@ class Ronikdesign_Admin
 		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
 		$f_expiration_time = get_option('options_mfa_settings_sms_expiration_time');
 
+		if(isset($_POST['re-auth']) && $_POST['re-auth']){
+			if($_POST['re-auth'] == 'RESET'){
+				update_user_meta(get_current_user_id(), 'auth_status', 'none');
+				// We build a query and redirect back to auth route.
+				$f_value['auth-select'] = "reset";
+				$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+				wp_redirect( esc_url(home_url($r_redirect)) );
+				exit;
+			}
+		}
 		// AUTH Section:
 			// First Check:
 				// Lets get the auth-select value.
@@ -410,7 +420,7 @@ class Ronikdesign_Admin
 				// Lets validate-sms-code
 				if(isset($_POST['validate-sms-code']) && $_POST['validate-sms-code']){
 					if($get_current_secret_2fa == $_POST['validate-sms-code']){
-						update_user_meta(get_current_user_id(), 'sms_2fa_status', $current_date);
+						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_verified');
 						$f_value['sms-success'] = "success";
 						// $f_value['sms-valid'] = "true";
 						$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
@@ -468,11 +478,7 @@ class Ronikdesign_Admin
 						$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
 						if ($valid) {
 							// Lets store the mfa validation data inside the current usermeta.
-							if( $mfa_validation ){
-								update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
-							} else {
-								add_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
-							}
+							update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
 							// $f_value['send-mfa'] = "true";
 							$f_value['mfa-success'] = "success";
@@ -483,12 +489,7 @@ class Ronikdesign_Admin
 					}  else {
 						$valid = false;
 						// Lets store the mfa validation data inside the current usermeta.
-						if( $mfa_validation ){
-							update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-						} else {
-							add_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-						}
-						// $f_value['send-mfa'] = "false";
+						update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 						$f_value['mfa-error'] = "nomatch";
 					}
 					$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
@@ -534,7 +535,7 @@ class Ronikdesign_Admin
 				}
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
-					if( isset($f_auth_expiration_time) || $f_auth_expiration_time ){
+					if( isset($f_auth_expiration_time) && $f_auth_expiration_time ){
 						$f_auth_expiration_time = $f_auth_expiration_time;
 					} else {
 						$f_auth_expiration_time = 30;
@@ -557,7 +558,7 @@ class Ronikdesign_Admin
 									}
 								}
 								if(isset($sms_2fa_status) && $sms_2fa_status && ($sms_2fa_status !== 'sms_2fa_unverified')){
-									if($past_date > $sms_2fa_status ){
+									if($past_date > $sms_code_timestamp ){
 										update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
 										update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 										wp_send_json_success('reload');

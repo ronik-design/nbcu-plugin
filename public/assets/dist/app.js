@@ -372,7 +372,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       checkPasswordStrength($);
       dynImageAttr($);
       dynAttr($);
-      previousLocationUrl($);
+      // previousLocationUrl($);
     }, 50);
   });
 })(jQuery);

@@ -18,17 +18,10 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
         $f_enable_mfa_settings = get_option('options_mfa_settings_enable_mfa_settings');
         $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
 
-        error_log(print_r(  dirname( __FILE__ , 2).'/authorization/custom-templates/auth-template.php' , true));
-        error_log(print_r('ronikdesigns_add_custom_auth_page', true));
-        error_log(print_r($f_enable_mfa_settings, true));
-        error_log(print_r($f_enable_2fa_settings, true));
-
         // Check if MFA && 2fa is enabled.
         if( isset($f_enable_mfa_settings) && isset($f_enable_2fa_settings) ){
             if($f_enable_mfa_settings && $f_enable_2fa_settings){
-                error_log(print_r('$f_enable_mfa_settings && $f_enable_2fa_settings', true));
                 if( !ronikdesigns_get_page_by_title('auth') ){
-                    error_log(print_r('$f_enable_mfa_settings && $f_enable_2fa_settings 2', true));
 
                     // Create post object
                     $my_post = array(
@@ -49,9 +42,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
         // Check if 2fa is enabled.
         if(isset($f_enable_2fa_settings) ){
             if($f_enable_2fa_settings){
-                error_log(print_r('$f_enable_2fa_settings', true));
                 if( !ronikdesigns_get_page_by_title('2fa') ){
-                    error_log(print_r('$f_enable_2fa_settings 2', true));
 
                     // Create post object
                     $my_post = array(
@@ -72,11 +63,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
         // Check if MFA is enabled.
         if(isset($f_enable_mfa_settings)){
             if($f_enable_mfa_settings){
-                error_log(print_r('$f_enable_mfa_settings', true));
-
                 if( !ronikdesigns_get_page_by_title('mfa') ){
-                    error_log(print_r('$f_enable_mfa_settings 2', true));
-
                     // Create post object
                     $my_post = array(
                         'post_title'    => wp_strip_all_tags( 'mfa' ),
@@ -221,6 +208,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                             setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
                             // Pause server.
                             sleep(.5);
+
                             wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
                             exit;
                         }

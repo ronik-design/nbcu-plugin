@@ -38,22 +38,34 @@
   margin-bottom: 25px;
   width: 100%;
 }
+.twofa-message__success{
+  padding: 15px 20px;
+  background-color: #acff7b;
+  color: #000;
+}
 .twofa-message__nomatch, .mfa-message__nomatch {
   padding: 15px 20px;
   background-color: #ff6060;
 }
+.mfa-message__message {
+  padding: 15px 20px;
+  background-color: #ffda60;
+}
 
 .dev-notice{
-  width: 100%;
+  position: fixed;
+  top: 5em;
+  right: 0px;
+  z-index: 11111111;
   background-color: #acff7b;
-  border-radius: 10px;
+  border-radius: 20px 0px 0px 20px;
+  text-align: left;
   margin-top: 20px;
   margin-bottom: 20px;
-  padding: 10px;
+  padding: 15px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  text-align: center;
   flex-direction: column;
 }
 .dev-notice h4, .dev-notice p{

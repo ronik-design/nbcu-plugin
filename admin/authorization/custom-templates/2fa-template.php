@@ -4,7 +4,7 @@
  *
  */
 
-// Lets check if 2fa is enabled. If not we kill it. 
+// Lets check if 2fa is enabled. If not we kill it.
 $f_auth = get_field('mfa_settings', 'options');
 if(!$f_auth['enable_2fa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
@@ -13,19 +13,22 @@ if(!$f_auth['enable_2fa_settings']){
 	ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
 }
 
-
-
-
-
-
-
-
-
-
-
-
 // We put this in the header for fast redirect..
 $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
+// sms-success
+// sms-error
+$f_expired = '';
+
+if(isset($_GET["2faredirect"])){
+    if($_GET["2faredirect"] == 'expired'){
+		$f_expired = 'Your 2fa has expired. Please re-authenticate!';
+    }
+	if($_GET["2faredirect"] == 'saved'){
+		$f_message = 'Your MFA has saved successfully.';
+    }
+}
+
+
 // Success message
 if($f_success){
     // Lets Check for the password reset url cookie.
@@ -36,20 +39,14 @@ if($f_success){
     } else {
         // We run our backup plan for redirecting back to previous page.
         // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-        add_action('wp_footer', 'ronikdesigns_redirect_js');
-        function ronikdesigns_redirect_js(){ ?>
-            <script type="text/javascript">
-                var x = JSON.parse(window.localStorage.getItem("ronik-url-reset"));
-                window.location.replace(x.redirect);
-            </script>
-        <?php };
+        // add_action('wp_footer', 'ronikdesigns_redirect_js');
     }
 }
 
 
 
 
-get_header(); 
+get_header();
 
 $f_header = apply_filters( 'ronikdesign_2fa_custom_header', false );
 $f_content = apply_filters( 'ronikdesign_2fa_custom_content', false );
@@ -68,23 +65,25 @@ $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
 	<?php if($f_header){ ?><?= $f_header(); ?><?php } ?>
 
 	<div class="twofa-wrapper">
-
 		<div class="twofa-message">
 			<?php if($f_success){ ?>
 				<div class="twofa-message__success">Verification Success!</div>
 			<?php } ?>
+			<?php if($f_message){ ?>
+				<div class="twofa-message__success">Authentication Saved!</div>
+			<?php } ?>
 			<?php if($f_error == 'nomatch'){ ?>
 				<div class="twofa-message__nomatch">Sorry, the verification code entered is invalid.</div>
 			<?php } ?>
+			<?php if($f_expired){ ?>
+				<div class="twofa-message__nomatch"><?= $f_expired; ?></div>
+			<?php } ?>
 		</div>
-		<div class="twofa-content">	
-
-
+		<div class="twofa-content">
 			<?php if($f_content){ ?>
 				<?= $f_content(); ?>
 			<?php } ?>
-
-		    <?php 
+		    <?php
 			if( ($sms_2fa_secret !== 'invalid') && $sms_2fa_secret ){
 				if($f_mfa_settings['2fa_post_content']){ ?>
 					<?= $f_mfa_settings['2fa_post_content']; ?>
@@ -98,7 +97,7 @@ $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
 							<?= $f_mfa_settings['2fa_post_instructions_content']; ?>
 						<?php } ?>
 					</div>
-				<?php } 
+				<?php }
 			} else {
 				if($f_mfa_settings['2fa_content']){ ?>
 					<?= $f_mfa_settings['2fa_content']; ?>
@@ -112,18 +111,9 @@ $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
 							<?= $f_mfa_settings['2fa_instructions_content']; ?>
 						<?php } ?>
 					</div>
-				<?php } 
+				<?php }
 			}
 			?>
-
-
-
-
-
-
-
-
-
 		</div>
 		<br><br>
 		<?php do_action('2fa-registration-page'); ?>

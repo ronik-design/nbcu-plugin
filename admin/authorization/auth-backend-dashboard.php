@@ -9,9 +9,22 @@ function ronikdesigns_save_extra_user_profile_fields_auth($user_id){
         return false;
     }
     update_user_meta($user_id, 'auth_status', $_POST['auth_select']);
-    update_user_meta($user_id, 'mfa_status', $_POST['google2fa_code']);
-    update_user_meta($user_id, 'sms_2fa_status', $_POST['sms_code']);
     update_user_meta($user_id, 'sms_user_phone', $_POST['sms_phonenumber']);
+    // update_user_meta($user_id, 'mfa_status', $_POST['mfa_status']);
+    // update_user_meta($user_id, 'mfa_validation', $_POST['mfa_validation']);
+    // update_user_meta($user_id, 'sms_2fa_status', $_POST['sms_status']);
+    // update_user_meta($user_id, 'sms_2fa_secret', $_POST['sms_secret']);
+
+    if($_POST['auth_reset']){
+        delete_user_meta($user_id, 'auth_status' );
+        delete_user_meta($user_id, 'mfa_status' );
+        delete_user_meta($user_id, 'mfa_validation' );
+        delete_user_meta($user_id, 'sms_2fa_status' );
+        delete_user_meta($user_id, 'sms_user_phone' );
+        delete_user_meta($user_id, 'sms_2fa_secret' );
+        delete_user_meta($user_id, 'google2fa_secret' );
+        delete_user_meta($user_id, 'sms_code_timestamp' );
+    }
 
 }
 add_action('personal_options_update', 'ronikdesigns_save_extra_user_profile_fields_auth');
@@ -25,48 +38,76 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
         if(!$get_auth_status){
             $get_auth_status = 'none';
         }
-
-        $get_registration_status = get_user_meta($_GET["user_id"], 'mfa_status', true);
-        if(!$get_registration_status){
-            $get_registration_status = 'mfa_unverified';
+        $get_mfa_status =  get_user_meta($_GET["user_id"], 'mfa_status', true);
+        if(!$get_mfa_status){
+            $get_mfa_status = 'mfa_unverified';
         }
-        // SMS Status
-        $get_sms_status = get_user_meta($_GET["user_id"], 'sms_2fa_status', true);
-        if(!$get_sms_status){
-            $get_sms_status = 'sms_unverified';
-        }
-        // Get user phone number.
         $get_phone_number = get_user_meta($_GET["user_id"], 'sms_user_phone', true);
         if(!$get_phone_number){
             $get_phone_number = false;
         }
+        $get_sms_status = get_user_meta($_GET["user_id"], 'sms_2fa_status', true);
+        if(!$get_sms_status){
+            $get_sms_status = 'sms_unverified';
+        }
+        $get_sms_secret = get_user_meta($_GET["user_id"], 'sms_2fa_secret', true);
+        if(!$get_sms_secret){
+            $get_sms_secret = 'invalid';
+        }
+
+        $get_mfa_secret = get_user_meta($_GET["user_id"], 'google2fa_secret', true);
+        if(!$get_mfa_secret){
+            $get_mfa_secret = '';
+        }
+
+        $get_mfa_validation = get_user_meta($_GET["user_id"], 'mfa_validation', true);
+        if(!$get_mfa_validation){
+            $get_mfa_validation = '';
+        }
     } else {
         // Last chance to get registration status
         if(isset($_GET["user"])){
-            $get_registration_status = get_user_meta($_GET["user"], 'mfa_status', true);
-            if(!$get_registration_status){
-                $get_registration_status = 'mfa_unverified';
+            $get_auth_status = get_user_meta($_GET["user"], 'auth_status', true);
+            if(!$get_auth_status){
+                $get_auth_status = 'none';
             }
-            // SMS Status
-            $get_sms_status = get_user_meta($_GET["user"], 'sms_2fa_status', true);
-            if(!$get_sms_status){
-                $get_sms_status = 'sms_unverified';
+            $get_mfa_status =  get_user_meta($_GET["user"], 'mfa_status', true);
+            if(!$get_mfa_status){
+                $get_mfa_status = 'mfa_unverified';
             }
-            // Get user phone number.
             $get_phone_number = get_user_meta($_GET["user"], 'sms_user_phone', true);
             if(!$get_phone_number){
                 $get_phone_number = false;
             }
+            $get_sms_status = get_user_meta($_GET["user"], 'sms_2fa_status', true);
+            if(!$get_sms_status){
+                $get_sms_status = 'sms_unverified';
+            }
+            $get_sms_secret = get_user_meta($_GET["user"], 'sms_2fa_secret', true);
+            if(!$get_sms_secret){
+                $get_sms_secret = 'invalid';
+            }
+
+            $get_mfa_secret = get_user_meta($_GET["user"], 'google2fa_secret', true);
+            if(!$get_mfa_secret){
+                $get_mfa_secret = '';
+            }
+
+            $get_mfa_validation = get_user_meta($_GET["user"], 'mfa_validation', true);
+            if(!$get_mfa_validation){
+                $get_mfa_validation = '';
+            }
+
         } else {
             // User is matching with there own account.
-            if( $_SERVER['REQUEST_URI'] == '/wp-admin/profile.php' ){
+            if( str_contains($_SERVER['REQUEST_URI'] , 'profile.php') ){
                 $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
                 if(!$get_auth_status){
                     $get_auth_status = 'none';
                 }
-                $get_registration_status =  get_user_meta(get_current_user_id(), 'mfa_status', true);
-                if(!$get_registration_status){
-                    $get_registration_status = 'mfa_unverified';
+                $get_mfa_status =  get_user_meta(get_current_user_id(), 'mfa_status', true);
+                if(!$get_mfa_status){
+                    $get_mfa_status = 'mfa_unverified';
                 }
                 $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
                 if(!$get_phone_number){
@@ -76,19 +117,45 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 if(!$get_sms_status){
                     $get_sms_status = 'sms_unverified';
                 }
-            // All else fails set everything to false or invalid.
+                $get_sms_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
+                if(!$get_sms_secret){
+                    $get_sms_secret = 'invalid';
+                }
+
+                $get_mfa_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
+                if(!$get_mfa_secret){
+                    $get_mfa_secret = '';
+                }
+
+                $get_mfa_validation = get_user_meta(get_current_user_id(), 'mfa_validation', true);
+                if(!$get_mfa_validation){
+                    $get_mfa_validation = '';
+                }
+                
+
             } else {
                 $get_auth_status = 'none';
-                $get_registration_status = 'mfa_unverified';
+                $get_mfa_status = 'mfa_unverified';
+                $get_mfa_validation = '';
                 $get_phone_number = false;
                 $get_sms_status = 'sms_unverified';
+                $get_mfa_secret = '';
+                $get_sms_secret = 'invalid';
             }
+
         }
     }
 
 ?>
     <h3><?php _e("Extra profile information", "blank"); ?></h3>
     <table class="form-table">
+        <tr>
+            <th><label for="auth_reset"><?php _e("Auth Rest"); ?></label></th>
+            <td>
+                <input type="checkbox"  name="auth_reset" id="auth_reset"  />
+            </td>
+        </tr>
+
         <tr>
             <th><label for="auth_select"><?php _e("User Auth Selection"); ?></label></th>
             <td>
@@ -101,24 +168,40 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
         </tr>
 
         <tr>
-            <th><label for="google2fa_code"><?php _e("Google 2fa"); ?></label></th>
+            <th><label for="mfa_status"><?php _e("MFA Status"); ?></label></th>
             <td>
-                <select name="google2fa_code" id="google2fa_code">
-                    <option value="mfa_verified" <?php if ($get_registration_status == 'mfa_verified') { ?>selected="selected" <?php } ?>>mfa_verified</option>
-                    <option value="mfa_unverified" <?php if ($get_registration_status == 'mfa_unverified') { ?>selected="selected" <?php } ?>>mfa_unverified</option>
-                </select>
+                <input disabled name="mfa_status" id="mfa_status" value="<?= $get_mfa_status; ?>">
             </td>
         </tr>
 
         <tr>
-            <th><label for="sms_code"><?php _e("SMS 2fa"); ?></label></th>
+            <th><label for="google2fa_secret"><?php _e("MFA Secret"); ?></label></th>
             <td>
-                <select name="sms_code" id="sms_code">
-                    <option value="sms_verified" <?php if ($get_sms_status == 'sms_verified') { ?>selected="selected" <?php } ?>>sms2fa_verified</option>
-                    <option value="sms_unverified" <?php if ($get_sms_status == 'sms_unverified') { ?>selected="selected" <?php } ?>>sms2fa_unverified</option>
-                </select>
+                <input disabled name="google2fa_secret" id="google2fa_secret" value="<?= $get_mfa_secret; ?>">
             </td>
         </tr>
+
+        <tr>
+            <th><label for="mfa_validation"><?php _e("MFA Validation"); ?></label></th>
+            <td>
+                <input disabled name="mfa_validation" id="mfa_validation" value="<?= $get_mfa_validation; ?>">
+            </td>
+        </tr>
+
+        <tr>
+            <th><label for="sms_status"><?php _e("SMS 2fa Status"); ?></label></th>
+            <td>
+                <input disabled name="sms_status" id="sms_status" value="<?= $get_sms_status; ?>">
+            </td>
+        </tr>
+
+        <tr>
+            <th><label for="sms_secret"><?php _e("SMS 2fa Secret"); ?></label></th>
+            <td>
+                <input disabled name="sms_secret" id="sms_secret" value="<?= $get_sms_secret; ?>">
+            </td>
+        </tr>
+        
 
         <?php if($get_phone_number){ ?>
             <tr>
