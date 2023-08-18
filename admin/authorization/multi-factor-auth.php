@@ -60,12 +60,6 @@ add_action('mfa-registration-page', function () {
 
         if( isset($mfa_validation) && $mfa_validation == 'valid'){
             update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
-            // Lets Check for the password reset url cookie.
-            // $cookie_name = "ronik-2fa-reset-redirect";
-            // if(isset($_COOKIE[$cookie_name])) {
-            //     // wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-            //     // exit();
-            // }
             // This is mostly for messaging purposes..
             wp_redirect( esc_url(home_url('/mfa?mfaredirect=expired')) );
             exit;
@@ -108,10 +102,19 @@ add_action('mfa-registration-page', function () {
             <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <input type="hidden" type="text" name="re-auth" value="RESET">
-                <input type="submit" name="submit" value="Change Authentication Selection.">
+                <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
             </form>
         <?php }?>
-    <?php } else{ ?>
+    <?php } else{
+        $cookie_name = "ronik-auth-reset-redirect";
+        if(isset($_COOKIE[$cookie_name])) {
+            wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+            exit;
+        } else {
+            wp_redirect( esc_url(home_url()) );
+            exit;
+        }
+    ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
         <script>

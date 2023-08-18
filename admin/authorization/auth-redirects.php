@@ -145,7 +145,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
                         // session_destroy();
                         update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
                         // Takes care of the redirection logic
-                        ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+                        ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                     } else {
                         if (str_contains($_SERVER['REQUEST_URI'], '/mfa/')) {
                         // if($_SERVER['REQUEST_URI'] == '/mfa/'){
@@ -154,7 +154,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
                             $dataUrl['reDest'] = '/';
 
                             if($mfa_validation !== 'valid' ){
-                                ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+                                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                             }
                         }
                     }
@@ -164,7 +164,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
                         // Redirect Magic, custom function to prevent an infinite loop.
                         $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/');
                         $dataUrl['reDest'] = '/mfa/';
-                    ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+                    ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 }
             }
 }
@@ -202,7 +202,7 @@ function ronikdesigns_redirect_registered_2fa() {
                     if($past_date > $sms_code_timestamp ){
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         // Takes care of the redirection logic
-                        ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+                        ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                     } else {
                         if (str_contains($_SERVER['REQUEST_URI'], '/2fa/')) {
                         // if($_SERVER['REQUEST_URI'] == '/2fa/'){
@@ -210,23 +210,21 @@ function ronikdesigns_redirect_registered_2fa() {
                             $dataUrl['reUrl'] = array('/');
                             $dataUrl['reDest'] = '/';
 
-                            error_log(Print_r( 'FIXXXXXX THIS', true));
-                            ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
-                            // if(){
-                            // }
+                            error_log(Print_r( 'RONIK NEXT FIX!', true));
+                            ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                         }
                     }
                 } else {
                     error_log(print_r( $get_registration_status, true));
                     update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                     // Takes care of the redirection logic
-                    ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+                    ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 }
             }else {
                 // Lets block the user from accessing the 2fa if already authenticated.
                 $dataUrl['reUrl'] = array('/');
                 $dataUrl['reDest'] = '/';
-                ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
             }
     //     }
     // }

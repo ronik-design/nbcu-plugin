@@ -10,7 +10,7 @@ if(!$f_auth['enable_mfa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
 	$dataUrl['reUrl'] = array('/wp-admin/admin-post.php');
 	$dataUrl['reDest'] = '';
-	ronikRedirectLoopApproval($dataUrl, "ronik-2fa-reset-redirect");
+	ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
 }
 // We put this in the header for fast redirect..
 $f_success = isset($_GET['mfa-success']) ? $_GET['mfa-success'] : false;
@@ -28,14 +28,13 @@ if(isset($_GET["mfaredirect"])){
 // Success message
 if($f_success){
     // Lets Check for the password reset url cookie.
-    $cookie_name = "ronik-2fa-reset-redirect";
+    $cookie_name = "ronik-auth-reset-redirect";
     if(isset($_COOKIE[$cookie_name])) {
         wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
         exit;
     } else {
         // We run our backup plan for redirecting back to previous page.
         // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-        // add_action('wp_footer', 'ronikdesigns_redirect_js');
     }
 }
 ?>

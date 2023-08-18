@@ -10,6 +10,7 @@ use Twilio\Rest\Client;
 
 add_action('2fa-registration-page', function () {
         $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
+		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
         $f_mfa_settings = get_field('mfa_settings', 'options');
         if( isset($f_mfa_settings['sms_expiration_time']) || $f_mfa_settings['sms_expiration_time'] ){
             $f_sms_expiration_time = $f_mfa_settings['sms_expiration_time'];
@@ -20,7 +21,7 @@ add_action('2fa-registration-page', function () {
         if (($get_registration_status !== 'sms_2fa_unverified')) {
             $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
             // If past date is greater than current date. We reset to unverified & start the process all over again.
-            if($past_date > $get_registration_status ){
+            if($past_date > $sms_code_timestamp ){
                 $valid = false;
             } else {
                 $valid = true;
@@ -30,7 +31,16 @@ add_action('2fa-registration-page', function () {
         }
 
         // If Valid we redirect
-        if ($valid) { ?>
+        if ($valid) {
+            $cookie_name = "ronik-auth-reset-redirect";
+            if(isset($_COOKIE[$cookie_name])) {
+                wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+                exit;
+            } else {
+                wp_redirect( esc_url(home_url()) );
+                exit;
+            }
+        ?>
             <div class="">Authorization Saved!</div>
             <div id="countdown"></div>
             <script>
@@ -85,9 +95,7 @@ add_action('2fa-registration-page', function () {
                         update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
                     }
                     if( $past_date > $sms_code_timestamp ){
-                        error_log(print_r( 'Expired', true));
-                        error_log(print_r( $past_date, true));
-                        error_log(print_r( $sms_code_timestamp, true));
+                        error_log(print_r( 'SMS Expired', true));
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
                         // This is mostly for messaging purposes..
@@ -201,7 +209,7 @@ add_action('2fa-registration-page', function () {
                 <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                     <input type="hidden" type="text" name="re-auth" value="RESET">
-                    <input type="submit" name="submit" value="Change Authentication Selection.">
+                    <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
                 </form>
             <?php }
         }

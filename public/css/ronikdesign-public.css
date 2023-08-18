@@ -42,17 +42,21 @@
   padding: 15px 20px;
   background-color: #acff7b;
   color: #000;
+  margin: 10px 0;
 }
 .twofa-message__nomatch, .mfa-message__nomatch {
   padding: 15px 20px;
   background-color: #ff6060;
+  margin: 10px 0;
 }
 .mfa-message__message {
   padding: 15px 20px;
   background-color: #ffda60;
+  margin: 10px 0;
 }
 
 .dev-notice{
+  box-shadow: 10px 10px 33px -26px rgba(0,0,0,0.75);
   position: fixed;
   top: 5em;
   right: 0px;

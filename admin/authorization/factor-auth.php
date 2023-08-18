@@ -26,12 +26,23 @@ add_action('auth-registration-page', function () {
     if ($valid) {
         $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
         $f_success = isset($_GET['auth-phone_number']) ? $_GET['auth-phone_number'] : false;
-        // Success message
-        if($f_success){
-            // This is mostly for messaging purposes..
-            wp_redirect( esc_url(home_url('/2fa?2faredirect=saved')) );
-            exit;
-        }
+        // Authorization Saved!
+            // Success message
+            if($f_success){
+                // This is mostly for messaging purposes..
+                wp_redirect( esc_url(home_url('/2fa?2faredirect=saved')) );
+                exit;
+            }
+            if($get_auth_status == 'auth_select_sms'){
+                // This is mostly for messaging purposes..
+                wp_redirect( esc_url(home_url('/2fa?2faredirect=saved')) );
+                exit;
+            }
+            if($get_auth_status == 'auth_select_mfa'){
+                // This is mostly for messaging purposes..
+                wp_redirect( esc_url(home_url('/mfa?mfaredirect=saved')) );
+                exit;
+            }
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
@@ -57,7 +68,9 @@ add_action('auth-registration-page', function () {
             <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                 <p>Please enter a valid phone number to receive authentication codes by text message:</p><br>
                 <label for="auth-phone_number">Phone Number:</label>
-                <input type="text" id="auth-phone_number" name="auth-phone_number" required><br><br>
+
+                <input type="tel" id="auth-phone_number" name="auth-phone_number" placeholder="123-456-7890" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required><br>
+                <small>Format: 123-45-678</small><br><br>
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <button type="submit" value="Send SMS Code">Submit phone number.</button>
             </form>
@@ -65,7 +78,7 @@ add_action('auth-registration-page', function () {
             <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <input type="hidden" type="text" name="re-auth" value="RESET">
-                <input type="submit" name="submit" value="Change Authentication Selection.">
+                <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
             </form>
         <?php } else { ?>
             <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">

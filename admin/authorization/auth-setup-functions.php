@@ -139,20 +139,19 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                     // Lets get the current post title. & Check if the post title are NOT EQUAL to mfa || 2fa.
                     if($post->post_title == 'mfa' || $post->post_title == '2fa'){
                         $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
-                        error_log(print_r($get_auth_status , true));
 
                         if($get_auth_status == 'auth_select_sms'){
                             if($post->post_title == 'mfa'){
                                 error_log(print_r('MFA Hit' , true));
-                                    wp_redirect( esc_url(home_url()) );
-                                    exit;
+                                wp_redirect( esc_url(home_url()) );
+                                exit;
                             }
                         }
                         if($get_auth_status == 'auth_select_mfa'){
                             if($post->post_title == '2fa'){
                                 error_log(print_r('2fa Hit' , true));
-                                    wp_redirect( esc_url(home_url()) );
-                                    exit;
+                                wp_redirect( esc_url(home_url()) );
+                                exit;
                             }
                         }
 
@@ -160,7 +159,6 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         // The magic part we check if any id are within the
                         // Lets check the id both ids dont match we kill the redirect.
                         if( $post && property_exists($post, 'ID') ){
-                            // error_log(print_r( 'ronikRedirectLoopApproval', true));
                             if( !in_array($post->ID, $f_id_array) ){
                                 return false;
                             } else {
@@ -194,21 +192,16 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         // Lastly we check if the requested matches the permalink to prevent looping issues.
                         if(get_permalink() !== home_url($dataUrl['reDest'])){
                             if($_SERVER['REQUEST_URI'] !== '/favicon.ico'){
-
                                 if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa')  ){
                                     $cookie_value = urlencode($_SERVER['REQUEST_URI']);
                                 }
-
                             } else {
                                 $cookie_value =  '/';
                             }
-
-                            // if(!$cookie_value){ $cookie_value =  '/'; }
-                            // Lets expire the cookie after 1 day.
+                            // Lets expire the cookie after 30 days.
                             setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
                             // Pause server.
                             sleep(.5);
-
                             wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
                             exit;
                         }
