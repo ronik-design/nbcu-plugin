@@ -64,11 +64,13 @@ add_action('2fa-registration-page', function () {
             <?php
                 $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
                 $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+                $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
             ?>
                 <div class="dev-notice">
                     <h4>Dev Message:</h4>
                     <p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
                     <p>SMS Status: <?php echo $sms_2fa_status; ?></p>
+                    <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
                 </div>
             <?php
             // Based on the session conditions we check if valid if not we default back to the send SMS button.
@@ -194,8 +196,8 @@ add_action('2fa-registration-page', function () {
                             });
                         }
                     </script>
-                    <input type="text" name="validate-sms-code" value="" required>
-                    <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                    <input type="text" id="validate-sms-code" name="validate-sms-code" minlength="6" maxlength="6" required>
+                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                     <p>If you don't receive a text message, please reach out to the <a href="mailto:together@nbcuni.com?subject=2fa SMS Issue">together@nbcuni.com</a> for support. </p>
                     <button type="submit" value="Reset Password">Submit SMS Code</button>
                 </form>

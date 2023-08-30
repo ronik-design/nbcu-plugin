@@ -1195,7 +1195,26 @@ https://test.com/',
 				'layout' => 'block',
 				'sub_fields' => array(
 
-
+					array(
+						'key' => 'field_6372afa6da3f200cdaasaasssss_ronikdesign',
+						'label' => 'User Override',
+						'name' => 'user_override',
+						'type' => 'textarea',
+						'instructions' => 'Add user email, separated by commas.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '100',
+							'class' => '',
+							'id' => '',
+						),
+						'append' => '',
+						'message' => '',
+						'default_value' => '',
+						'ui' => 1,
+						'ui_on_text' => '',
+						'ui_off_text' => '',
+					),
 					array(
 						'key' => 'field_6372afa6da3f200cdaasaasss_ronikdesign',
 						'label' => 'Twilio Token',

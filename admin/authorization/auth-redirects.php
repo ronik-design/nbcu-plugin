@@ -215,7 +215,6 @@ function ronikdesigns_redirect_registered_2fa() {
                         }
                     }
                 } else {
-                    error_log(print_r( $get_registration_status, true));
                     update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                     // Takes care of the redirection logic
                     ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
@@ -260,9 +259,18 @@ function ronikdesigns_redirect_registered_2fa() {
             }
             });
             jQuery(document).ready(function(){
-                console.log('Lets check the timeout');
+                console.log('Lets check the inital timeout');
                 // Lets trigger the validation on page load.
                 timeValidationAjax('invalid', 'valid');
+
+                // This is critical we basically re-run the timeValidationAjax function every 30 seconds
+                function timeValidationChecker() {
+                    console.log('Lets check the timeout');
+                    // Lets trigger the validation on page load.
+                    timeValidationAjax('invalid', 'valid');
+                }
+                setInterval(timeValidationChecker, (60000/2));
+
                 <?php
                 	$f_auth = get_field('mfa_settings', 'options');
                     $auth_idle_time = $f_auth['auth_idle_time'];

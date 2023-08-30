@@ -18,6 +18,7 @@ add_action('mfa-registration-page', function () {
     $get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
     $mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
     $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
+    $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 
     // Check if user has secret if not add secret.
     if (!$get_current_secret) {
@@ -42,6 +43,7 @@ add_action('mfa-registration-page', function () {
             <p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
             <p>MFA Status: <?php echo $mfa_status; ?></p>
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
+            <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
         </div>
 
     <?php

@@ -206,21 +206,46 @@ class Ronikdesign_Admin
 			// We add the logic into the theme.
 			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
 			if(!$f_bypasser){
-				include $file;
+				// The next part we find the user email.
+				$user_id = get_current_user_id();
+				$user_email = get_user_meta($user_id, "user_email", true);
+				// If default user email is not found we look through a custom data path. do_users.
+				if(!$user_email){
+					global $wpdb;
+					$sql = "select * from do_users where ID = '$user_id'";
+					$do_users = $wpdb->get_results($sql);
+
+					if($do_users[0]->user_email){
+						$user_email = $do_users[0]->user_email;
+					} else {
+						$user_email = 'No email found.';
+					}
+				}	
+				// If no email we include the file.
+				if($user_email == 'No email found.'){
+					include $file;
+				} else {
+					$f_user_override = get_option('options_mfa_settings_user_override');
+					// We remove all whitespace (including tabs and line ends)
+					$f_user_override = preg_replace('/\s+/', '', $f_user_override);
+					// Lets trim just incase as well.
+					$f_user_override_array = explode(",", trim($f_user_override));
+					// Detect if array is populated.
+					if (!in_array($user_email, $f_user_override_array)) {
+						include $file;
+					}
+
+				}
+
 			}
 		}
 		// Include the password reset.
 		foreach (glob(dirname(__FILE__) . '/password-reset/*.php') as $file) {
 			// This is critical without this we would get an infinite loop...
-				// SMS Checkpoint
-				$get_current_sms_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
-				$get_registration_sms_status = get_user_meta(get_current_user_id(), 'sms_2fa_status', true);
-				// MFA Checkpoint
-				$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
-				$get_registration_status = get_user_meta(get_current_user_id(), 'mfa_status', true);
-				// If all fields are not empty we include the password reset file.
-				if( (empty($get_current_sms_secret) || $get_registration_sms_status == 'sms_2fa_unverified') || (empty($get_current_secret) || $get_registration_status == 'mfa_unverified')){} else {
-					// include $file;
+				// We check if the server REQUEST_URI contains the following "admin-post", "auth", "2fa", "mfa"
+				if( !str_contains($_SERVER['REQUEST_URI'], 'admin-post') && !str_contains($_SERVER['REQUEST_URI'], 'auth') && !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa')  ){
+					error_log(print_r($_SERVER['REQUEST_URI'], true));
+					include $file;
 				}
 		}
 		// Include the manifest.
@@ -286,7 +311,7 @@ class Ronikdesign_Admin
 		// session_start();
 		$f_value = array();
 		$f_auth = get_field('mfa_settings', 'options');
-
+		
 		$f_twilio_id = get_option('options_mfa_settings_twilio_id');
 		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
 		$f_twilio_number = get_option('options_mfa_settings_twilio_number');
@@ -299,6 +324,9 @@ class Ronikdesign_Admin
 		$sms_2fa_status = get_user_meta( get_current_user_id(),'sms_2fa_status', true );
 		$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
 		$get_current_secret_2fa = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
+
+		$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+
 		// Update the status with timestamp.
 		// Keep in mind all timestamp are within the UTC timezone. For constant all around.
 		// https://www.timestamp-converter.com/
@@ -440,11 +468,27 @@ class Ronikdesign_Admin
 			// Second Check:
 				// Lets validate-sms-code
 				if(isset($_POST['validate-sms-code']) && $_POST['validate-sms-code']){
+
+					if( strlen($_POST['validate-sms-code']) !== 6 ){
+						$f_value['sms-error'] = "nomatch";
+						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 3)){
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+						} else {
+							if(!isset($get_auth_lockout_counter) || !$get_auth_lockout_counter){
+								$get_auth_lockout_counter = 0;
+							}
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+						}
+						$r_redirect = '/2fa/?'.http_build_query($f_value, '', '&amp;');
+						// We build a query and redirect back to 2fa route.
+						wp_redirect( esc_url(home_url($r_redirect)) );
+						exit;
+					} 
+
 					$verification_check = $client->verify->v2->services($get_current_secret_2fa)->verificationChecks->create([
 						"to" => $to_number,
 						"code" => $_POST['validate-sms-code']
-						]
-					);
+					]);
 					if($verification_check->status == 'approved'){
 						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_verified');
 						$f_value['sms-success'] = "success";
@@ -454,6 +498,14 @@ class Ronikdesign_Admin
 						exit;
 					} else {
 						$f_value['sms-error'] = "nomatch";
+						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 3)){
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+						} else {
+							if(!isset($get_auth_lockout_counter) || !$get_auth_lockout_counter){
+								$get_auth_lockout_counter = 0;
+							}
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+						}
 					}
 					// if($get_current_secret_2fa == $_POST['validate-sms-code']){
 					// 	update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_verified');
@@ -485,6 +537,13 @@ class Ronikdesign_Admin
                     if( $past_date > $sms_code_timestamp ){
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+
+						if($get_auth_lockout_counter == 3){
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+						} else {
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+						}
+
 						wp_send_json_success('reload');
                     }  else {
 						wp_send_json_success('noreload');
@@ -511,12 +570,25 @@ class Ronikdesign_Admin
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
 							$f_value['mfa-success'] = "success";
 						} else {
+							if($get_auth_lockout_counter == 3){
+								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+							} else {
+								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+							}
+
 							$f_value['mfa-error'] = "nomatch";
 						}
 					}  else {
 						$valid = false;
 						// Lets store the mfa validation data inside the current usermeta.
 						update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
+
+						if($get_auth_lockout_counter == 3){
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+						} else {
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+						}
+
 						$f_value['mfa-error'] = "nomatch";
 					}
 					$r_redirect = '/mfa/?'.http_build_query($f_value, '', '&amp;');
@@ -571,6 +643,29 @@ class Ronikdesign_Admin
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
+				// Lets check to see if the user is idealing to long.
+				if(isset($_POST['timeLockoutChecker']) && ($_POST['timeLockoutChecker'] == 'valid')){
+					error_log(print_r('Lockout Time Checker Validation' , true));
+					if( isset($get_auth_lockout_counter) && (strlen($get_auth_lockout_counter) > 6) ){
+						$f_expiration_time = 3;
+						$past_date = strtotime((new DateTime())->modify('-'.$f_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
+						if( $past_date > $get_auth_lockout_counter ){
+							delete_user_meta(get_current_user_id(), 'auth_lockout_counter');
+							wp_send_json_success('reload');
+						} else {
+							// Catch ALL
+							wp_send_json_success('noreload');
+						}
+					} else {
+						// Catch ALL
+						wp_send_json_success('noreload');
+					}
+					// Catch ALL
+					wp_send_json_success('noreload');
+				}
+
+
+
 	}
 
 
