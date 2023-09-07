@@ -209,16 +209,20 @@ class Ronikdesign_Admin
 				// The next part we find the user email.
 				$user_id = get_current_user_id();
 				$user_email = get_user_meta($user_id, "user_email", true);
+
+				error_log(print_r( $user_id , true));
+				
 				// If default user email is not found we look through a custom data path. do_users.
 				if(!$user_email){
 					global $wpdb;
 					$sql = "select * from do_users where ID = '$user_id'";
 					$do_users = $wpdb->get_results($sql);
-
-					error_log(print_r( $do_users , true));
-
-					if($do_users[0]->user_email){
-						$user_email = $do_users[0]->user_email;
+					if(empty($do_users)){
+						if($do_users[0]->user_email){
+							$user_email = $do_users[0]->user_email;
+						} else {
+							$user_email = 'No email found.';
+						}
 					} else {
 						$user_email = 'No email found.';
 					}
