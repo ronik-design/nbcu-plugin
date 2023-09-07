@@ -215,6 +215,8 @@ class Ronikdesign_Admin
 					$sql = "select * from do_users where ID = '$user_id'";
 					$do_users = $wpdb->get_results($sql);
 
+					error_log(print_r( $do_users , true));
+
 					if($do_users[0]->user_email){
 						$user_email = $do_users[0]->user_email;
 					} else {

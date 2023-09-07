@@ -2,7 +2,7 @@
 // This file plays a critical role. It loads in the MFA & SMS file.
 // Also handles all the redirects.
 
-error_log(print_r( 'tessttt', true));
+error_log(print_r( 'Auth Redirects', true));
 
     // This function block is responsible for redirecting users to the correct AUTH page.
     function ronikdesigns_redirect_registered_auth() {
@@ -12,10 +12,12 @@ error_log(print_r( 'tessttt', true));
 
         // Kill the entire AUTH if both are not enabled!
         if((!$f_auth['enable_mfa_settings']) && (!$f_auth['enable_2fa_settings'])){
+            error_log(print_r( 'Auth is Killed', true));
             return;
         }
         // Restricted Access only login users can proceed.
         if(!is_user_logged_in()){
+            error_log(print_r( 'Auth is due to not logged in user.', true));
             // Redirect Magic, custom function to prevent an infinite loop.
             $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/', '/2fa/', '/mfa/');
             $dataUrl['reDest'] = '';
