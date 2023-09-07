@@ -30,19 +30,19 @@ class Ronikdesign_Admin
 	 * The ID of this plugin.
 	 *
 	 * @since    1.0.0
-	 * @access   protected
+	 * @access   private
 	 * @var      string    $plugin_name    The ID of this plugin.
 	 */
-	protected $plugin_name;
+	private $plugin_name;
 
 	/**
 	 * The version of this plugin.
 	 *
 	 * @since    1.0.0
-	 * @access   protected
+	 * @access   private
 	 * @var      string    $version    The current version of this plugin.
 	 */
-	protected $version;
+	private $version;
 
 	/**
 	 * Initialize the class and set its properties.

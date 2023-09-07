@@ -8,14 +8,13 @@ error_log(print_r( 'Auth Redirects', true));
     function ronikdesigns_redirect_registered_auth() {
         $f_auth = get_field('mfa_settings', 'options');
         $f_auth_mfa = get_option('options_mfa_settings_enable_mfa_settings');
-        $f_auth_2fa = get_option('options_mfa_settings_enable_sms2fa_settings');
+        $f_auth_2fa = get_option('options_mfa_settings_enable_2fa_settings');
 
         $f_admin_auth_select['mfa'] = false;
         $f_admin_auth_select['2fa'] = false;
 
         error_log(print_r( 'f_auth_mfa', true));
         error_log(print_r(  $f_auth_mfa, true));
-
         error_log(print_r( 'f_auth_2fa', true));
         error_log(print_r( $f_auth_2fa, true));
 
