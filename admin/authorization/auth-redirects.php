@@ -7,11 +7,14 @@ error_log(print_r( 'Auth Redirects', true));
     // This function block is responsible for redirecting users to the correct AUTH page.
     function ronikdesigns_redirect_registered_auth() {
         $f_auth = get_field('mfa_settings', 'options');
+        $f_auth_mfa = get_option('options_mfa_settings_enable_mfa_settings');
+        $f_auth_2fa = get_option('options_mfa_settings_enable_sms2fa_settings	');
+
         $f_admin_auth_select['mfa'] = false;
         $f_admin_auth_select['2fa'] = false;
 
         // Kill the entire AUTH if both are not enabled!
-        if((!$f_auth['enable_mfa_settings']) && (!$f_auth['enable_2fa_settings'])){
+        if((!$f_auth_mfa) && (!$f_auth_2fa)){
             error_log(print_r( 'Auth is Killed', true));
             return;
         }
@@ -25,23 +28,23 @@ error_log(print_r( 'Auth Redirects', true));
         }
         // If both AUTH are not enabled we auto bypass the auth-template. By including the auth files below.
             // Lets check if MFA is not enabled!
-            if(!$f_auth['enable_mfa_settings']){
+            if(!$f_auth_mfa){
                 // Lets check if 2fa is enabled!
-                if($f_auth['enable_2fa_settings']){
+                if($f_auth_2fa){
                     // Store the values in an array for later.
                     $f_admin_auth_select['2fa'] = true;
                 }
             }
             // Lets check if 2fa is not enabled!
-            if(!$f_auth['enable_2fa_settings']){
+            if(!$f_auth_2fa){
                 // Lets check if MFA is enabled!
-                if($f_auth['enable_mfa_settings']){
+                if($f_auth_mfa){
                     // Store the values in an array for later.
                     $f_admin_auth_select['mfa'] = true;
                 }
             }
             // Lets check if 2fa is not enabled!
-            if($f_auth['enable_2fa_settings'] && $f_auth['enable_mfa_settings']){
+            if($f_auth_2fa && $f_auth_mfa){
                 // Store the values in an array for later.
                 $f_admin_auth_select['mfa'] = true;
                 $f_admin_auth_select['2fa'] = true;
