@@ -21,10 +21,10 @@ error_log(print_r( 'Auth Redirects', true));
 
 
         // Kill the entire AUTH if both are not enabled!
-        // if((!$f_auth_mfa) && (!$f_auth_2fa)){
-        //     error_log(print_r( 'Auth is Killed', true));
-        //     return;
-        // }
+        if((!$f_auth_mfa) && (!$f_auth_2fa)){
+            error_log(print_r( 'Auth is Killed', true));
+            return;
+        }
         // Restricted Access only login users can proceed.
         if(!is_user_logged_in()){
             error_log(print_r( 'Auth is due to not logged in user.', true));
