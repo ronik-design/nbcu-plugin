@@ -244,7 +244,6 @@ class Ronikdesign_Admin
 			// This is critical without this we would get an infinite loop...
 				// We check if the server REQUEST_URI contains the following "admin-post", "auth", "2fa", "mfa"
 				if( !str_contains($_SERVER['REQUEST_URI'], 'admin-post') && !str_contains($_SERVER['REQUEST_URI'], 'auth') && !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa')  ){
-					error_log(print_r($_SERVER['REQUEST_URI'], true));
 					include $file;
 				}
 		}
@@ -632,6 +631,11 @@ class Ronikdesign_Admin
 							update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
 							wp_send_json_success('reload');
 						}
+					}
+					if($sms_code_timestamp == 'invalid'){
+						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+						update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+						wp_send_json_success('reload');
 					}
 					if(isset($sms_2fa_status) && $sms_2fa_status && ($sms_2fa_status !== 'sms_2fa_unverified')){
 						if($past_date > $sms_code_timestamp ){

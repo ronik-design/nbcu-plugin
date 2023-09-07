@@ -2,11 +2,14 @@
 // This file plays a critical role. It loads in the MFA & SMS file.
 // Also handles all the redirects.
 
+error_log(print_r( 'tessttt', true));
+
     // This function block is responsible for redirecting users to the correct AUTH page.
     function ronikdesigns_redirect_registered_auth() {
         $f_auth = get_field('mfa_settings', 'options');
         $f_admin_auth_select['mfa'] = false;
         $f_admin_auth_select['2fa'] = false;
+
         // Kill the entire AUTH if both are not enabled!
         if((!$f_auth['enable_mfa_settings']) && (!$f_auth['enable_2fa_settings'])){
             return;
@@ -44,6 +47,18 @@
             // We check the current user auth status and compare it to the admin auth selection
             $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
 
+
+            
+            if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
+                if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
+                    error_log(print_r($_SERVER['REQUEST_URI'], true));
+                    $cookie_value = urlencode($_SERVER['REQUEST_URI']);
+                    // Lets expire the cookie after 30 days.
+                    setcookie('ronik-auth-reset-redirect', $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+                }    
+            }
+
+
             // Okay this is critical: If site admin disables one auth but not the other auth.
             // Basically user selection is thrown away and is automatically set.
             if($f_admin_auth_select['mfa'] && !$f_admin_auth_select['2fa'] ){
@@ -77,6 +92,15 @@
                     return;
                 }
             }
+            
+            // This is critical
+            if($get_auth_status == 'auth_select_sms-missing'){
+                $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
+                $dataUrl['reDest'] = '/auth/';
+                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                return;
+            }
+
             // Lets check if the current user status is none or not yet set.
             if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
                 error_log(print_r('roniknbcu_ronikdesign_none', true));
@@ -105,6 +129,11 @@
                     ronikdesigns_redirect_registered_2fa();
                     return;
                 }
+            } else {
+                $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
+                $dataUrl['reDest'] = '/auth/';
+                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                return;
             }
     }
     add_action( 'admin_init', 'ronikdesigns_redirect_registered_auth' );

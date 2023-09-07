@@ -523,3 +523,404 @@ body {
 .pass-reset-wrapper form button:hover {
   opacity: 0.8;
 }
+
+.auth-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  background-size: cover;
+  margin: 0 auto;
+  padding: 64px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.auth-wrapper .mfa-message {
+  margin: -74px;
+  width: calc(100% + 128px);
+  margin-bottom: 25px;
+  font-family: "gotham-light", sans-serif;
+  font-size: 17px;
+}
+.auth-wrapper .mfa-message .mfa-message__nomatch {
+  margin: 0;
+  background-color: #D34949;
+}
+.auth-wrapper .auth-flagger {
+  background-color: #1A1A1A;
+  width: 249px;
+  height: 229px;
+  flex: 0 1 auto;
+}
+
+.mfa-wrapper, .auth-content, .twofa-wrapper {
+  background: white;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 96px 56px;
+  max-width: 836px;
+  font-family: "gotham-bookgotham-book", sans-serif;
+  font-size: 32px;
+  line-height: 1.4;
+  color: #1A1A1A;
+}
+.mfa-wrapper h2, .auth-content h2, .twofa-wrapper h2 {
+  font-size: 32px;
+  line-height: 1;
+}
+.mfa-wrapper .instructions, .mfa-wrapper form, .auth-content .instructions, .auth-content form, .twofa-wrapper .instructions, .twofa-wrapper form {
+  font-family: "gotham-light", sans-serif;
+  font-size: 14px;
+  padding-top: 28px;
+}
+.mfa-wrapper .instructions h3, .mfa-wrapper .instructions h4, .mfa-wrapper .instructions h5, .mfa-wrapper .instructions h6, .auth-content .instructions h3, .auth-content .instructions h4, .auth-content .instructions h5, .auth-content .instructions h6, .twofa-wrapper .instructions h3, .twofa-wrapper .instructions h4, .twofa-wrapper .instructions h5, .twofa-wrapper .instructions h6 {
+  font-family: "gotham-light", sans-serif;
+  font-size: 17px;
+  padding-bottom: 28px;
+}
+.mfa-wrapper .instructions p, .mfa-wrapper .instructions strong, .auth-content .instructions p, .auth-content .instructions strong, .twofa-wrapper .instructions p, .twofa-wrapper .instructions strong {
+  padding-bottom: 28px;
+}
+.mfa-wrapper .instructions p:last-child, .mfa-wrapper .instructions strong:last-child, .auth-content .instructions p:last-child, .auth-content .instructions strong:last-child, .twofa-wrapper .instructions p:last-child, .twofa-wrapper .instructions strong:last-child {
+  padding-bottom: 0;
+}
+.mfa-wrapper .instructions a, .auth-content .instructions a, .twofa-wrapper .instructions a {
+  font-family: "gotham-mediumgotham-medium", sans-serif;
+  color: #1A1A1A;
+  transition: all 0.4s;
+  text-decoration: underline;
+}
+.mfa-wrapper .instructions a:hover, .auth-content .instructions a:hover, .twofa-wrapper .instructions a:hover {
+  color: #686868;
+}
+.mfa-wrapper .instructions ul, .auth-content .instructions ul, .twofa-wrapper .instructions ul {
+  margin: 0 16px;
+  padding: 0;
+}
+.mfa-wrapper .instructions ul li, .auth-content .instructions ul li, .twofa-wrapper .instructions ul li {
+  padding-bottom: 5px;
+}
+.mfa-wrapper .instructions ul li:last-child, .auth-content .instructions ul li:last-child, .twofa-wrapper .instructions ul li:last-child {
+  padding-bottom: 0;
+}
+.mfa-wrapper form span, .auth-content form span, .twofa-wrapper form span {
+  width: 100%;
+  display: flex;
+  padding-bottom: 14px;
+}
+.mfa-wrapper form p, .auth-content form p, .twofa-wrapper form p {
+  padding-bottom: 32px;
+}
+.mfa-wrapper form button, .auth-content form button, .twofa-wrapper form button {
+  margin-top: 40px;
+  font-family: "gotham-mediumgotham-medium", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  font-weight: normal;
+  letter-spacing: 2.5px;
+  color: white;
+  transition: all 0.4s;
+  text-decoration: underline;
+  display: inline-block;
+  line-height: 41px;
+  text-transform: uppercase;
+  text-align: center;
+  border: 2px solid #1A1A1A;
+  transition: all 250ms ease;
+  background-color: #1A1A1A;
+  padding: 0 16px;
+  white-space: nowrap;
+  clear: both;
+  font-size: 14px;
+  height: 45px;
+  text-decoration: unset;
+  cursor: pointer;
+}
+.mfa-wrapper form button:hover, .auth-content form button:hover, .twofa-wrapper form button:hover {
+  background-color: #fff;
+  color: #1A1A1A;
+}
+.mfa-wrapper form [type=radio]:checked,
+.mfa-wrapper form [type=radio]:not(:checked), .auth-content form [type=radio]:checked,
+.auth-content form [type=radio]:not(:checked), .twofa-wrapper form [type=radio]:checked,
+.twofa-wrapper form [type=radio]:not(:checked) {
+  position: absolute;
+  left: -9999px;
+}
+.mfa-wrapper form [type=radio]:checked + label,
+.mfa-wrapper form [type=radio]:not(:checked) + label, .auth-content form [type=radio]:checked + label,
+.auth-content form [type=radio]:not(:checked) + label, .twofa-wrapper form [type=radio]:checked + label,
+.twofa-wrapper form [type=radio]:not(:checked) + label {
+  position: relative;
+  padding-left: 28px;
+  cursor: pointer;
+  line-height: 20px;
+  display: inline-block;
+}
+.mfa-wrapper form [type=radio]:checked + label:before,
+.mfa-wrapper form [type=radio]:not(:checked) + label:before, .auth-content form [type=radio]:checked + label:before,
+.auth-content form [type=radio]:not(:checked) + label:before, .twofa-wrapper form [type=radio]:checked + label:before,
+.twofa-wrapper form [type=radio]:not(:checked) + label:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #000;
+  border-radius: 100%;
+  background: transparent;
+}
+.mfa-wrapper form [type=radio]:checked + label:after,
+.mfa-wrapper form [type=radio]:not(:checked) + label:after, .auth-content form [type=radio]:checked + label:after,
+.auth-content form [type=radio]:not(:checked) + label:after, .twofa-wrapper form [type=radio]:checked + label:after,
+.twofa-wrapper form [type=radio]:not(:checked) + label:after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #000000;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  border-radius: 100%;
+  transition: all 0.2s ease;
+}
+.mfa-wrapper form [type=radio]:not(:checked) + label:after, .auth-content form [type=radio]:not(:checked) + label:after, .twofa-wrapper form [type=radio]:not(:checked) + label:after {
+  opacity: 0;
+  transform: scale(0);
+}
+.mfa-wrapper form [type=radio]:checked + label:after, .auth-content form [type=radio]:checked + label:after, .twofa-wrapper form [type=radio]:checked + label:after {
+  opacity: 1;
+  transform: scale(1);
+}
+.mfa-wrapper .auth-content-bottom, .auth-content .auth-content-bottom, .twofa-wrapper .auth-content-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.mfa-wrapper .auth-content-bottom .qr-code-wrapper, .auth-content .auth-content-bottom .qr-code-wrapper, .twofa-wrapper .auth-content-bottom .qr-code-wrapper {
+  flex: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+}
+.mfa-wrapper .auth-content-bottom .qr-code-wrapper img, .auth-content .auth-content-bottom .qr-code-wrapper img, .twofa-wrapper .auth-content-bottom .qr-code-wrapper img {
+  width: 175px;
+  height: 175px;
+}
+.mfa-wrapper .auth-content-bottom .qr-code-wrapper p, .auth-content .auth-content-bottom .qr-code-wrapper p, .twofa-wrapper .auth-content-bottom .qr-code-wrapper p {
+  font-family: "gotham-mediumgotham-medium", sans-serif;
+  font-size: 14px;
+  text-align: center;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit, .auth-content .auth-content-bottom .auth-content-bottom__submit, .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  max-width: 492px;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit input[name=google2fa_code], .auth-content .auth-content-bottom .auth-content-bottom__submit input[name=google2fa_code], .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit input[name=google2fa_code] {
+  flex: 1;
+  width: 100%;
+  height: 54px;
+  border: solid #D3D3D3;
+  margin-right: 18px;
+  padding: 0px 12px;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit input[type=submit], .auth-content .auth-content-bottom .auth-content-bottom__submit input[type=submit], .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit input[type=submit] {
+  flex: 0;
+  font-family: "gotham-mediumgotham-medium", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  font-weight: normal;
+  letter-spacing: 2.5px;
+  color: white;
+  transition: all 0.4s;
+  text-decoration: underline;
+  display: inline-block;
+  line-height: 41px;
+  text-transform: uppercase;
+  text-align: center;
+  border: 2px solid #1A1A1A;
+  transition: all 250ms ease;
+  background-color: #1A1A1A;
+  padding: 0 64px;
+  white-space: nowrap;
+  clear: both;
+  font-size: 14px;
+  height: 52px;
+  text-decoration: unset;
+  cursor: pointer;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit_error input[name=google2fa_code], .auth-content .auth-content-bottom .auth-content-bottom__submit_error input[name=google2fa_code], .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit_error input[name=google2fa_code] {
+  border: solid 1px #FF0000;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit_error ::-webkit-input-placeholder, .auth-content .auth-content-bottom .auth-content-bottom__submit_error ::-webkit-input-placeholder, .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit_error ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: #FF0000 !important;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit_error ::-moz-placeholder, .auth-content .auth-content-bottom .auth-content-bottom__submit_error ::-moz-placeholder, .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit_error ::-moz-placeholder { /* Firefox 19+ */
+  color: #FF0000 !important;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit_error :-ms-input-placeholder, .auth-content .auth-content-bottom .auth-content-bottom__submit_error :-ms-input-placeholder, .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit_error :-ms-input-placeholder { /* IE 10+ */
+  color: #FF0000 !important;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__submit_error :-moz-placeholder, .auth-content .auth-content-bottom .auth-content-bottom__submit_error :-moz-placeholder, .twofa-wrapper .auth-content-bottom .auth-content-bottom__submit_error :-moz-placeholder { /* Firefox 18- */
+  color: #FF0000 !important;
+}
+.mfa-wrapper .auth-content-bottom .message, .auth-content .auth-content-bottom .message, .twofa-wrapper .auth-content-bottom .message {
+  color: #FF0000;
+  font-family: "gotham-light", sans-serif;
+  font-size: 14px;
+  padding-top: 16px;
+  line-height: 1;
+  width: 100%;
+  padding-bottom: 8px;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__goback, .auth-content .auth-content-bottom .auth-content-bottom__goback, .twofa-wrapper .auth-content-bottom .auth-content-bottom__goback {
+  width: 100%;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__helper, .auth-content .auth-content-bottom .auth-content-bottom__helper, .twofa-wrapper .auth-content-bottom .auth-content-bottom__helper {
+  font-family: "gotham-light", sans-serif;
+  font-size: 14px;
+  padding-top: 24px;
+  line-height: 1;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__helper a, .auth-content .auth-content-bottom .auth-content-bottom__helper a, .twofa-wrapper .auth-content-bottom .auth-content-bottom__helper a {
+  font-family: "gotham-mediumgotham-medium", sans-serif;
+  color: #1A1A1A;
+  transition: all 0.4s;
+  text-decoration: underline;
+}
+.mfa-wrapper .auth-content-bottom .auth-content-bottom__helper a:hover, .auth-content .auth-content-bottom .auth-content-bottom__helper a:hover, .twofa-wrapper .auth-content-bottom .auth-content-bottom__helper a:hover {
+  color: #686868;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit, .auth-content .auth-content-bottom--sms .auth-content-bottom__submit, .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit {
+  width: 100%;
+  max-width: inherit;
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents, .auth-content .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents, .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input, .auth-content .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input, .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input {
+  width: auto;
+  height: 54px;
+  border: solid #D3D3D3;
+  margin-right: 18px;
+  padding: 0px 12px;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input[name=validate-sms-code], .auth-content .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input[name=validate-sms-code], .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input[name=validate-sms-code] {
+  width: 269px;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents small, .auth-content .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents small, .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents small {
+  font-family: "gotham-light", sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  padding-top: 12px;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit button, .auth-content .auth-content-bottom--sms .auth-content-bottom__submit button, .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit button {
+  height: 56px;
+  margin-top: 0;
+  width: 100%;
+  max-width: 205px;
+}
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: #D3D3D3;
+  font-size: 17px;
+  font-family: "gotham-light", sans-serif;
+}
+
+::-moz-placeholder { /* Firefox 19+ */
+  color: #D3D3D3;
+  font-size: 17px;
+  font-family: "gotham-light", sans-serif;
+}
+
+:-ms-input-placeholder { /* IE 10+ */
+  color: #D3D3D3;
+  font-size: 17px;
+  font-family: "gotham-light", sans-serif;
+}
+
+:-moz-placeholder { /* Firefox 18- */
+  color: #D3D3D3;
+  font-size: 17px;
+  font-family: "gotham-light", sans-serif;
+}
+
+.twofa-content, .mfa-content {
+  width: 100%;
+}
+
+.twofa-message, .mfa-message {
+  font-size: 16px;
+  text-align: center;
+  color: #fff;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 25px;
+  width: 100%;
+}
+
+.twofa-message__success {
+  padding: 15px 20px;
+  background-color: #acff7b;
+  color: #000;
+  margin: 10px 0;
+}
+
+.twofa-message__nomatch, .mfa-message__nomatch {
+  padding: 15px 20px;
+  background-color: #ff6060;
+  margin: 10px 0;
+}
+
+.mfa-message__message {
+  padding: 15px 20px;
+  background-color: #ffda60;
+  margin: 10px 0;
+}
+
+.dev-notice {
+  box-shadow: 10px 10px 33px -26px rgba(0, 0, 0, 0.75);
+  position: fixed;
+  top: 5em;
+  right: 0px;
+  z-index: 11111111;
+  background-color: #acff7b;
+  border-radius: 20px 0px 0px 20px;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  transform: scale(0.4);
+  transform-origin: right;
+}
+
+.dev-notice h4, .dev-notice p {
+  padding-bottom: 5px;
+}

@@ -43,49 +43,50 @@ $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
 $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 ?>
 	<?php if($f_header){ ?><?= $f_header(); ?><?php } ?>
-	<div class="auth-wrapper">
-
-		<?php if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
-			
-			<?php if($f_content){ ?>
-				<?= $f_content(); ?>
-			<?php } 
-			if($f_mfa_settings['auth_missing-sms_content']){ ?>
-				<?= $f_mfa_settings['auth_missing-sms_content']; ?>
-			<?php } ?>
-			<br></br>
-			<?php if($f_instructions){ ?>
-				<?= $f_instructions(); ?>
-			<?php } else { ?>
-				<div class="instructions">
-					<?php if($f_mfa_settings['auth_missing-sms_instructions_content']){ ?>
-						<?= $f_mfa_settings['auth_missing-sms_instructions_content']; ?>
-					<?php } ?>
-				</div>
-			<?php } ?>
-
-		<?php } else { ?>
-			<?php if($f_content){ ?>
-				<?= $f_content(); ?>
-			<?php } 
-			if($f_mfa_settings['auth_content']){ ?>
-				<?= $f_mfa_settings['auth_content']; ?>
-			<?php } ?>
-			<br></br>
-			<?php if($f_instructions){ ?>
-				<?= $f_instructions(); ?>
-			<?php } else { ?>
-				<div class="instructions">
-					<?php if($f_mfa_settings['auth_instructions_content']){ ?>
-						<?= $f_mfa_settings['auth_instructions_content']; ?>
-					<?php } ?>
-				</div>
-			<?php } ?>
-
-		<?php } ?>
+	<div class="auth-wrapper" style="background-image: url('<?php echo $f_mfa_settings['auth_content_bgimage']['url']; ?>');">
+		<div class="auth-flagger">
+			<img src="<?php echo plugin_dir_url( __DIR__ ).'/images/flagger.svg'; ?>">
+		</div>
+		<div class="auth-content">
+			<?php if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
+				
+				<?php if($f_content){ ?>
+					<?= $f_content(); ?>
+				<?php } 
+				if($f_mfa_settings['auth_missing-sms_content_title']){ ?>
+					<?= $f_mfa_settings['auth_missing-sms_content_title']; ?>
+				<?php } ?>
+				<?php if($f_instructions){ ?>
+					<?= $f_instructions(); ?>
+				<?php } else { ?>
+					<div class="instructions">
+						<?php if($f_mfa_settings['auth_missing-sms_instructions_content']){ ?>
+							<?= $f_mfa_settings['auth_missing-sms_instructions_content']; ?>
+						<?php } ?>
+					</div>
+				<?php } ?>
 	
-		<br><br>
-		<?php do_action('auth-registration-page'); ?>
+			<?php } else { ?>
+				<?php if($f_content){ ?>
+					<?= $f_content(); ?>
+				<?php } 
+				if($f_mfa_settings['auth_content_title']){ ?>
+					<h2><?= $f_mfa_settings['auth_content_title']; ?></h2>
+				<?php } ?>
+				<?php if($f_instructions){ ?>
+					<?= $f_instructions(); ?>
+				<?php } else { ?>
+					<div class="instructions">
+						<?php if($f_mfa_settings['auth_instructions_content']){ ?>
+							<?= $f_mfa_settings['auth_instructions_content']; ?>
+						<?php } ?>
+					</div>
+				<?php } ?>
+	
+			<?php } ?>
+		
+			<?php do_action('auth-registration-page'); ?>
+		</div>
 	</div>
 
 	<?php if($f_footer){ ?><?= $f_footer(); ?><?php } ?>

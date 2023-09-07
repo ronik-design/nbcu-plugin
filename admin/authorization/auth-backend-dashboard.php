@@ -8,6 +8,8 @@ function ronikdesigns_save_extra_user_profile_fields_auth($user_id){
     if (!current_user_can('edit_user', $user_id)) {
         return false;
     }
+
+    error_log(print_r( 'AUTH Backend Dashboard', true));
     update_user_meta($user_id, 'auth_status', $_POST['auth_select']);
     update_user_meta($user_id, 'sms_user_phone', $_POST['sms_phonenumber']);
     // update_user_meta($user_id, 'mfa_status', $_POST['mfa_status']);
@@ -48,7 +50,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
         }
         $get_sms_status = get_user_meta($_GET["user_id"], 'sms_2fa_status', true);
         if(!$get_sms_status){
-            $get_sms_status = 'sms_unverified';
+            $get_sms_status = 'sms_2fa_unverified';
         }
         $get_sms_secret = get_user_meta($_GET["user_id"], 'sms_2fa_secret', true);
         if(!$get_sms_secret){
@@ -81,7 +83,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
             }
             $get_sms_status = get_user_meta($_GET["user"], 'sms_2fa_status', true);
             if(!$get_sms_status){
-                $get_sms_status = 'sms_unverified';
+                $get_sms_status = 'sms_2fa_unverified';
             }
             $get_sms_secret = get_user_meta($_GET["user"], 'sms_2fa_secret', true);
             if(!$get_sms_secret){
@@ -115,7 +117,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 }
                 $get_sms_status = get_user_meta(get_current_user_id(), 'sms_2fa_status', true);
                 if(!$get_sms_status){
-                    $get_sms_status = 'sms_unverified';
+                    $get_sms_status = 'sms_2fa_unverified';
                 }
                 $get_sms_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
                 if(!$get_sms_secret){
@@ -138,7 +140,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 $get_mfa_status = 'mfa_unverified';
                 $get_mfa_validation = '';
                 $get_phone_number = false;
-                $get_sms_status = 'sms_unverified';
+                $get_sms_status = 'sms_2fa_unverified';
                 $get_mfa_secret = '';
                 $get_sms_secret = 'invalid';
             }

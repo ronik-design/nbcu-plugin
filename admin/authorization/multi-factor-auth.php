@@ -36,6 +36,14 @@ add_action('mfa-registration-page', function () {
         update_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
     }
 
+    // We put this in the header for fast redirect..
+    $f_success = isset($_GET['mfa-success']) ? $_GET['mfa-success'] : false;
+    $f_error = isset($_GET['mfa-error']) ? $_GET['mfa-error'] : false;
+    $f_expired = '';
+    if($f_error == 'nomatch'){
+        $f_error = 'Sorry, the verification code entered is invalid.';
+    }
+
     ?>
         <div class="dev-notice">
             <h4>Dev Message:</h4>
@@ -44,6 +52,11 @@ add_action('mfa-registration-page', function () {
             <p>MFA Status: <?php echo $mfa_status; ?></p>
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
             <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
+            <form  action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                <input type="hidden" type="text" name="re-auth" value="RESET">
+                <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
+            </form>
         </div>
 
     <?php
@@ -84,28 +97,34 @@ add_action('mfa-registration-page', function () {
                 }, 1000);
             </script>
 
-        <?php } else {
-            if( !$mfa_validation || ($mfa_validation == 'not_registered' )  ){ ?>
-                <!-- We check if the get_current_secret is empty or false if so we reload the page.  -->
-                <?php if(!$get_current_secret){ ?>
-                    <script>
-                        location.reload();
-                    </script>
+        <?php } else { ?>
+
+            <div class="auth-content-bottom">
+                <?php if( !$mfa_validation || ($mfa_validation == 'not_registered' )  ){ ?>
+                    <!-- We check if the get_current_secret is empty or false if so we reload the page.  -->
+                    <?php if(!$get_current_secret){ ?>
+                        <script>
+                            location.reload();
+                        </script>
+                    <?php } ?>
+                    <span class="qr-code-wrapper">
+                        <img src='<?= $qrcode ?>' alt='QR Code' width='100' height='100'>
+                        <p><?= $get_current_secret; ?></p>
+                    </span>
                 <?php } ?>
-                <p><?= $get_current_secret; ?></p>
-                <img src='<?= $qrcode ?>' alt='QR Code' width='100' height='100'>
-            <?php } ?>
-            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
-                <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                <input required autocomplete="off" type="text" name="google2fa_code" value="">
-                <input type="submit" name="submit" value="Submit">
-            </form>
-            <br><br>
-            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
-                <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                <input type="hidden" type="text" name="re-auth" value="RESET">
-                <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-            </form>
+                <form class="auth-content-bottom__submit <?php if($f_error){ echo 'auth-content-bottom__submit_error'; } ?>" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                    <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                    <input required autocomplete="off" type="text" name="google2fa_code" placeholder="6 Digit Code" value="">
+                    <input type="submit" name="submit" value="Submit">
+                    <?php if($f_error){ ?>
+                        <span class="message"><?= $f_error; ?></span>
+                    <?php } ?>
+                </form>
+                <div class="auth-content-bottom__helper">
+                    <p>If you encounter any issue, please reach out to the <a href="mailto:together@nbcuni.com?subject=MFA Registration Issue">together@nbcuni.com</a> for support. </p>
+                </div>
+            </div>
+
         <?php }?>
     <?php } else{
         $cookie_name = "ronik-auth-reset-redirect";

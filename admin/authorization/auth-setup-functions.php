@@ -160,6 +160,13 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         // Lets check the id both ids dont match we kill the redirect.
                         if( $post && property_exists($post, 'ID') ){
                             if( !in_array($post->ID, $f_id_array) ){
+                                
+                                $get_current_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
+                                if(empty($get_current_auth_status) || $get_current_auth_status == 'none'){                                    
+                                    // By adding the looperdooper we basically invoke the loop to the auth page.
+                                    ronikLooperDooper($dataUrl, $cookieName);
+                                }
+
                                 return false;
                             } else {
                                 // This checks if the user is inside wp-admin
@@ -184,30 +191,37 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
 
 
             // First lets loop through all the provided urls.
-            foreach ($dataUrl['reUrl'] as $value) {
-                // If value matches with the request_url
-                if (!str_contains($_SERVER['REQUEST_URI'], $value)) {
-                    // We dont want to redirect on the '/wp-admin/admin-post.php'
-                    if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/admin-post.php')) {
-                        // Lastly we check if the requested matches the permalink to prevent looping issues.
-                        if(get_permalink() !== home_url($dataUrl['reDest'])){
-                            if($_SERVER['REQUEST_URI'] !== '/favicon.ico'){
-                                if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa')  ){
-                                    $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-                                }
-                            } else {
-                                $cookie_value =  '/';
-                            }
-                            // Lets expire the cookie after 30 days.
-                            setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
-                            // Pause server.
-                            sleep(.5);
-                            wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
-                            exit;
+            ronikLooperDooper($dataUrl, $cookieName);
+
+        }
+    }
+
+
+
+    function ronikLooperDooper($dataUrl, $cookieName){
+        // First lets loop through all the provided urls.
+        foreach ($dataUrl['reUrl'] as $value) {
+            // If value matches with the request_url
+            if (!str_contains($_SERVER['REQUEST_URI'], $value)) {
+                // We dont want to redirect on the '/wp-admin/admin-post.php'
+                if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/admin-post.php')) {
+                    // Lastly we check if the requested matches the permalink to prevent looping issues.
+                    if(get_permalink() !== home_url($dataUrl['reDest'])){
+                        if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
+                            if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
+                                error_log(print_r($_SERVER['REQUEST_URI'], true));
+                                $cookie_value = urlencode($_SERVER['REQUEST_URI']);
+                                // Lets expire the cookie after 30 days.
+                                setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+                            }    
+                            
                         }
+                        // Pause server.
+                        sleep(.5);
+                        wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
+                        exit;
                     }
                 }
             }
-
         }
     }
