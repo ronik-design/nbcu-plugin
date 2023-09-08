@@ -205,7 +205,7 @@ class Ronikdesign_Admin
 			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
 			// We add the logic into the theme.
 			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
-			if(!$f_bypasser){
+			if($f_bypasser){
 				// The next part we find the user email.
 				$user_id = get_current_user_id();
 				$user_email = get_user_meta($user_id, "user_email", true);				
