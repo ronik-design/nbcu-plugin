@@ -156,7 +156,6 @@ error_log(print_r( 'Auth Redirects', true));
                 return;
             }
     }
-    add_action( 'acf_init', 'ronikdesigns_redirect_registered_auth' );
     add_action( 'template_redirect', 'ronikdesigns_redirect_registered_auth' );
     add_action( 'admin_init', 'ronikdesigns_redirect_registered_auth' );
 
