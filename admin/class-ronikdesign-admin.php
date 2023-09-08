@@ -202,16 +202,18 @@ class Ronikdesign_Admin
 		}
 		// Include the auth.
 		foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
+			global $wpdb;
+
 			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
 			// We add the logic into the theme.
 			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
 			if($f_bypasser){
+
 				// The next part we find the user email.
 				$user_id = get_current_user_id();
-				$user_email = get_user_meta($user_id, "user_email", true);				
+				$user_email = get_user_meta($user_id, "user_email", true);
 				// If default user email is not found we look through a custom data path. do_users.
 				if(!$user_email){
-					global $wpdb;
 					$sql = "select * from do_users where ID = '$user_id'";
 					$do_users = $wpdb->get_results($sql);
 					if(empty($do_users)){
@@ -223,7 +225,7 @@ class Ronikdesign_Admin
 					} else {
 						$user_email = 'No email found.';
 					}
-				}	
+				}
 				// If no email we include the file.
 				if($user_email == 'No email found.'){
 					include $file;
@@ -311,7 +313,7 @@ class Ronikdesign_Admin
 		// session_start();
 		$f_value = array();
 		$f_auth = get_field('mfa_settings', 'options');
-		
+
 		$f_twilio_id = get_option('options_mfa_settings_twilio_id');
 		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
 		$f_twilio_number = get_option('options_mfa_settings_twilio_number');
@@ -483,7 +485,7 @@ class Ronikdesign_Admin
 						// We build a query and redirect back to 2fa route.
 						wp_redirect( esc_url(home_url($r_redirect)) );
 						exit;
-					} 
+					}
 
 					$verification_check = $client->verify->v2->services($get_current_secret_2fa)->verificationChecks->create([
 						"to" => $to_number,

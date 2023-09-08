@@ -177,7 +177,7 @@ class Ronikdesign
 		// Hooking up our function to theme setup
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init');
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_fields', 2);
-		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_functions', 3);
+		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_functions', 99);
 
 		// $this->loader->add_action('admin_menu', $plugin_admin, 'remove_menus', 99);
 		$this->loader->add_filter('upload_mimes', $plugin_admin, 'roniks_add_svg_mime_types', 99);
