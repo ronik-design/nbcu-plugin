@@ -414,6 +414,7 @@ class Ronikdesign_Public
 						$user_id = get_current_user_id();
 						$user_email = get_user_meta($user_id, "user_email", true);
 		
+						error_log(print_r( 'user_id' , true));
 						error_log(print_r( $user_id , true));
 						
 						// If default user email is not found we look through a custom data path. do_users.
