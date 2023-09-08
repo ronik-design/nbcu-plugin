@@ -13,6 +13,15 @@ error_log(print_r( 'Auth Redirects', true));
         $f_admin_auth_select['mfa'] = false;
         $f_admin_auth_select['2fa'] = false;
 
+
+        global $current_user, $wpdb;
+
+
+        error_log(print_r(  'current_user', true));
+        error_log(print_r(  $current_user, true));
+
+        error_log(print_r(  'f_auth', true));
+        error_log(print_r(  $f_auth, true));
         error_log(print_r( 'f_auth_mfa', true));
         error_log(print_r(  $f_auth_mfa, true));
         error_log(print_r( 'f_auth_2fa', true));
@@ -147,8 +156,9 @@ error_log(print_r( 'Auth Redirects', true));
                 return;
             }
     }
-    add_action( 'admin_init', 'ronikdesigns_redirect_registered_auth' );
+    add_action( 'acf_init', 'ronikdesigns_redirect_registered_auth' );
     add_action( 'template_redirect', 'ronikdesigns_redirect_registered_auth' );
+    add_action( 'admin_init', 'ronikdesigns_redirect_registered_auth' );
 
 
 
