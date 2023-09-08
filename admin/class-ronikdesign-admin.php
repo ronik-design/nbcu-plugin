@@ -200,49 +200,49 @@ class Ronikdesign_Admin
 		foreach (glob(dirname(__FILE__) . '/wp-cleaner/*.php') as $file) {
 			include $file;
 		}
-		// Include the auth.
-		foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
-			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
-			// We add the logic into the theme.
-			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
-			if(!$f_bypasser){
-				// The next part we find the user email.
-				$user_id = get_current_user_id();
-				$user_email = get_user_meta($user_id, "user_email", true);
+		// // Include the auth.
+		// foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
+		// 	// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
+		// 	// We add the logic into the theme.
+		// 	$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
+		// 	if(!$f_bypasser){
+		// 		// The next part we find the user email.
+		// 		$user_id = get_current_user_id();
+		// 		$user_email = get_user_meta($user_id, "user_email", true);
 
-				error_log(print_r( $user_id , true));
+		// 		error_log(print_r( $user_id , true));
 				
-				// If default user email is not found we look through a custom data path. do_users.
-				if(!$user_email){
-					global $wpdb;
-					$sql = "select * from do_users where ID = '$user_id'";
-					$do_users = $wpdb->get_results($sql);
-					if(empty($do_users)){
-						if($do_users[0]->user_email){
-							$user_email = $do_users[0]->user_email;
-						} else {
-							$user_email = 'No email found.';
-						}
-					} else {
-						$user_email = 'No email found.';
-					}
-				}	
-				// If no email we include the file.
-				if($user_email == 'No email found.'){
-					include $file;
-				} else {
-					$f_user_override = get_option('options_mfa_settings_user_override');
-					// We remove all whitespace (including tabs and line ends)
-					$f_user_override = preg_replace('/\s+/', '', $f_user_override);
-					// Lets trim just incase as well.
-					$f_user_override_array = explode(",", trim($f_user_override));
-					// Detect if array is populated.
-					if (!in_array($user_email, $f_user_override_array)) {
-						include $file;
-					}
-				}
-			}
-		}
+		// 		// If default user email is not found we look through a custom data path. do_users.
+		// 		if(!$user_email){
+		// 			global $wpdb;
+		// 			$sql = "select * from do_users where ID = '$user_id'";
+		// 			$do_users = $wpdb->get_results($sql);
+		// 			if(empty($do_users)){
+		// 				if($do_users[0]->user_email){
+		// 					$user_email = $do_users[0]->user_email;
+		// 				} else {
+		// 					$user_email = 'No email found.';
+		// 				}
+		// 			} else {
+		// 				$user_email = 'No email found.';
+		// 			}
+		// 		}	
+		// 		// If no email we include the file.
+		// 		if($user_email == 'No email found.'){
+		// 			include $file;
+		// 		} else {
+		// 			$f_user_override = get_option('options_mfa_settings_user_override');
+		// 			// We remove all whitespace (including tabs and line ends)
+		// 			$f_user_override = preg_replace('/\s+/', '', $f_user_override);
+		// 			// Lets trim just incase as well.
+		// 			$f_user_override_array = explode(",", trim($f_user_override));
+		// 			// Detect if array is populated.
+		// 			if (!in_array($user_email, $f_user_override_array)) {
+		// 				include $file;
+		// 			}
+		// 		}
+		// 	}
+		// }
 		// Include the password reset.
 		foreach (glob(dirname(__FILE__) . '/password-reset/*.php') as $file) {
 			// This is critical without this we would get an infinite loop...
