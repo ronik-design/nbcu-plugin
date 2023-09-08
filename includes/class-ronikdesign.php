@@ -223,7 +223,6 @@ class Ronikdesign
 		// $this->loader->add_action('admin_enqueue_scripts', $plugin_public, 'enqueue_styles');
 
 		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
-		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_mfa_public', 5);
 
 
 		// Verification API AJAX.
