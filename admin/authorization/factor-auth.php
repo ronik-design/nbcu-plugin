@@ -7,11 +7,18 @@ use Twilio\Rest\Client;
 		// temp session_start();
         // session_start();
 
+add_action('auth-rest', function ($args) { ?>
+    <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+        <h2>MFA Registeration Reset</h2>
+        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+        <input type="hidden" type="text" name="re-auth" value="RESET">
+        <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
+    </form>
+<?php });
 
 add_action('auth-registration-page', function () {
     $get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-
 
         $mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
         $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
@@ -26,7 +33,7 @@ add_action('auth-registration-page', function () {
             <p>MFA Status: <?php echo $mfa_status; ?></p>
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
             <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-            <form  action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <input type="hidden" type="text" name="re-auth" value="RESET">
                 <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>

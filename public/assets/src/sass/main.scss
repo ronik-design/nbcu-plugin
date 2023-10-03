@@ -643,3 +643,43 @@ body {
   padding-bottom: 5px;
 }
 
+
+.registeration-mfa-reset{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding-top: 50px;
+  border-top: solid 1px #c8c8c8;
+  margin-top: 50px;
+
+  button{
+    margin-top: 40px;
+    font-family: 'gotham-mediumgotham-medium', sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    letter-spacing: 2.5px;
+    color: #ffff;
+    transition: all .4s;
+    text-decoration: underline;
+    display: inline-block;
+    line-height: 41px;
+    text-transform: uppercase;
+    text-align: center;
+    border: 2px solid #1A1A1A;
+    transition: all 250ms ease;
+    background-color: #1A1A1A;
+    padding: 0 16px;
+    white-space: nowrap;
+    clear: both;
+    font-size: 14px;
+    height: 45px;
+    text-decoration: unset;
+    cursor: pointer;
+  
+    &:hover{
+      background-color: #fff;
+      color: #1A1A1A;
+    }
+  }
+}
