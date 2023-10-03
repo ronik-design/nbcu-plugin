@@ -57,13 +57,26 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
             <?php } ?>
             <?php if($f_error == 'alreadyexists'){ ?>
                 <div class="pass-reset-message__nomatch">Sorry your password is already used! Please choose a different password!</div>
-            <?php } ?> 
+            <?php } ?>
             <?php if($f_error == 'nomatch'){ ?>
                 <div class="pass-reset-message__nomatch">Sorry your password does not match!</div>
+            <?php } ?>
+            <?php if($f_error == 'weak'){ ?>
+                <div class="pass-reset-message__nomatch">Sorry you did not input a strong enough password!</div>
             <?php } ?>
             <?php if($f_error == 'missing'){ ?>
                 <div class="pass-reset-message__missing">Sorry you did not input a password!</div>
             <?php } ?>
+            <?php if($f_error == 'no-uppercase'){ ?>
+                <div class="pass-reset-message__missing">Sorry your input does not contain a uppercase letter!</div>
+            <?php } ?>
+            <?php if($f_error == 'no-lowercase'){ ?>
+                <div class="pass-reset-message__missing">Sorry your input does not contain a lowercase letter!</div>
+            <?php } ?>
+            <?php if($f_error == 'no-special-characters'){ ?>
+                <div class="pass-reset-message__missing">Sorry your input does not contain a special character!</div>
+            <?php } ?>
+
         </div>
         <br></br>
         <?php if($f_content){ ?><?= $f_content(); ?><?php } ?>
@@ -79,7 +92,7 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
                 <label for="password">Retype Password:</label>
                 <input autocomplete="new-password" type="password" class="adv-passwordchecker" id="retype_password" name="retype_password" value="" required>
                 <input type="hidden" name="action" value="ronikdesigns_admin_password_reset">
-                <button type="submit" value="Reset Password">Reset Password</button>
+                <button type="submit" class="ronik-password-disabled" value="Reset Password">Reset Password</button>
             </form>
 		<?php } else { ?>
             <?= "Whoops something went wrong!" ?>

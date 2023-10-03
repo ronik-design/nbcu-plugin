@@ -79,10 +79,20 @@ function password_reset_ronikdesigns(){
 
         // If past date is greater then current time stamp. We redirect to the reset page.
         if( $current_user_reset_time_stamp <= $past_date ){
+            $f_redirect_allowable_slugs = array(
+                '/password-reset/?pr-success=success', 
+                '/password-reset/?pr-error=weak', 
+                '/password-reset/?pr-error=alreadyexists', 
+                '/password-reset/?pr-error=nomatch',
+                '/password-reset/?pr-error=missing',
+                '/password-reset/?pr-error=no-uppercase',
+                '/password-reset/?pr-error=no-lowercase',
+                '/password-reset/?pr-error=no-special-characters',
+            );
 
             // Lets setup the cookie for redirect purposes.
             if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
-                if( ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-success=success') && ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-error=alreadyexists') && ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-error=nomatch') && ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-error=missing') ){
+                if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
                     $cookie_name = "ronik-password-reset-redirect";
                     $cookie_value = urlencode($_SERVER['REQUEST_URI']);
                     // Lets expire the cookie after 1 day.
@@ -99,14 +109,14 @@ function password_reset_ronikdesigns(){
                         // This prevent redirect loop issues
                         if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REDIRECT_URL'] !== '/password-reset/')){
                             // Because we are using GET we have to check each query
-                            if( ($_SERVER['QUERY_STRING'] !== 'pr-success=success') || ($_SERVER['QUERY_STRING'] !== 'pr-error=alreadyexists') || ($_SERVER['QUERY_STRING'] !== 'pr-error=nomatch') || ($_SERVER['QUERY_STRING'] !== 'pr-error=missing') ){
+                            if(!in_array($_SERVER['QUERY_STRING'], $f_redirect_allowable_slugs) ){
                                 wp_redirect( esc_url(home_url('/password-reset/')) );
                                 exit;
                             }
                         }
                     } else {
                         if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
-                            if( ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-success=success') && ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-error=alreadyexists')&& ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-error=nomatch') && ($_SERVER['REQUEST_URI'] !== '/password-reset/?pr-error=missing') ){
+                            if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
                                 wp_redirect( esc_url(home_url('/password-reset/')) );
                                 exit;
                             }

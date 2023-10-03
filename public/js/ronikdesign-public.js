@@ -67,6 +67,8 @@ function checkPasswordStrength($) {
 				submitButton = $target.find('submit');
 			} else if( $target.find('.submit').length !== 0 ) {
 				submitButton = $target.find('.submit');
+			} else if( $target.find('button[type="submit"]').length !== 0 ) {
+				submitButton = $target.find('button[type="submit"]');
 			} else if( $target.find('input[type="submit"]').length !== 0 ) {
 				submitButton = $target.find('input[type="submit"]');
 			} else {

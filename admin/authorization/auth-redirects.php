@@ -13,12 +13,12 @@ error_log(print_r( 'Auth Redirects', true));
         $f_admin_auth_select['mfa'] = false;
         $f_admin_auth_select['2fa'] = false;
 
-        error_log(print_r(  'is_user_logged_in()', true));
-        error_log(print_r(  wp_get_current_user(), true));
-        error_log(print_r( 'f_auth_mfa', true));
-        error_log(print_r(  $f_auth_mfa, true));
-        error_log(print_r( 'f_auth_2fa', true));
-        error_log(print_r( $f_auth_2fa, true));
+        // error_log(print_r(  'is_user_logged_in()', true));
+        // error_log(print_r(  wp_get_current_user(), true));
+        // error_log(print_r( 'f_auth_mfa', true));
+        // error_log(print_r(  $f_auth_mfa, true));
+        // error_log(print_r( 'f_auth_2fa', true));
+        // error_log(print_r( $f_auth_2fa, true));
 
 
         // Kill the entire AUTH if both are not enabled!

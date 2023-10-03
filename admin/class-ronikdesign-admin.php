@@ -700,26 +700,45 @@ class Ronikdesign_Admin
 				if(wp_check_password($_POST['password'], $curr_user->user_pass, $curr_user->ID)){
 					$f_value['pr-error'] = "alreadyexists";
 				} else {
-					// Store the id.
-					$curr_id = $curr_user->id;
-					$current_date = strtotime((new DateTime())->format( 'd-m-Y' ));
-					update_user_meta( $curr_id, 'wp_user-settings-time-password-reset', $current_date );
-					// Get current logged-in user.
-					$user = wp_get_current_user();
-					// Send out an email notification.
-					$to = $curr_user->user_email;
-					$subject = 'Password Reset.';
-					$body = 'Your password was successfully reset.';
-					$headers = array('Content-Type: text/html; charset=UTF-8');
-					wp_mail($to, $subject, $body, $headers);
-					// Change password.
-					wp_set_password( $_POST['password'], $user->ID);
-					// Log-in again.
-					wp_set_auth_cookie($user->ID);
-					wp_set_current_user($user->ID);
-					do_action('wp_login', $user->user_login, $user);
-
-					$f_value['pr-success'] = "success";
+					if(strlen($_POST['password']) < 8){
+						$f_value['pr-error'] = "weak";
+					} else {
+						if (!preg_match('/([~,!,@,#,$,%,^,&,*,-,_,+,=,?,>,<])/', $_POST['password'])){
+							// No special characters found in string!
+							$f_value['pr-error'] = "no-special-characters";
+						} else{
+							if(!preg_match('/[A-Z]/', $_POST['password'])){
+								// No uppercase found!
+								$f_value['pr-error'] = "no-uppercase";
+							} else {
+								if(!preg_match('/[a-z]/', $_POST['password'])){
+									// No lowercase found!
+									$f_value['pr-error'] = "no-lowercase";
+								} else{
+									// Store the id.
+									$curr_id = $curr_user->id;
+									$current_date = strtotime((new DateTime())->format( 'd-m-Y' ));
+									update_user_meta( $curr_id, 'wp_user-settings-time-password-reset', $current_date );
+									// Get current logged-in user.
+									$user = wp_get_current_user();
+									// Send out an email notification.
+									$to = $curr_user->user_email;
+									$subject = 'Password Reset.';
+									$body = 'Your password was successfully reset.';
+									$headers = array('Content-Type: text/html; charset=UTF-8');
+									wp_mail($to, $subject, $body, $headers);
+									// Change password.
+									wp_set_password( $_POST['password'], $user->ID);
+									// Log-in again.
+									wp_set_auth_cookie($user->ID);
+									wp_set_current_user($user->ID);
+									do_action('wp_login', $user->user_login, $user);
+				
+									$f_value['pr-success'] = "success";
+								}
+							}
+						}
+					}
 				}
 
 			} else {
