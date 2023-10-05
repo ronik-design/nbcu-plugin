@@ -199,22 +199,28 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
 
 
     function ronikLooperDooper($dataUrl, $cookieName){
+        $f_redirect_wp_slugs = array(
+            '/favicon.ico', 
+            '/wp-admin/admin-post.php', 
+            '/wp-admin/admin-ajax.php',
+        );
+       
         // First lets loop through all the provided urls.
         foreach ($dataUrl['reUrl'] as $value) {
             // If value matches with the request_url
             if (!str_contains($_SERVER['REQUEST_URI'], $value)) {
-                // We dont want to redirect on the '/wp-admin/admin-post.php'
-                if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/admin-post.php')) {
+                // We dont want to redirect on the '/wp-admin/admin-post.php' or /wp-content/
+                if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/admin-post.php') && !str_contains($_SERVER['REQUEST_URI'], '/wp-content/')) {
                     // Lastly we check if the requested matches the permalink to prevent looping issues.
                     if(get_permalink() !== home_url($dataUrl['reDest'])){
-                        if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
+                        if( !in_array($_SERVER['REQUEST_URI'], $f_redirect_wp_slugs) ){
+                        // if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
                             if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
                                 error_log(print_r($_SERVER['REQUEST_URI'], true));
                                 $cookie_value = urlencode($_SERVER['REQUEST_URI']);
                                 // Lets expire the cookie after 30 days.
                                 setcookie($cookieName, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
-                            }    
-                            
+                            }
                         }
                         // Pause server.
                         sleep(.5);

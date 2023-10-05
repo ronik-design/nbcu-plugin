@@ -1,5 +1,55 @@
 // Global Function.
 
+
+function test($){
+    // var iframe = document.querySelector('iframe');
+	// console.log(iframe);
+    // var player = new Vimeo.Player(iframe);
+	// console.log(player);
+	//
+	//
+    // player.on('play', function() {
+    //     alert('You have played the video')
+    // });
+    //     player.on('ended', function(){
+    //     alert('Video play completed');
+    // });
+	//
+    // player.getVideoTitle().then(function(title) {
+    //     console.log('title:', title);
+    // });
+
+
+
+	// const nativeFetch = window.fetch;
+	// window.fetch = function(...args) {
+	// 	console.log('detected fetch call');
+	// 	console.log(args);
+	// 	console.log(window);
+	// 	return nativeFetch.apply(window, args);
+	// }
+
+    // var proxied = window.XMLHttpRequest.prototype.send;
+    // window.XMLHttpRequest.prototype.send = function() {
+    //     console.log( arguments );
+    //     //Here is where you can add any code to process the request.
+    //     //If you want to pass the Ajax request object, pass the 'pointer' below
+    //     var pointer = this
+    //     var intervalId = window.setInterval(function(){
+    //             if(pointer.readyState != 4){
+    //                     return;
+    //             }
+    //             console.log( pointer.responseText );
+    //             //Here is where you can add any code to process the response.
+    //             //If you want to pass the Ajax request object, pass the 'pointer' below
+    //             clearInterval(intervalId);
+
+    //     }, 1);//I found a delay of 1 to be sufficient, modify it as you need.
+    //     return proxied.apply(this, [].slice.call(arguments));
+    // };
+}
+
+
 function checkPasswordStrength($) {
 	// Loop through all the passwords inputs
 	$( ".adv-passwordchecker" ).each(function( index ) {
@@ -50,8 +100,8 @@ function checkPasswordStrength($) {
 		}
 
 
-		// This is best guess effort 
-		// First attempt to check for the closest "form" tag. 
+		// This is best guess effort
+		// First attempt to check for the closest "form" tag.
 		if(THIS.closest('form').length !== 0){
 			findSubmitButton(THIS.closest('form'), submitted);
 		// If not we look for the closest class called .form
@@ -79,7 +129,7 @@ function checkPasswordStrength($) {
 			} else {
 				submitButton.removeClass('ronik-password-disabled');
 			}
-		}	
+		}
 	}
 }
 
@@ -151,6 +201,7 @@ function log_click_action( action, url ) {
 		setTimeout(() => {
 			addNonce($);
 			log_click_action();
+			test($);
 
 		}, 50);
 	});

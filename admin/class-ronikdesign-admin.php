@@ -226,20 +226,27 @@ class Ronikdesign_Admin
 						$user_email = 'No email found.';
 					}
 				}
-				// If no email we include the file.
-				if($user_email == 'No email found.'){
-					include $file;
-				} else {
-					$f_user_override = get_option('options_mfa_settings_user_override');
-					// We remove all whitespace (including tabs and line ends)
-					$f_user_override = preg_replace('/\s+/', '', $f_user_override);
-					// Lets trim just incase as well.
-					$f_user_override_array = explode(",", trim($f_user_override));
-					// Detect if array is populated.
-					if (!in_array($user_email, $f_user_override_array)) {
+
+				$user_confirmed = get_user_meta($user_id, "user_confirmed", true);
+				$wp_3_access = get_user_meta($user_id, "wp_3_access", true);
+				// Pretty much want to only trigger the MFA if the user is confirmed and is granted access.
+				if($user_confirmed == 'Y' && $wp_3_access == 'Y'){
+					// If no email we include the file.
+					if($user_email == 'No email found.'){
 						include $file;
+					} else {
+						$f_user_override = get_option('options_mfa_settings_user_override');
+						// We remove all whitespace (including tabs and line ends)
+						$f_user_override = preg_replace('/\s+/', '', $f_user_override);
+						// Lets trim just incase as well.
+						$f_user_override_array = explode(",", trim($f_user_override));
+						// Detect if array is populated.
+						if (!in_array($user_email, $f_user_override_array)) {
+							include $file;
+						}
 					}
 				}
+				
 			}
 		}
 		// Include the password reset.

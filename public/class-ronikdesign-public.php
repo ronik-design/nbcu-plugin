@@ -103,12 +103,17 @@ class Ronikdesign_Public
 		if ( ! wp_script_is( 'jquery', 'enqueued' )) {
 			wp_enqueue_script($this->plugin_name.'jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js', array(), null, true);
 			$scriptName = $this->plugin_name.'jquery';
+
+			wp_enqueue_script($this->plugin_name.'-vimeo', 'https://player.vimeo.com/api/player.js', array($scriptName), $this->version, false);
 			wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ronikdesign-public.js', array($scriptName), $this->version, false);
 			wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array($scriptName), $this->version, false);
 		} else {
+			wp_enqueue_script($this->plugin_name.'-vimeo', 'https://player.vimeo.com/api/player.js', array(), $this->version, false);
 			wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ronikdesign-public.js', array(), $this->version, false);
 			wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array(), $this->version, false);
 		}
+
+
 
 		// Ajax & Nonce
 		wp_localize_script($this->plugin_name, 'wpVars', array(
