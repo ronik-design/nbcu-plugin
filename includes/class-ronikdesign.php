@@ -185,11 +185,8 @@ class Ronikdesign
 		// $this->loader->add_action( 'admin_init', $plugin_admin, 'remove_acf_options_page', 99);
 
 		// Add admin posts
-		$this->loader->add_action('admin_post_nopriv_ronikdesigns_admin_password_reset', $plugin_admin, 'ronikdesigns_admin_password_reset');
-		$this->loader->add_action('admin_post_ronikdesigns_admin_password_reset', $plugin_admin, 'ronikdesigns_admin_password_reset');
-
-		$this->loader->add_action('admin_post_nopriv_ronikdesigns_admin_auth_verification', $plugin_admin, 'ronikdesigns_admin_auth_verification');
-		$this->loader->add_action('admin_post_ronikdesigns_admin_auth_verification', $plugin_admin, 'ronikdesigns_admin_auth_verification');
+		// $this->loader->add_action('admin_post_nopriv_ronikdesigns_admin_password_reset', $plugin_admin, 'ronikdesigns_admin_password_reset');
+		// $this->loader->add_action('admin_post_ronikdesigns_admin_password_reset', $plugin_admin, 'ronikdesigns_admin_password_reset');
 
 		// Add Ajax
 		$this->loader->add_action('wp_ajax_nopriv_do_init_page_migration', $plugin_admin, 'ajax_do_init_page_migration');
@@ -224,6 +221,12 @@ class Ronikdesign
 
 		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
 
+
+		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
+		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
+		$this->loader->add_action('wp_ajax_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
+		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');
+		$this->loader->add_action('wp_ajax_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');
 
 		// Verification API AJAX.
 		$this->loader->add_action('wp_ajax_nopriv_do_verification', $plugin_public, 'ajax_do_verification');

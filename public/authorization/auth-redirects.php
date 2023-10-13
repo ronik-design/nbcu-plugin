@@ -30,7 +30,7 @@ error_log(print_r( 'Auth Redirects', true));
         if(!is_user_logged_in()){
             error_log(print_r( 'Auth is due to not logged in user.', true));
             // Redirect Magic, custom function to prevent an infinite loop.
-            $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/', '/2fa/', '/mfa/');
+            $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/', '/2fa/', '/mfa/');
             $dataUrl['reDest'] = '';
             ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
         }
@@ -108,7 +108,7 @@ error_log(print_r( 'Auth Redirects', true));
             
             // This is critical
             if($get_auth_status == 'auth_select_sms-missing'){
-                $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
+                $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
                 $dataUrl['reDest'] = '/auth/';
                 ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 return;
@@ -123,7 +123,7 @@ error_log(print_r( 'Auth Redirects', true));
 
                     // Redirect Magic, custom function to prevent an infinite loop.
                     // if(empty($get_auth_status)){
-                        $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
+                        $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
                         $dataUrl['reDest'] = '/auth/';
                         ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                         return;
@@ -143,7 +143,7 @@ error_log(print_r( 'Auth Redirects', true));
                     return;
                 }
             } else {
-                $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/auth/');
+                $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
                 $dataUrl['reDest'] = '/auth/';
                 ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 return;
@@ -169,7 +169,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
     }
     $f_auth = get_field('mfa_settings', 'options');
     // Redirect Magic, custom function to prevent an infinite loop.
-    $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/', '/mfa/');
+    $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/', '/mfa/');
     $dataUrl['reDest'] = '/mfa/';
 
             if(ronikdesigns_get_page_by_title('mfa')){
@@ -192,7 +192,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
                         if (str_contains($_SERVER['REQUEST_URI'], '/mfa/')) {
                         // if($_SERVER['REQUEST_URI'] == '/mfa/'){
                             // Lets block the user from accessing the 2fa if already authenticated.
-                            $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/', '/mfa/');
+                            $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/', '/mfa/');
                             $dataUrl['reDest'] = '/';
 
                             if($mfa_validation !== 'valid' ){
@@ -204,7 +204,7 @@ function ronikdesigns_redirect_non_registered_mfa() {
                     // update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
                     // Takes care of the redirection logic
                         // Redirect Magic, custom function to prevent an infinite loop.
-                        $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/');
+                        $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/');
                         $dataUrl['reDest'] = '/mfa/';
                     ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 }
@@ -224,7 +224,7 @@ function ronikdesigns_redirect_registered_2fa() {
     }
     $f_auth = get_field('mfa_settings', 'options');
     // Redirect Magic, custom function to prevent an infinite loop.
-    $dataUrl['reUrl'] = array('/wp-admin/admin-post.php', '/2fa/');
+    $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/');
     $dataUrl['reDest'] = '/2fa/';
 
     // if($f_auth['auth_page_enabled']){
@@ -366,7 +366,7 @@ function ronikdesigns_redirect_registered_2fa() {
                 function timeValidationAjax( killValidation, timeChecker ){
                     jQuery.ajax({
                         type: 'POST',
-                        url: "<?php echo esc_url( admin_url('admin-post.php') ); ?>",
+                        url: "<?php echo esc_url( admin_url('admin-ajax.php') ); ?>",
                         data: {
                             action: 'ronikdesigns_admin_auth_verification',
                             killValidation: killValidation,

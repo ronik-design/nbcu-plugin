@@ -52,7 +52,7 @@ add_action('mfa-registration-page', function () {
             <p>MFA Status: <?php echo $mfa_status; ?></p>
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
             <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-            <form  action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+            <form  action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <input type="hidden" type="text" name="re-auth" value="RESET">
                 <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
@@ -112,7 +112,7 @@ add_action('mfa-registration-page', function () {
                         <p><?= $get_current_secret; ?></p>
                     </span>
                 <?php } ?>
-                <form class="auth-content-bottom__submit <?php if($f_error){ echo 'auth-content-bottom__submit_error'; } ?>" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                <form class="auth-content-bottom__submit <?php if($f_error){ echo 'auth-content-bottom__submit_error'; } ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                     <input required autocomplete="off" type="text" name="google2fa_code" placeholder="6 Digit Code" value="">
                     <input type="submit" name="submit" value="Submit">

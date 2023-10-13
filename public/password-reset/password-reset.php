@@ -91,7 +91,7 @@ function password_reset_ronikdesigns(){
             );
 
             // Lets setup the cookie for redirect purposes.
-            if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
+            if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
                 if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
                     $cookie_name = "ronik-password-reset-redirect";
                     $cookie_value = urlencode($_SERVER['REQUEST_URI']);
@@ -107,7 +107,7 @@ function password_reset_ronikdesigns(){
                     if(isset($_SERVER['REDIRECT_URL'])){
                         // Lets check if the $_SERVER['REDIRECT_URL'] is equal to admin-post.php or password-reset.
                         // This prevent redirect loop issues
-                        if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REDIRECT_URL'] !== '/password-reset/')){
+                        if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REDIRECT_URL'] !== '/password-reset/')){
                             // Because we are using GET we have to check each query
                             if(!in_array($_SERVER['QUERY_STRING'], $f_redirect_allowable_slugs) ){
                                 wp_redirect( esc_url(home_url('/password-reset/')) );
@@ -115,7 +115,7 @@ function password_reset_ronikdesigns(){
                             }
                         }
                     } else {
-                        if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
+                        if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
                             if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
                                 wp_redirect( esc_url(home_url('/password-reset/')) );
                                 exit;

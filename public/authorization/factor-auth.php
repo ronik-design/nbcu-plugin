@@ -8,7 +8,7 @@ use Twilio\Rest\Client;
         // session_start();
 
 add_action('auth-rest', function ($args) { ?>
-    <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+    <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
         <h2>MFA Registeration Reset</h2>
         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
         <input type="hidden" type="text" name="re-auth" value="RESET">
@@ -33,7 +33,7 @@ add_action('auth-registration-page', function () {
             <p>MFA Status: <?php echo $mfa_status; ?></p>
             <p>MFA Validation: <?php echo $mfa_validation; ?></p>
             <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+            <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <input type="hidden" type="text" name="re-auth" value="RESET">
                 <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
@@ -104,7 +104,7 @@ add_action('auth-registration-page', function () {
                 });
             </script>
             <div class="auth-content-bottom auth-content-bottom--sms">
-                <form class="auth-content-bottom__submit" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+                <form class="auth-content-bottom__submit" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                     <div class="auth-content-bottom__submit-contents">
                         <input type="tel" id="auth-phone_number" name="auth-phone_number" placeholder="234-567-8901" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required>
                         <small>Format: 234-567-8901</small>
@@ -115,7 +115,7 @@ add_action('auth-registration-page', function () {
 
             </div>
         <?php } else { ?>
-            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+            <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                 <p>Please select the type of authentication:</p>
                 <span>
                     <input type="radio" id="mfa" name="auth-select" value="mfa" checked="checked">

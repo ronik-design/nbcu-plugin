@@ -210,7 +210,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
             // If value matches with the request_url
             if (!str_contains($_SERVER['REQUEST_URI'], $value)) {
                 // We dont want to redirect on the '/wp-admin/admin-post.php' or /wp-content/
-                if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/admin-post.php') && !str_contains($_SERVER['REQUEST_URI'], '/wp-content/')) {
+                if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/admin-ajax.php') && !str_contains($_SERVER['REQUEST_URI'], '/wp-content/')) {
                     // Lastly we check if the requested matches the permalink to prevent looping issues.
                     if(get_permalink() !== home_url($dataUrl['reDest'])){
                         if( !in_array($_SERVER['REQUEST_URI'], $f_redirect_wp_slugs) ){

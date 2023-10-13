@@ -8,7 +8,7 @@
 $f_auth = get_field('mfa_settings', 'options');
 if(!$f_auth['enable_mfa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
-	$dataUrl['reUrl'] = array('/wp-admin/admin-post.php');
+	$dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php');
 	$dataUrl['reDest'] = '';
 	ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
 }
@@ -141,7 +141,7 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 							function timeValidationAjax( killValidation, timeChecker, timeLockoutChecker ){
 								jQuery.ajax({
 									type: 'POST',
-									url: "<?php echo esc_url( admin_url('admin-post.php') ); ?>",
+									url: "<?php echo esc_url( admin_url('admin-ajax.php') ); ?>",
 									data: {
 										action: 'ronikdesigns_admin_auth_verification',
 										killValidation: killValidation,

@@ -83,8 +83,12 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
         <br></br>
         <?php if($f_instructions){ ?><?= $f_instructions(); ?><?php } ?>
         <br></br>
-		<?php if($f_userdata){ ?>
-            <form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post">
+		<?php if($f_userdata){ 
+            // Needs to be public
+            $ajaxUrl = esc_url( admin_url('admin-ajax.php') );
+            // $ajaxUrl = esc_url( admin_url('admin-post.php') );
+        ?>
+            <form action="<?php echo $ajaxUrl; ?>" method="post">
                 <!-- Need to add username input to silence the console warnings. -->
                 <input type="text" name="email" value="..." autocomplete="username email" style="display: none;" >
                 <label for="password">Password:</label>
