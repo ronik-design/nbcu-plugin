@@ -220,9 +220,9 @@ class Ronikdesign
 		// $this->loader->add_action('admin_enqueue_scripts', $plugin_public, 'enqueue_styles');
 
 		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
-
-
 		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
+
+
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');

@@ -417,7 +417,7 @@ class Ronikdesign_Public
 
 			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
 			// We add the logic into the theme.
-			include $file;
+			// include $file;
 
 			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
 			if($f_bypasser){
