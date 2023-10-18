@@ -198,8 +198,8 @@ class Ronikdesign
 		$this->loader->add_action('wp_ajax_nopriv_do_init_remove_unused_media', $plugin_admin, 'ajax_do_init_remove_unused_media');
 		$this->loader->add_action('wp_ajax_do_init_remove_unused_media', $plugin_admin, 'ajax_do_init_remove_unused_media');
 
-		$this->loader->add_action('wp_ajax_nopriv_do_init_analytics', $plugin_admin, 'ajax_do_init_analytics');
-		$this->loader->add_action('wp_ajax_do_init_analytics', $plugin_admin, 'ajax_do_init_analytics');
+		$this->loader->add_action('wp_ajax_nopriv_do_init_urltracking', $plugin_admin, 'ajax_do_init_urltracking');
+		$this->loader->add_action('wp_ajax_do_init_urltracking', $plugin_admin, 'ajax_do_init_urltracking');
 	}
 
 	/**

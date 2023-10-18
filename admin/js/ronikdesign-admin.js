@@ -1,18 +1,6 @@
 (function( $ ) {
 	'use strict';
 
-	function log_click_action( action, url ) {
-		alert('ddd');
-		jQuery.ajax({
-			type: 'POST',
-			url: ajaxurl,
-			data: {
-				action: 'do_init_analytics',
-				click_action: action,
-				point_origin: url
-			}
-		});
-	}
 
 
 	function initSVGMigration() {
@@ -224,27 +212,6 @@
 			initPageMigration();
 			initUnusedMedia();
 			deleteUnusedMedia();
-
-			// verificationProcess('email', 'kevin@ronikdesign.com' );
-			// setTimeout(() => {
-			// 	verificationProcess('phone', '631-617-4271' );
-			// }, 2000);
-
-			// jQuery( 'button, a' ).on( 'click', function (ev) {
-			// 	// ev.preventDefault();
-			// 	// alert("Hello World!");
-
-			// 	var currentLocation = window.location;
-			// 	console.log(currentLocation);
-			// 	log_click_action( 'my_button_clicked', currentLocation );
-			// 	alert('sss');
-
-
-			// 	setTimeout(() => {
-			// 		alert('sss');
-			// 	}, 1110);
-
-			// });
 		}, 250);
 
 

@@ -1233,62 +1233,17 @@ class Ronikdesign_Admin
 	}
 
 
-
-
-	function ajax_do_init_sms_verification() {
-		// // Check if user is logged in.
-		// if (!is_user_logged_in()) {
-		// 	return;
-		// }
-		// $user_id = get_current_user_id();
-		// $meta_key = 'user_click_actions';
-
-		// $current_data = get_user_meta( $user_id, $meta_key, true );
-
-		// if($current_data){
-		// 	// error_log(print_r($current_data, true));
-		// 	$current_data[] = array(
-		// 		'action' => $_POST['click_action'],
-		// 		'timestamp' => time(),
-		// 		'url' => $_POST['point_origin']
-		// 	);
-		// 	update_user_meta( $user_id, $meta_key, $current_data );
-		// } else {
-		// 	$current_data = array(
-		// 		'action' => $_POST['click_action'],
-		// 		'timestamp' => time(),
-		// 		'url' => $_POST['point_origin']
-		// 	);
-		// 	update_user_meta( $user_id, $meta_key, $current_data );
-
-		// }
-	}
-
-
-
-	function ajax_do_init_analytics() {
+	function ajax_do_init_urltracking() {
 		// Check if user is logged in.
 		if (!is_user_logged_in()) {
 			return;
 		}
 		$user_id = get_current_user_id();
 		$meta_key = 'user_click_actions';
-		$current_data = get_user_meta( $user_id, $meta_key, true );
-		if($current_data){
-			$current_data[] = array(
-				'action' => $_POST['click_action'],
-				'timestamp' => time(),
-				'url' => $_POST['point_origin']
-			);
-			update_user_meta( $user_id, $meta_key, $current_data );
-		} else {
-			$current_data = array(
-				'action' => $_POST['click_action'],
-				'timestamp' => time(),
-				'url' => $_POST['point_origin']
-			);
-			update_user_meta( $user_id, $meta_key, $current_data );
 
-		}
+		update_user_meta( $user_id, $meta_key, array(
+			'timestamp' => time(),
+			'url' => $_POST['point_origin']
+		) );
 	}
 }

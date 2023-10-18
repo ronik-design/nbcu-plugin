@@ -1,55 +1,5 @@
 // Global Function.
 
-
-function test($){
-    // var iframe = document.querySelector('iframe');
-	// console.log(iframe);
-    // var player = new Vimeo.Player(iframe);
-	// console.log(player);
-	//
-	//
-    // player.on('play', function() {
-    //     alert('You have played the video')
-    // });
-    //     player.on('ended', function(){
-    //     alert('Video play completed');
-    // });
-	//
-    // player.getVideoTitle().then(function(title) {
-    //     console.log('title:', title);
-    // });
-
-
-
-	// const nativeFetch = window.fetch;
-	// window.fetch = function(...args) {
-	// 	console.log('detected fetch call');
-	// 	console.log(args);
-	// 	console.log(window);
-	// 	return nativeFetch.apply(window, args);
-	// }
-
-    // var proxied = window.XMLHttpRequest.prototype.send;
-    // window.XMLHttpRequest.prototype.send = function() {
-    //     console.log( arguments );
-    //     //Here is where you can add any code to process the request.
-    //     //If you want to pass the Ajax request object, pass the 'pointer' below
-    //     var pointer = this
-    //     var intervalId = window.setInterval(function(){
-    //             if(pointer.readyState != 4){
-    //                     return;
-    //             }
-    //             console.log( pointer.responseText );
-    //             //Here is where you can add any code to process the response.
-    //             //If you want to pass the Ajax request object, pass the 'pointer' below
-    //             clearInterval(intervalId);
-
-    //     }, 1);//I found a delay of 1 to be sufficient, modify it as you need.
-    //     return proxied.apply(this, [].slice.call(arguments));
-    // };
-}
-
-
 function checkPasswordStrength($) {
 	// Loop through all the passwords inputs
 	$( ".adv-passwordchecker" ).each(function( index ) {
@@ -176,21 +126,26 @@ function addNonce($){
 
 
 
-function log_click_action( action, url ) {
-	$(".sms_2fa_button").on('click', function(){
-		alert('ddd');
-		jQuery.ajax({
-			type: 'POST',
-			url: ajaxurl,
-			data: {
-				action: 'do_init_sms_verification',
-				// click_action: action,
-				// point_origin: url
+function log_click_action( ) {
+	$( "a" ).each(function( index ) {	
+
+		if( $( this ).attr('href') ){
+			if( ($( this ).attr('href').indexOf('/') === 0) || ($( this ).attr('href').includes(window.location.hostname)) ) {
+				$( this ).on('click', function(){
+					var href = $( this ).attr('href');
+					jQuery.ajax({
+						type: 'POST',
+						url: wpVars.ajaxURL,
+						data: {
+							action: 'do_init_urltracking',
+							point_origin: href
+						}
+					});
+				});
 			}
-		});
+		}
 	});
 }
-
 
 
 (function( $ ) {
@@ -200,9 +155,7 @@ function log_click_action( action, url ) {
 		// SetTimeOut just incase things havent initialized just yet.
 		setTimeout(() => {
 			addNonce($);
-			log_click_action();
-			test($);
-
+			log_click_action($);
 		}, 50);
 	});
 })( jQuery );
