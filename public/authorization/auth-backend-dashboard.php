@@ -17,6 +17,9 @@ function ronikdesigns_save_extra_user_profile_fields_auth($user_id){
     // update_user_meta($user_id, 'sms_2fa_status', $_POST['sms_status']);
     // update_user_meta($user_id, 'sms_2fa_secret', $_POST['sms_secret']);
 
+    if($_POST['auth_reset_lockdown'] == 'auth_not_locked'){
+        delete_user_meta($user_id, 'auth_lockout_counter' );
+    }
     if($_POST['auth_reset']){
         delete_user_meta($user_id, 'auth_status' );
         delete_user_meta($user_id, 'mfa_status' );
@@ -26,6 +29,7 @@ function ronikdesigns_save_extra_user_profile_fields_auth($user_id){
         delete_user_meta($user_id, 'sms_2fa_secret' );
         delete_user_meta($user_id, 'google2fa_secret' );
         delete_user_meta($user_id, 'sms_code_timestamp' );
+        delete_user_meta($user_id, 'auth_lockout_counter' );
     }
 
 }
@@ -66,6 +70,10 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
         if(!$get_mfa_validation){
             $get_mfa_validation = '';
         }
+        $get_auth_lockout_counter = get_user_meta($_GET["user_id"], 'auth_lockout_counter', true);
+        if(!$get_auth_lockout_counter){
+            $get_auth_lockout_counter = '';
+        }
     } else {
         // Last chance to get registration status
         if(isset($_GET["user"])){
@@ -98,6 +106,11 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
             $get_mfa_validation = get_user_meta($_GET["user"], 'mfa_validation', true);
             if(!$get_mfa_validation){
                 $get_mfa_validation = '';
+            }
+
+            $get_auth_lockout_counter = get_user_meta($_GET["user"], 'auth_lockout_counter', true);
+            if(!$get_auth_lockout_counter){
+                $get_auth_lockout_counter = '';
             }
 
         } else {
@@ -133,7 +146,11 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 if(!$get_mfa_validation){
                     $get_mfa_validation = '';
                 }
-                
+
+                $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+                if(!$get_auth_lockout_counter){
+                    $get_auth_lockout_counter = '';
+                }
 
             } else {
                 $get_auth_status = 'none';
@@ -143,6 +160,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 $get_sms_status = 'sms_2fa_unverified';
                 $get_mfa_secret = '';
                 $get_sms_secret = 'invalid';
+                $get_auth_lockout_counter = '';
             }
 
         }
@@ -151,6 +169,36 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
 ?>
     <h3><?php _e("Extra profile information", "blank"); ?></h3>
     <table class="form-table">
+
+
+        <?php
+        if( strlen($get_auth_lockout_counter) > 6){ ?>
+            <tr>
+                <th><label for="auth_reset_lockdown"><?php _e("Account Locked Down"); ?></label><p>The current user account is locked down!</p></th>
+                <!-- <td>
+                    <input type="checkbox"  name="auth_reset_lockdown" id="auth_reset_lockdown" checked="selected" />
+                </td> -->
+                <td>
+                    <select name="auth_reset_lockdown" id="auth_reset_lockdown">
+                        <option value="auth_is_locked" selected="selected">User is Locked</option>
+                        <option value="auth_not_locked" >User is Not Locked</option>
+                        <option value="none">none</option>
+                    </select>
+                    <p>Change the selection and click update user to reset locked down mode.</p>
+                </td>
+            </tr>
+
+        <?php } else { ?>
+
+            <?php if($get_auth_lockout_counter){ ?>
+                User has <?= $get_auth_lockout_counter; ?> failed attempts.
+            <?php } else { ?>
+                User has 0 failed attempts.
+            <?php } ?>
+        <?php } ?>
+
+
+        <br>
         <tr>
             <th><label for="auth_reset"><?php _e("Auth Rest"); ?></label></th>
             <td>
@@ -203,7 +251,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 <input disabled name="sms_secret" id="sms_secret" value="<?= $get_sms_secret; ?>">
             </td>
         </tr>
-        
+
 
         <?php if($get_phone_number){ ?>
             <tr>

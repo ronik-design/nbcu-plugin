@@ -713,7 +713,7 @@ class Ronikdesign_Public
 
 					if( strlen($_POST['validate-sms-code']) !== 6 ){
 						$f_value['sms-error'] = "nomatch";
-						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 3)){
+						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 10)){
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 						} else {
 							if(!isset($get_auth_lockout_counter) || !$get_auth_lockout_counter){
@@ -740,7 +740,7 @@ class Ronikdesign_Public
 						exit;
 					} else {
 						$f_value['sms-error'] = "nomatch";
-						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 3)){
+						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 10)){
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 						} else {
 							if(!isset($get_auth_lockout_counter) || !$get_auth_lockout_counter){
@@ -780,7 +780,7 @@ class Ronikdesign_Public
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 
-						if($get_auth_lockout_counter == 3){
+						if($get_auth_lockout_counter == 10){
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 						} else {
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
@@ -812,7 +812,7 @@ class Ronikdesign_Public
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
 							$f_value['mfa-success'] = "success";
 						} else {
-							if($get_auth_lockout_counter == 3){
+							if($get_auth_lockout_counter == 10){
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 							} else {
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
@@ -825,7 +825,7 @@ class Ronikdesign_Public
 						// Lets store the mfa validation data inside the current usermeta.
 						update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 
-						if($get_auth_lockout_counter == 3){
+						if($get_auth_lockout_counter == 10){
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 						} else {
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
@@ -893,11 +893,11 @@ class Ronikdesign_Public
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeLockoutChecker']) && ($_POST['timeLockoutChecker'] == 'valid')){
 					error_log(print_r('Lockout Time Checker Validation' , true));
-					if( isset($get_auth_lockout_counter) && (strlen($get_auth_lockout_counter) > 6) ){
+					if( isset($get_auth_lockout_counter) && (strlen($get_auth_lockout_counter) > 10) ){
 						$f_expiration_time = 3;
 						$past_date = strtotime((new DateTime())->modify('-'.$f_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
 						if( $past_date > $get_auth_lockout_counter ){
-							delete_user_meta(get_current_user_id(), 'auth_lockout_counter');
+							// delete_user_meta(get_current_user_id(), 'auth_lockout_counter');
 							wp_send_json_success('reload');
 						} else {
 							// Catch ALL

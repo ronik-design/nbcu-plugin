@@ -85,13 +85,14 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 		<div class="auth-content">
 			<?php if( strlen($get_auth_lockout_counter) > 6){ ?>
 				<div class="mfa-content">
-					<h2>Authentication failed</h2>
+					<h2>Authentication failed too many times.</h2>
 					<div class="instructions">
-						<h4>Account is locked out for 3 minutes. Please try again later.</h4>
+						<!-- <h4>Account is locked out for 3 minutes. Please try again later.</h4> -->
+						<h4>Your account is locked.</h4>
 					</div>
 					<div class="auth-content-bottom">
 						<div class="auth-content-bottom__helper" style="padding: 0;">
-							<p>If you encounter any issue, please reach out to the <a href="mailto:together@nbcuni.com?subject=MFA Registration Issue">together@nbcuni.com</a> for support. </p>
+							<p>Please reach out to <a href="mailto:together@nbcuni.com?subject=Account Locked Out">together@nbcuni.com</a> for support. </p>
 						</div>
 					</div>
 				</div>
@@ -139,7 +140,7 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 				$f_expiration_time = 3;
 				$past_date = strtotime((new DateTime())->modify('-'.$f_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
 				if( $past_date > $get_auth_lockout_counter ){
-					delete_user_meta(get_current_user_id(), 'auth_lockout_counter');
+					// delete_user_meta(get_current_user_id(), 'auth_lockout_counter');
 				} else { ?>
 					<script>
 						timeLockoutValidationChecker();
