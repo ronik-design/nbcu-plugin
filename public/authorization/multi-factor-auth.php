@@ -4,7 +4,7 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 
-// do_action('2fa-registration-page');
+
 add_action('mfa-registration-page', function () {
     $options = new QROptions([
         'eccLevel' => QRCode::ECC_L,
@@ -35,7 +35,6 @@ add_action('mfa-registration-page', function () {
         // add_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
         update_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
     }
-
     // We put this in the header for fast redirect..
     $f_success = isset($_GET['mfa-success']) ? $_GET['mfa-success'] : false;
     $f_error = isset($_GET['mfa-error']) ? $_GET['mfa-error'] : false;
@@ -43,7 +42,6 @@ add_action('mfa-registration-page', function () {
     if($f_error == 'nomatch'){
         $f_error = 'Sorry, the verification code entered is invalid.';
     }
-
     ?>
         <div class="dev-notice">
             <h4>Dev Message:</h4>
@@ -58,9 +56,7 @@ add_action('mfa-registration-page', function () {
                 <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
             </form>
         </div>
-
     <?php
-
     // Check if mfa_status is not equal to verified.
     if ($mfa_status == 'mfa_unverified' && is_user_logged_in()) {
         // Get the User Object.
@@ -72,7 +68,6 @@ add_action('mfa-registration-page', function () {
             $get_current_secret // Lets use the $google2fa_secret we created earlier.
         );
         $qrcode = (new QRCode($options))->render($g2faUrl);
-
         if( isset($mfa_validation) && $mfa_validation == 'valid'){
             update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
             // This is mostly for messaging purposes..
@@ -91,14 +86,12 @@ add_action('mfa-registration-page', function () {
                             window.location = window.location.pathname + "?mfaredirect=expired";
                         }, 1000);
                     } else {
-                    document.getElementById("countdown").innerHTML = "Page will auto reload in: " + timeleft + " seconds";
+                        document.getElementById("countdown").innerHTML = "Page will auto reload in: " + timeleft + " seconds";
                     }
                         timeleft -= 1;
                 }, 1000);
             </script>
-
         <?php } else { ?>
-
             <div class="auth-content-bottom">
                 <?php if( !$mfa_validation || ($mfa_validation == 'not_registered' )  ){ ?>
                     <!-- We check if the get_current_secret is empty or false if so we reload the page.  -->

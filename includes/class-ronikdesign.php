@@ -173,7 +173,6 @@ class Ronikdesign
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 		$this->loader->add_action('acf/input/admin_enqueue_scripts', $plugin_admin, 'acf_enqueue_scripts', 99);
 
-
 		// Hooking up our function to theme setup
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init');
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_fields', 2);
@@ -215,34 +214,28 @@ class Ronikdesign
 
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
-
 		// This will add styles to the admin dashboard side
 		// $this->loader->add_action('admin_enqueue_scripts', $plugin_public, 'enqueue_styles');
 
 		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
 		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
 
-
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');
-
 		// Verification API AJAX.
 		$this->loader->add_action('wp_ajax_nopriv_do_verification', $plugin_public, 'ajax_do_verification');
 		$this->loader->add_action('wp_ajax_do_verification', $plugin_public, 'ajax_do_verification');
-
 		// SVG API AJAX.
 		$this->loader->add_action('wp_ajax_nopriv_do_init_svg_migration_ronik', $plugin_public, 'ajax_do_init_svg_migration_ronik');
 		$this->loader->add_action('wp_ajax_do_init_svg_migration_ronik', $plugin_public, 'ajax_do_init_svg_migration_ronik');
-
 		// SVG Add Custom Route Path.
 		$this->loader->add_filter('acf_icon_path_suffix', $plugin_public, 'acf_icon_path_suffix');
 		$this->loader->add_filter('acf_icon_path', $plugin_public, 'acf_icon_path');
 		$this->loader->add_filter('acf_icon_url', $plugin_public, 'acf_icon_url');
-
 		// Lets add body class. This will allow us to hook into some powerful JS functions.
-		$this->loader->add_action('body_class', $plugin_public, 'my_body_classes');
+		$this->loader->add_action('body_class', $plugin_public, 'ronik_body_class');
 	}
 
 	/**

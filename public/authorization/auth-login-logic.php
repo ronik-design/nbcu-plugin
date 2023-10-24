@@ -4,15 +4,9 @@ use PragmaRX\Google2FA\Google2FA;
 
 
 
-
-
-
-
+// This file has been de-activated. For later...
+// Pretty much this handle mfa logic for wp-login path.. 
 return;
-
-
-
-
 
 
 

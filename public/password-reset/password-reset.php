@@ -1,4 +1,6 @@
 <?php
+$helper = new RonikHelper;
+$helper->ronikdesigns_write_log_devmode('Password Reset', 'low');
 
 $f_password_reset = get_field('password_reset_settings', 'options');
 // Validate password reset is enabled if not just return false.
@@ -49,6 +51,8 @@ function password_reset_ronikdesigns(){
         return $page_template;
     }
     add_filter( 'template_include', 'ronikdesigns_reserve_passwordreset_page_template', 99 );
+
+    $helper = new RonikHelper;
 
     $f_password_reset = get_field('password_reset_settings', 'options');
     // Lets get the current user information
@@ -102,52 +106,32 @@ function password_reset_ronikdesigns(){
                 }
             }
         
-                // Due to redirect loop issues we need to check the following parameters to avoid a redirect loop.
-                    // Check if the $_SERVER is available via isset. WPE will default to else.
-                    if(isset($_SERVER['REDIRECT_URL'])){
-                        // Lets check if the $_SERVER['REDIRECT_URL'] is equal to admin-post.php or password-reset.
-                        // This prevent redirect loop issues
-                        if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REDIRECT_URL'] !== '/password-reset/')){
-                            // Because we are using GET we have to check each query
-                            if(!in_array($_SERVER['QUERY_STRING'], $f_redirect_allowable_slugs) ){
-                                wp_redirect( esc_url(home_url('/password-reset/')) );
-                                exit;
-                            }
-                        }
-                    } else {
-                        if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
-                            if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
-                                wp_redirect( esc_url(home_url('/password-reset/')) );
-                                exit;
-                            }
+            // Due to redirect loop issues we need to check the following parameters to avoid a redirect loop.
+                // Check if the $_SERVER is available via isset. WPE will default to else.
+                if(isset($_SERVER['REDIRECT_URL'])){
+                    // Lets check if the $_SERVER['REDIRECT_URL'] is equal to admin-post.php or password-reset.
+                    // This prevent redirect loop issues
+                    if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REDIRECT_URL'] !== '/password-reset/')){
+                        // Because we are using GET we have to check each query
+                        if(!in_array($_SERVER['QUERY_STRING'], $f_redirect_allowable_slugs) ){
+                            wp_redirect( esc_url(home_url('/password-reset/')) );
+                            exit;
                         }
                     }
- 
-
+                } else {
+                    if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
+                        if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
+                            wp_redirect( esc_url(home_url('/password-reset/')) );
+                            exit;
+                        } else {
+                            $helper->ronikdesigns_write_log_devmode('Password Reset Error 1', 'critical');
+                        }
+                    } else {
+                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical');
+                    }
+                }
         }
     }
 }
 add_action( 'admin_init', 'password_reset_ronikdesigns' );
 add_action( 'template_redirect', 'password_reset_ronikdesigns' );
-
-
-// add_filter( 'wp_mail_from', 'my_mail_from' );
-// function my_mail_from( $email ) {
-//     $config_wp_mail_from = 'kevin.m.mancuso@gmail.com';
-//     // $config_wp_mail_from = get_field( 'config_wp_mail_from', 'options');
-//     if($config_wp_mail_from){
-//         return $config_wp_mail_from;
-//     } else {
-//         return $email;
-//     }
-// }
-// add_filter( 'wp_mail_from_name', 'my_mail_from_name' );
-// function my_mail_from_name( $name ) {
-//     $config_wp_mail_from_name = 'kevin';
-//     // $config_wp_mail_from_name = get_field( 'config_wp_mail_from_name', 'options');
-//     if($config_wp_mail_from_name){
-//         return $config_wp_mail_from_name;
-//     } else {
-//         return $name;
-//     }
-// }

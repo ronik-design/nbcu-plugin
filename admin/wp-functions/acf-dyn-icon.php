@@ -5,7 +5,6 @@ function ronikdesigns_dynamic_get_icon($icon){
         return;
     }
     if($icon){
-        
         $directory = get_stylesheet_directory_uri().'/roniksvg/migration/';
         $f_svg_path = $directory.$icon['icon_select'] . '.svg';
     ?>

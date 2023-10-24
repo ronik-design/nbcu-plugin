@@ -1,5 +1,4 @@
 <?php 
-
 function ronikdesigns_AdvancedSettings($fieldType){ 
 	if($fieldType == 'flex'){
 		$get_acf_type = 'get_field';
@@ -60,7 +59,6 @@ function ronikdesigns_AdvancedSettingsInner($fieldType){
 		$get_acf_type = 'get_field';
 	}
     $f_max_width = $get_acf_type( 'advanced_settings_max-width' );
-
     if($f_max_width){
         $f_mw = 'max-width:';
         switch ($f_max_width) {
@@ -75,14 +73,11 @@ function ronikdesigns_AdvancedSettingsInner($fieldType){
                 break;
             case 'custom':
                 $f_max_width_custom = $get_acf_type( 'advanced_settings_max-width_custom' );
-                
                 if($f_max_width_custom){
                     $f_mw .=  $f_max_width_custom.'px;'; 
-                    
                     if($f_max_width_custom == ''){
                         $f_mw = 'max-width:100%;'; 
                     }
-                    
                 } else{
                     $f_mw = 'max-width:100%;'; 
                 }
@@ -91,10 +86,8 @@ function ronikdesigns_AdvancedSettingsInner($fieldType){
     } else{
         $f_mw = '';
     }
-
     $f_min_height = $get_acf_type( 'advanced_settings_min-height' );
     if($f_min_height){
-
         $f_mh = 'min-height:';
         switch ($f_min_height) {
             case 'sm':
@@ -110,11 +103,9 @@ function ronikdesigns_AdvancedSettingsInner($fieldType){
                 $f_min_height_custom = $get_acf_type( 'advanced_settings_min-height_custom' );
                 if($f_min_height_custom){
                     $f_mh .=  $f_min_height_custom.'px;'; 
-    
                     if($f_min_height_custom == ''){
                         $f_mh = 'min-height:100%;'; 
                     }
-    
                 } else{
                     $f_mh = 'min-height:100%;'; 
                 }
@@ -124,5 +115,4 @@ function ronikdesigns_AdvancedSettingsInner($fieldType){
         $f_mh = '';
     }
     return $f_mw . ' ' . $f_mh;
-} 
-
+}

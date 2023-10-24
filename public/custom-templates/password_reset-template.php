@@ -39,7 +39,6 @@ if($f_success){
     }
 }
 
-
 get_header();
 
 $f_header = apply_filters( 'ronikdesign_passwordreset_custom_header', false );
@@ -84,9 +83,7 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
         <?php if($f_instructions){ ?><?= $f_instructions(); ?><?php } ?>
         <br></br>
 		<?php if($f_userdata){ 
-            // Needs to be public
             $ajaxUrl = esc_url( admin_url('admin-ajax.php') );
-            // $ajaxUrl = esc_url( admin_url('admin-post.php') );
         ?>
             <form action="<?php echo $ajaxUrl; ?>" method="post">
                 <!-- Need to add username input to silence the console warnings. -->

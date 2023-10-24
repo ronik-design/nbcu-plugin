@@ -207,7 +207,6 @@
         });
     }
 
-
 	function text_truncate(str, length, ending) {
 		if(!str){
 			return str;
@@ -256,8 +255,6 @@
 				if(!findParent.trim()){
 					findParent = $(this).attr('src').split("/").pop().split(".")[0].replace(/^a-zA-Z0-9 ]/g, '');
 				}
-
-
 				$(this).attr('alt', text_truncate(findParent, 100));
 			}
 		});
@@ -268,17 +265,14 @@
 		if(!$("body").hasClass("dyn-button-attr") ){
 			return false;
 		}
-
 		function getLastPart(url) {
 			const parts = url.split('/');
 			var lastElement = parts[parts.length - 1];
-
 			if(!lastElement){
 				lastElement = parts[parts.length - 2];
 			} else{
 				lastElement = parts[parts.length - 3];
 			}
-
 			return lastElement;
 		}
 
@@ -299,7 +293,6 @@
 							newText = newText.replace(/[-_]/g, ' ');
 							return newText;
 						}
-
 						switch( $(this).text().toLowerCase() ) {
 							case 'learn more':
 								newText = linkLastSegment($(this).attr('href'));
@@ -313,13 +306,11 @@
 							default:
 							newText = $(this).text();
 						}
-
 						if(text_truncate($(this).text(), 100).trim()){
 							$(this).attr('aria-label', 'A link to '+text_truncate(newText, 100));
 						} else {
 							// $(this).attr('aria-label', 'A link to '+text_truncate(getLastPart($(this).attr('href')), 100));
 						}
-
 					} else {
 						$(this).attr('aria-label', 'A clickable '+text_truncate($(this).prop("tagName").toLowerCase(), 100)+'.');
 					}
@@ -403,5 +394,3 @@ window.addEventListener("load", ()=>{
 		}
 	}
 });
-
-

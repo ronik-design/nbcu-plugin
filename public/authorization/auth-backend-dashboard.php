@@ -9,13 +9,11 @@ function ronikdesigns_save_extra_user_profile_fields_auth($user_id){
         return false;
     }
 
-    error_log(print_r( 'AUTH Backend Dashboard', true));
+    $helper = new RonikHelper;
+    $helper->ronikdesigns_write_log_devmode('AUTH Backend Dashboard', 'low');
+
     update_user_meta($user_id, 'auth_status', $_POST['auth_select']);
     update_user_meta($user_id, 'sms_user_phone', $_POST['sms_phonenumber']);
-    // update_user_meta($user_id, 'mfa_status', $_POST['mfa_status']);
-    // update_user_meta($user_id, 'mfa_validation', $_POST['mfa_validation']);
-    // update_user_meta($user_id, 'sms_2fa_status', $_POST['sms_status']);
-    // update_user_meta($user_id, 'sms_2fa_secret', $_POST['sms_secret']);
 
     if($_POST['auth_reset_lockdown'] == 'auth_not_locked'){
         delete_user_meta($user_id, 'auth_lockout_counter' );
@@ -162,22 +160,16 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 $get_sms_secret = 'invalid';
                 $get_auth_lockout_counter = '';
             }
-
         }
     }
 
 ?>
     <h3><?php _e("Extra profile information", "blank"); ?></h3>
     <table class="form-table">
-
-
         <?php
         if( strlen($get_auth_lockout_counter) > 6){ ?>
             <tr>
                 <th><label for="auth_reset_lockdown"><?php _e("Account Locked Down"); ?></label><p>The current user account is locked down!</p></th>
-                <!-- <td>
-                    <input type="checkbox"  name="auth_reset_lockdown" id="auth_reset_lockdown" checked="selected" />
-                </td> -->
                 <td>
                     <select name="auth_reset_lockdown" id="auth_reset_lockdown">
                         <option value="auth_is_locked" selected="selected">User is Locked</option>
@@ -187,17 +179,13 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                     <p>Change the selection and click update user to reset locked down mode.</p>
                 </td>
             </tr>
-
         <?php } else { ?>
-
             <?php if($get_auth_lockout_counter){ ?>
                 User has <?= $get_auth_lockout_counter; ?> failed attempts.
             <?php } else { ?>
                 User has 0 failed attempts.
             <?php } ?>
         <?php } ?>
-
-
         <br>
         <tr>
             <th><label for="auth_reset"><?php _e("Auth Rest"); ?></label></th>
@@ -205,7 +193,6 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 <input type="checkbox"  name="auth_reset" id="auth_reset"  />
             </td>
         </tr>
-
         <tr>
             <th><label for="auth_select"><?php _e("User Auth Selection"); ?></label></th>
             <td>
@@ -216,43 +203,36 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                 </select>
             </td>
         </tr>
-
         <tr>
             <th><label for="mfa_status"><?php _e("MFA Status"); ?></label></th>
             <td>
                 <input disabled name="mfa_status" id="mfa_status" value="<?= $get_mfa_status; ?>">
             </td>
         </tr>
-
         <tr>
             <th><label for="google2fa_secret"><?php _e("MFA Secret"); ?></label></th>
             <td>
                 <input disabled name="google2fa_secret" id="google2fa_secret" value="<?= $get_mfa_secret; ?>">
             </td>
         </tr>
-
         <tr>
             <th><label for="mfa_validation"><?php _e("MFA Validation"); ?></label></th>
             <td>
                 <input disabled name="mfa_validation" id="mfa_validation" value="<?= $get_mfa_validation; ?>">
             </td>
         </tr>
-
         <tr>
             <th><label for="sms_status"><?php _e("SMS 2fa Status"); ?></label></th>
             <td>
                 <input disabled name="sms_status" id="sms_status" value="<?= $get_sms_status; ?>">
             </td>
         </tr>
-
         <tr>
             <th><label for="sms_secret"><?php _e("SMS 2fa Secret"); ?></label></th>
             <td>
                 <input disabled name="sms_secret" id="sms_secret" value="<?= $get_sms_secret; ?>">
             </td>
         </tr>
-
-
         <?php if($get_phone_number){ ?>
             <tr>
                 <th><label for="sms_phonenumber"><?php _e("SMS 2fa Phone Number"); ?></label></th>

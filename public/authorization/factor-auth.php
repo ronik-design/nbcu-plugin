@@ -3,9 +3,6 @@ use PragmaRX\Google2FA\Google2FA;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
-// Cleaning up the session variables.
-		// temp session_start();
-        // session_start();
 
 add_action('auth-rest', function ($args) { ?>
     <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
@@ -19,13 +16,10 @@ add_action('auth-rest', function ($args) { ?>
 add_action('auth-registration-page', function () {
     $get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-
         $mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
         $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
         $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
-
     ?>
-
         <div class="dev-notice">
             <h4>Dev Message:</h4>
             <p>Current UserID: <?php echo get_current_user_id(); ?></p>
@@ -112,7 +106,6 @@ add_action('auth-registration-page', function () {
                     </div>
                     <button type="submit" value="Send SMS Code">Submit</button>
                 </form>
-
             </div>
         <?php } else { ?>
             <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">

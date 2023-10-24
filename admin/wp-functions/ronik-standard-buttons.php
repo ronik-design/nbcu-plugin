@@ -1,7 +1,6 @@
 <?php 
 function ronikdesigns_buttons($ACF){
     $f_buttons = get_field($ACF.'_buttons');
-
     if($f_buttons){ ?>
     <div class="buttons-wrapper">
         <?php foreach($f_buttons as $buttons){ ?>
