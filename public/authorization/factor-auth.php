@@ -8,6 +8,7 @@ add_action('auth-rest', function ($args) { ?>
     <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
         <h2>MFA Registeration Reset</h2>
         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+        <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
         <input type="hidden" type="text" name="re-auth" value="RESET">
         <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
     </form>
@@ -29,6 +30,7 @@ add_action('auth-registration-page', function () {
             <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
             <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                 <input type="hidden" type="text" name="re-auth" value="RESET">
                 <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
             </form>
@@ -100,9 +102,10 @@ add_action('auth-registration-page', function () {
             <div class="auth-content-bottom auth-content-bottom--sms">
                 <form class="auth-content-bottom__submit" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                     <div class="auth-content-bottom__submit-contents">
-                        <input type="tel" id="auth-phone_number" name="auth-phone_number" placeholder="234-567-8901" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required>
+                        <input type="tel" id="auth-phone_number" name="auth-phone_number" placeholder="234-567-8901" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"  autocomplete="off"  required>
                         <small>Format: 234-567-8901</small>
                         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                     </div>
                     <button type="submit" value="Send SMS Code">Submit</button>
                 </form>
@@ -119,6 +122,7 @@ add_action('auth-registration-page', function () {
                     <label for="2fa">Authenticate with a code received to SMS</label>
                 </span>
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                 <button type="submit" value="Submit">Submit</button>
             </form>
         <?php }

@@ -12,7 +12,7 @@ class RonikHelper{
 			$img = wp_get_attachment_image_src( attachment_url_to_postid($imgacf) , 'full' );
 			$viewbox = "width='{$img[1]}' height='{$img[2]}' viewBox='0 0 {$img[1]} {$img[2]}'";
 			$width  = $img[1];
-			$height = $img[2]; 
+			$height = $img[2];
 			$url = $imgacf;
 			$alt = '';
 		} else {
@@ -37,8 +37,8 @@ class RonikHelper{
 				$viewbox = "viewBox='0 0 100 100'";
 			}
 		}
-		if($advanced_mode) { 
-			$svg_url = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' {$viewbox}%3E%3C/svg%3E";	
+		if($advanced_mode) {
+			$svg_url = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' {$viewbox}%3E%3C/svg%3E";
 		?>
 			<img data-width="<?= $width; ?>" data-height="<?= $height; ?>" class="<?= $custom_css; ?> lzy_img reveal-disabled" src="<?= $svg_url; ?>" data-src="<?= $url; ?>" alt="<?= $alt; ?>">
 		<?php } else{
@@ -75,6 +75,9 @@ class RonikHelper{
 	}
 	// Write error logs cleanly.
 	public function ronikdesigns_write_log_devmode($log, $severity_level='low') {
+		if($severity_level == 'low'){
+			return false;
+		}
 		$f_error_email = get_field('error_email', 'option');
 		// Lets run a backtrace to get more useful information.
 		$t = debug_backtrace();
@@ -153,5 +156,48 @@ function ronikdesigns_get_page_by_title($title, $post_type = 'page'){
 		return true;
 	} else {
 		return false;
+	}
+}
+
+// POST CLEANING
+function cleanInputPOST() {
+	function cleanInput($input){
+		$search = array(
+		  '@<script[^>]*?>.*?</script>@si',
+		  '@<[\/\!]*?[^<>]*?>@si',
+		  '@<style[^>]*?>.*?</style>@siU',
+		  '@<![\s\S]*?--[ \t\n\r]*>@'
+		);
+		$output = preg_replace($search, '', $input);
+		$additional_output = sanitize_text_field( $output );
+		return $additional_output;
+	}
+	// Next lets santize the post data.
+	foreach ($_POST as $key => $value) {
+		$_POST[$key] = cleanInput($value);
+	}
+}
+
+// Simple Ajax Secruity
+function ronik_ajax_security(){
+	// Check if user is logged in. AKA user is authorized.
+	if (!is_user_logged_in()) {
+		wp_send_json_success('noreload');
+		return;
+	}
+	// If POST is empty we fail it.
+	if( empty($_POST) ){
+		wp_send_json_error('Security check failed', '400');
+		wp_die();
+	}
+	// Check if the NONCE is correct. Otherwise we kill the application.
+	if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
+		wp_send_json_error('Security check failed', '400');
+		wp_die();
+	}
+	// Verifies intent, not authorization AKA protect against clickjacking style attacks
+	if ( !check_admin_referer( 'ajax-nonce', 'nonce' ) ) {
+		wp_send_json_error('Security check failed', '400');
+		wp_die();
 	}
 }

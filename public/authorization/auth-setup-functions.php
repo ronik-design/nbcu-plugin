@@ -211,3 +211,31 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
             }
         }
     }
+
+    function ronik_authorize_success_redirect_path(){
+        $user_id = get_current_user_id();
+		$meta_key = 'user_click_actions';
+        $userclick_actions = get_user_meta($user_id, $meta_key, true);
+
+        if($userclick_actions){
+            if( isset($userclick_actions['url']) ){
+                wp_redirect( esc_url(home_url(urldecode($userclick_actions['url']))) );
+                exit;
+            } else {                
+                wp_redirect( esc_url(home_url()) );
+                exit;
+            }
+        } else {
+            wp_redirect( esc_url(home_url()) );
+            exit;  
+        }
+        // // We disable cookie tracking.
+        // $cookie_name = "ronik-auth-reset-redirect";
+        // if(isset($_COOKIE[$cookie_name])) {
+        //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+        //     exit;
+        // } else {
+        //     wp_redirect( esc_url(home_url()) );
+        //     exit;
+        // }
+    }

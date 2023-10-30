@@ -128,7 +128,6 @@ function addNonce($){
 
 function log_click_action( ) {
 	$( "a" ).each(function( index ) {	
-
 		if( $( this ).attr('href') ){
 			if( ($( this ).attr('href').indexOf('/') === 0) || ($( this ).attr('href').includes(window.location.hostname)) ) {
 				$( this ).on('click', function(){
@@ -137,6 +136,7 @@ function log_click_action( ) {
 						type: 'POST',
 						url: wpVars.ajaxURL,
 						data: {
+							nonce: wpVars.nonce,
 							action: 'do_init_urltracking',
 							point_origin: href
 						}

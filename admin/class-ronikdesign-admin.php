@@ -307,18 +307,4 @@ class Ronikdesign_Admin
 		wp_send_json_success('Done');
 	}
 
-
-	function ajax_do_init_urltracking() {
-		// Check if user is logged in.
-		if (!is_user_logged_in()) {
-			return;
-		}
-		$user_id = get_current_user_id();
-		$meta_key = 'user_click_actions';
-
-		update_user_meta( $user_id, $meta_key, array(
-			'timestamp' => time(),
-			'url' => $_POST['point_origin']
-		) );
-	}
 }

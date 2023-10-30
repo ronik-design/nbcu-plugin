@@ -474,6 +474,11 @@ class Ronikdesign_Public
 		if (!is_user_logged_in()) {
 			return;
 		}
+		// Check if the NONCE is correct. Otherwise we kill the application.
+		if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
+			wp_send_json_error('Security check failed', '400');
+			wp_die();
+		}
 		$f_value = array();
 		if(!empty($_POST['password']) && !empty($_POST['retype_password'])){
 			if($_POST['password'] === $_POST['retype_password']){
@@ -532,13 +537,49 @@ class Ronikdesign_Public
 		wp_redirect( esc_url(home_url($r_redirect)) );
 		exit;
 	}
-
+	
 	function ronikdesigns_admin_auth_verification() {
-		// Check if user is logged in.
-		if (!is_user_logged_in()) {
-			wp_send_json_success('noreload');
-			return;
+		// Ajax Security.
+		ronik_ajax_security();
+		// Next lets santize the post data.
+		cleanInputPOST();
+
+		// We determine if a POST var is in the predetermined list. If not we kill the application.
+		$predeterminedDataArray = array(
+			're-auth',
+			'auth-select',
+			'auth-phone_number',
+			'send-sms',
+			'validate-sms-code',
+			'smsExpired',
+			'google2fa_code',
+			'videoPlayed',
+			'killValidation',
+			'timeChecker',
+			'timeLockoutChecker',
+			'action',
+			'nonce',
+			'_wp_http_referer',
+			'submit'
+		);
+		$postDataArray = array();
+		foreach ($_POST as $key => $value) {
+			$postDataArray[] = $key;
 		}
+		if($postDataArray){
+			foreach ($postDataArray as $dataArray){
+				if(!in_array($dataArray, $predeterminedDataArray)){
+					error_log(print_r($dataArray, true));
+					wp_send_json_error('Security check failed', '400');
+					wp_die();
+				}
+			}
+		}
+		error_log(print_r('PASSED Secruity Checks.', true));
+
+		// Need to start the session.
+		session_start();
+
 		// Helper Guide
 		$helper = new RonikHelper;
 
@@ -566,7 +607,7 @@ class Ronikdesign_Public
 		$current_date = strtotime((new DateTime())->format( 'd-m-Y H:i:s' ));
 		// Lets generate the sms_2fa_secret key.
 		$sms_2fa_secret = wp_rand( 1000, 9999 );
-		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', 'low');
+		$sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
 		$f_expiration_time = get_option('options_mfa_settings_sms_expiration_time');
 		$account_sid = $f_twilio_id;
 		$auth_token = $f_twilio_token;
@@ -825,9 +866,40 @@ class Ronikdesign_Public
 
 		// Global Validation Section:
 			// Second Check:
+				if(isset($_POST['videoPlayed']) && ($_POST['videoPlayed'] == 'valid')){
+					// We must unset just incase.
+					unset($_SESSION["videoPlayed"]);
+					// Then we set it to valid aka true
+					$_SESSION["videoPlayed"] = "valid";
+					error_log(print_r('videoPlayed valid', true));
+					// Catch ALL
+					wp_send_json_success('noreload');
+				}
+				if(isset($_POST['videoPlayed']) && ($_POST['videoPlayed'] == 'invalid')){
+					// We must unset just incase.
+					unset($_SESSION["videoPlayed"]);
+					// Then we set it to invalid aka false
+					$_SESSION["videoPlayed"] = "invalid";
+					error_log(print_r('videoPlayed invalid', true));
+					// Catch ALL
+					wp_send_json_success('noreload');
+				}
+
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
+					// This is the logic blocker that will prevent the other code from triggering. 
+					if($_SESSION["videoPlayed"] == 'valid'){
+						error_log(print_r('killValidation', true));
+						error_log(print_r($_SESSION["videoPlayed"], true));
+						// Catch ALL noreload.
+						wp_send_json_success('noreload');
+					}
 					$helper->ronikdesigns_write_log_devmode('Auth Verification: Kill Validation.', 'low');
+
+					error_log(print_r('killValidation', true));
+					error_log(print_r($mfa_status, true));
+					error_log(print_r($sms_2fa_status, true));
+					error_log(print_r($sms_code_timestamp, true));
 
 					// Lets check if user is accessing a locked page.
 					if($mfa_status !== 'mfa_unverified'){
@@ -835,16 +907,35 @@ class Ronikdesign_Public
 						// update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
 						wp_send_json_success('reload');
 					}
-					if($sms_2fa_status !== 'sms_2fa_unverified'){
+					if($sms_code_timestamp == 'invalid'){
 						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
 						update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 						wp_send_json_success('reload');
 					}
+					if($sms_2fa_status !== 'sms_2fa_unverified'){
+						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+						update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+						wp_send_json_success('reload');
+					} 
+					// else {
+					// 	// In code we set the sms to unverified so we have to create logic that auto invalidates the sms secrete and double the unverfied just incase.
+					// 	update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+					// 	update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+					// 	// wp_send_json_success('reload');	
+					// }
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
-				// Lets check to see if the user is idealing to long.
+
+				// Lets check to see if the user is outbound on the allowed site time.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
+					// This is the logic blocker that will prevent the other code from triggering. 
+					if($_SESSION["videoPlayed"] == 'valid'){
+						// error_log(print_r('timeChecker', true));
+						// error_log(print_r($_SESSION["videoPlayed"], true));
+						// Catch ALL noreload.
+						wp_send_json_success('noreload');
+					}
 					$helper->ronikdesigns_write_log_devmode('Auth Verification: Time Checker Validation.', 'low');
 
 					if( isset($f_auth_expiration_time) && $f_auth_expiration_time ){
@@ -870,7 +961,26 @@ class Ronikdesign_Public
 							update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 							wp_send_json_success('reload');
 						}
-					}
+					} 
+					// else {
+					// 	// We must check against the time stamp
+					// 	if($past_date > $sms_code_timestamp ){
+					// 		// In code we set the sms to unverified so we have to create logic that auto invalidates the sms secrete and double the unverfied just incase.
+					// 		update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+					// 		update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+					// 		// wp_send_json_success('reload')
+					// 	}
+					// }
+
+
+					error_log(print_r('timeChecker', true));
+					error_log(print_r($sms_2fa_status, true));
+					error_log(print_r($sms_code_timestamp, true));
+					error_log(print_r($past_date, true));
+
+
+
+
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -895,5 +1005,32 @@ class Ronikdesign_Public
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
+	}
+
+
+	function ajax_do_init_urltracking() {
+		// Ajax Security.
+		ronik_ajax_security();
+		// Next lets santize the post data.
+		cleanInputPOST();
+
+		$user_id = get_current_user_id();
+		$meta_key = 'user_click_actions';
+
+
+		error_log(print_r( $_POST['point_origin'], true) );
+		
+		// We are checking if the url contains the /wp-content/
+		if (!str_contains($_POST['point_origin'], '/wp-content/')) {
+			$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
+		} else {
+			if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
+				$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
+			}
+		}
+		update_user_meta( $user_id, $meta_key, array(
+			'timestamp' => time(),
+			'url' => $point_origin_url
+		) );
 	}
 }

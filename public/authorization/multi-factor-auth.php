@@ -52,6 +52,7 @@ add_action('mfa-registration-page', function () {
             <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
             <form  action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                 <input type="hidden" type="text" name="re-auth" value="RESET">
                 <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
             </form>
@@ -107,6 +108,7 @@ add_action('mfa-registration-page', function () {
                 <?php } ?>
                 <form class="auth-content-bottom__submit <?php if($f_error){ echo 'auth-content-bottom__submit_error'; } ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                    <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                     <input required autocomplete="off" type="text" name="google2fa_code" placeholder="6 Digit Code" value="">
                     <input type="submit" name="submit" value="Submit">
                     <?php if($f_error){ ?>
@@ -120,14 +122,15 @@ add_action('mfa-registration-page', function () {
 
         <?php }?>
     <?php } else{
-        $cookie_name = "ronik-auth-reset-redirect";
-        if(isset($_COOKIE[$cookie_name])) {
-            wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-            exit;
-        } else {
-            wp_redirect( esc_url(home_url()) );
-            exit;
-        }
+        ronik_authorize_success_redirect_path();
+        // $cookie_name = "ronik-auth-reset-redirect";
+        // if(isset($_COOKIE[$cookie_name])) {
+        //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+        //     exit;
+        // } else {
+        //     wp_redirect( esc_url(home_url()) );
+        //     exit;
+        // }
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>

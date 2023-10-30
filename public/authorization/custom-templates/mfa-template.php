@@ -27,15 +27,16 @@ if(isset($_GET["mfaredirect"])){
 }
 // Success message
 if($f_success){
-    // Lets Check for the password reset url cookie.
-    $cookie_name = "ronik-auth-reset-redirect";
-    if(isset($_COOKIE[$cookie_name])) {
-        wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-        exit;
-    } else {
-        // We run our backup plan for redirecting back to previous page.
-        // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-    }
+	ronik_authorize_success_redirect_path();
+    // // Lets Check for the password reset url cookie.
+    // $cookie_name = "ronik-auth-reset-redirect";
+    // if(isset($_COOKIE[$cookie_name])) {
+    //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+    //     exit;
+    // } else {
+    //     // We run our backup plan for redirecting back to previous page.
+    //     // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
+    // }
 }
 ?>
 
@@ -142,12 +143,13 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 							function timeValidationAjax( killValidation, timeChecker, timeLockoutChecker ){
 								jQuery.ajax({
 									type: 'POST',
-									url: "<?php echo esc_url( admin_url('admin-ajax.php') ); ?>",
+									url: wpVars.ajaxURL,
 									data: {
 										action: 'ronikdesigns_admin_auth_verification',
 										killValidation: killValidation,
 										timeChecker: timeChecker,
 										timeLockoutChecker: timeLockoutChecker,
+										nonce: wpVars.nonce
 									},
 									success: data => {
 										if(data.success){

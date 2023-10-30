@@ -2,142 +2,140 @@
 // This file plays a critical role. It loads in the MFA & SMS file.
 // Also handles all the redirects.
 
-error_log(print_r( 'Auth Redirects', true));
+// This function block is responsible for redirecting users to the correct AUTH page.
+function ronikdesigns_redirect_registered_auth() {
+    // Helper Guide
+    $helper = new RonikHelper;
 
-    // This function block is responsible for redirecting users to the correct AUTH page.
-    function ronikdesigns_redirect_registered_auth() {
-        // Helper Guide
-        $helper = new RonikHelper;
+    $f_auth = get_field('mfa_settings', 'options');
+    $f_auth_mfa = get_option('options_mfa_settings_enable_mfa_settings');
+    $f_auth_2fa = get_option('options_mfa_settings_enable_2fa_settings');
 
-        $f_auth = get_field('mfa_settings', 'options');
-        $f_auth_mfa = get_option('options_mfa_settings_enable_mfa_settings');
-        $f_auth_2fa = get_option('options_mfa_settings_enable_2fa_settings');
+    $f_admin_auth_select['mfa'] = false;
+    $f_admin_auth_select['2fa'] = false;
 
-        $f_admin_auth_select['mfa'] = false;
-        $f_admin_auth_select['2fa'] = false;
-
-        // Kill the entire AUTH if both are not enabled!
-        if((!$f_auth_mfa) && (!$f_auth_2fa)){
-            $helper->ronikdesigns_write_log_devmode('Auth is Killed', 'low');
-            return;
-        }
-        // Restricted Access only login users can proceed.
-        if(!is_user_logged_in()){
-            $helper->ronikdesigns_write_log_devmode('Auth is due to not logged in user.', 'low');
-            // Redirect Magic, custom function to prevent an infinite loop.
-            $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/', '/2fa/', '/mfa/');
-            $dataUrl['reDest'] = '';
-            ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
-        }
-        // If both AUTH are not enabled we auto bypass the auth-template. By including the auth files below.
-            // Lets check if MFA is not enabled!
-            if(!$f_auth_mfa){
-                // Lets check if 2fa is enabled!
-                if($f_auth_2fa){
-                    // Store the values in an array for later.
-                    $f_admin_auth_select['2fa'] = true;
-                }
-            }
-            // Lets check if 2fa is not enabled!
-            if(!$f_auth_2fa){
-                // Lets check if MFA is enabled!
-                if($f_auth_mfa){
-                    // Store the values in an array for later.
-                    $f_admin_auth_select['mfa'] = true;
-                }
-            }
-            // Lets check if 2fa is not enabled!
-            if($f_auth_2fa && $f_auth_mfa){
+    // Kill the entire AUTH if both are not enabled!
+    if((!$f_auth_mfa) && (!$f_auth_2fa)){
+        $helper->ronikdesigns_write_log_devmode('Auth is Killed', 'low');
+        return;
+    }
+    // Restricted Access only login users can proceed.
+    if(!is_user_logged_in()){
+        $helper->ronikdesigns_write_log_devmode('Auth is due to not logged in user.', 'low');
+        // Redirect Magic, custom function to prevent an infinite loop.
+        $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/', '/2fa/', '/mfa/');
+        $dataUrl['reDest'] = '';
+        ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+    }
+    // If both AUTH are not enabled we auto bypass the auth-template. By including the auth files below.
+        // Lets check if MFA is not enabled!
+        if(!$f_auth_mfa){
+            // Lets check if 2fa is enabled!
+            if($f_auth_2fa){
                 // Store the values in an array for later.
-                $f_admin_auth_select['mfa'] = true;
                 $f_admin_auth_select['2fa'] = true;
             }
-            // We check the current user auth status and compare it to the admin auth selection
-            $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
-
-            if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
-                if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
-                    $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-                    // Lets expire the cookie after 30 days.
-                    setcookie('ronik-auth-reset-redirect', $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
-                }    
+        }
+        // Lets check if 2fa is not enabled!
+        if(!$f_auth_2fa){
+            // Lets check if MFA is enabled!
+            if($f_auth_mfa){
+                // Store the values in an array for later.
+                $f_admin_auth_select['mfa'] = true;
             }
+        }
+        // Lets check if 2fa is not enabled!
+        if($f_auth_2fa && $f_auth_mfa){
+            // Store the values in an array for later.
+            $f_admin_auth_select['mfa'] = true;
+            $f_admin_auth_select['2fa'] = true;
+        }
+        // We check the current user auth status and compare it to the admin auth selection
+        $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
 
-            // Okay this is critical: If site admin disables one auth but not the other auth.
-            // Basically user selection is thrown away and is automatically set.
-            if($f_admin_auth_select['mfa'] && !$f_admin_auth_select['2fa'] ){
-                $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to MFA', 'low');
-                // update usermeta data
-                update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_mfa');
-                ronikdesigns_redirect_non_registered_mfa();
-                return;
-            } else if(!$f_admin_auth_select['mfa'] && $f_admin_auth_select['2fa']) {
-                $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to 2fa', 'low');
-                // update usermeta data
-                update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
+        if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
+            if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
+                $cookie_value = urlencode($_SERVER['REQUEST_URI']);
+                // Lets expire the cookie after 30 days.
+                setcookie('ronik-auth-reset-redirect', $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+            }
+        }
+
+        // Okay this is critical: If site admin disables one auth but not the other auth.
+        // Basically user selection is thrown away and is automatically set.
+        if($f_admin_auth_select['mfa'] && !$f_admin_auth_select['2fa'] ){
+            $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to MFA', 'low');
+            // update usermeta data
+            update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_mfa');
+            ronikdesigns_redirect_non_registered_mfa();
+            return;
+        } else if(!$f_admin_auth_select['mfa'] && $f_admin_auth_select['2fa']) {
+            $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to 2fa', 'low');
+            // update usermeta data
+            update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
+            ronikdesigns_redirect_registered_2fa();
+            return;
+        }
+
+
+        if(($get_auth_status == 'auth_select_sms')){
+            if($f_admin_auth_select['2fa']){
+                // Include the 2fa auth.
+                $helper->ronikdesigns_write_log_devmode('ronikdesigns_redirect_registered_2fa', 'low');
                 ronikdesigns_redirect_registered_2fa();
                 return;
             }
-
-
-            if(($get_auth_status == 'auth_select_sms')){
-                if($f_admin_auth_select['2fa']){
-                    // Include the 2fa auth.
-                    $helper->ronikdesigns_write_log_devmode('ronikdesigns_redirect_registered_2fa', 'low');
-                    ronikdesigns_redirect_registered_2fa();
-                    return;
-                }
+        }
+        if(($get_auth_status == 'auth_select_mfa')){
+            if($f_admin_auth_select['mfa']){
+                // Include the mfa auth.
+                $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_non_registered_mfa', 'low');
+                ronikdesigns_redirect_non_registered_mfa();
+                return;
             }
-            if(($get_auth_status == 'auth_select_mfa')){
-                if($f_admin_auth_select['mfa']){
-                    // Include the mfa auth.
-                    $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_non_registered_mfa', 'low');
-                    ronikdesigns_redirect_non_registered_mfa();
-                    return;
-                }
-            }
-            
-            // This is critical
-            if($get_auth_status == 'auth_select_sms-missing'){
+        }
+
+        // This is critical
+        if($get_auth_status == 'auth_select_sms-missing'){
+            $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
+            $dataUrl['reDest'] = '/auth/';
+            ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+            return;
+        }
+
+        // Lets check if the current user status is none or not yet set.
+        if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
+            $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_none', 'low');
+            // If the MFA && 2fa are enabled we auto redirect to the AUTH template for user selection.
+            if(($f_admin_auth_select['mfa']) && ($f_admin_auth_select['2fa'])){
+                $helper->ronikdesigns_write_log_devmode('AUTH Route', 'low');
+
+                // Redirect Magic, custom function to prevent an infinite loop.
                 $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
                 $dataUrl['reDest'] = '/auth/';
                 ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 return;
-            }
 
-            // Lets check if the current user status is none or not yet set.
-            if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
-                $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_none', 'low');
-                // If the MFA && 2fa are enabled we auto redirect to the AUTH template for user selection.
-                if(($f_admin_auth_select['mfa']) && ($f_admin_auth_select['2fa'])){
-                    $helper->ronikdesigns_write_log_devmode('AUTH Route', 'low');
-
-                    // Redirect Magic, custom function to prevent an infinite loop.
-                    $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
-                    $dataUrl['reDest'] = '/auth/';
-                    ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
-                    return;
-
-                // Next we check if the MFA is set but not the 2fa. If so we include just the mfa.
-                } else if(($f_admin_auth_select['mfa']) && (!$f_admin_auth_select['2fa'])){
-                    // Include the mfa auth.
-                    ronikdesigns_redirect_non_registered_mfa();
-                    return;
-                // Next we check if the 2fa is set but not the mfa. If so we include just the 2fa.
-                } else if((!$f_admin_auth_select['mfa']) && ($f_admin_auth_select['2fa'])){
-                    // Include the 2fa auth.
-                    ronikdesigns_redirect_registered_2fa();
-                    return;
-                }
-            } else {
-                $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
-                $dataUrl['reDest'] = '/auth/';
-                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+            // Next we check if the MFA is set but not the 2fa. If so we include just the mfa.
+            } else if(($f_admin_auth_select['mfa']) && (!$f_admin_auth_select['2fa'])){
+                // Include the mfa auth.
+                ronikdesigns_redirect_non_registered_mfa();
+                return;
+            // Next we check if the 2fa is set but not the mfa. If so we include just the 2fa.
+            } else if((!$f_admin_auth_select['mfa']) && ($f_admin_auth_select['2fa'])){
+                // Include the 2fa auth.
+                ronikdesigns_redirect_registered_2fa();
                 return;
             }
-    }
-    add_action( 'admin_init', 'ronikdesigns_redirect_registered_auth' );
-    add_action( 'template_redirect', 'ronikdesigns_redirect_registered_auth' );
+        } else {
+            $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
+            $dataUrl['reDest'] = '/auth/';
+            ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+            return;
+        }
+}
+add_action( 'admin_init', 'ronikdesigns_redirect_registered_auth' );
+add_action( 'template_redirect', 'ronikdesigns_redirect_registered_auth' );
 
 
 // This function block is responsible for detecting the time expiration of the MFA on page specific pages.
@@ -169,8 +167,9 @@ function ronikdesigns_redirect_non_registered_mfa() {
             $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
             // If past date is greater than current date. We reset to unverified & start the process all over again.
             if($past_date > $mfa_status ){
+                error_log(print_r( 'RONIK NEXT FIX 0!', true));
                 // session_destroy();
-                update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+                // update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
                 // Takes care of the redirection logic
                 ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
             } else {
@@ -225,7 +224,8 @@ function ronikdesigns_redirect_registered_2fa() {
             $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
             // If past date is greater than current date. We reset to unverified & start the process all over again.
             if($past_date > $sms_code_timestamp ){
-                update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+                error_log(print_r( 'RONIK NEXT FIX 1!', true));
+                // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                 // Takes care of the redirection logic
                 ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
             } else {
@@ -238,7 +238,8 @@ function ronikdesigns_redirect_registered_2fa() {
                 }
             }
         } else {
-            update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+            error_log(print_r( 'RONIK NEXT FIX 2!', true));
+            // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
             // Takes care of the redirection logic
             ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
         }
@@ -268,14 +269,73 @@ function timeValidationExcution(){
         }
         });
         jQuery(document).ready(function(){
+            timeValidationAjax('invalid', 'invalid', 'invalid');
+            // Throttle the execution.
+            setTimeout(() => {
+                function videoIframeValidation($target){
+                    var iframe = $target;
+                    var videoPlayer = new Vimeo.Player(iframe);
+                    videoPlayer.on('play', function() {
+                        console.log('Video is playing');
+                        timeValidationAjax('invalid', 'invalid', 'valid');
+                    });
+                    videoPlayer.on('pause', function() {
+                        console.log('Video is paused');
+                        timeValidationAjax('invalid', 'invalid', 'invalid');
+                    });
+                }
+                // Pretty much we detect if the iframe is for vimeo if so we add the wrapper
+                $( "iframe.optanon-category-4-7" ).each(function( index ) {
+                   if($( this )){
+                        if (typeof $( this ).attr('src') !== 'undefined') {
+                            if( $( this ).attr('src').length > 0 && $( this ).attr('src').indexOf("vimeo") > -1 ){
+                                videoIframeValidation($( this ));
+                            }
+                        }
+                        if (typeof $( this ).attr('data-src') !== 'undefined') {
+                            if( $( this ).attr('data-src').length > 0 && $( this ).attr('data-src').indexOf("vimeo") > -1 ){
+                                videoIframeValidation($( this ));
+                            }
+                        }
+                    }
+                });
+            }, 250);
+            // observer that detects changes to the dom...
+            // This is primarily used for the modal video
+            var elemToObserve = document.querySelector('.jqmWindow');
+            var prevClassState = elemToObserve.classList.contains('active');
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if(mutation.attributeName == "class"){
+                        var currentClassState = mutation.target.classList.contains('active');
+                        if(prevClassState !== currentClassState)    {
+                            prevClassState = currentClassState;
+                            if(currentClassState){
+                                console.log("Video is playing");
+                                timeValidationAjax('invalid', 'invalid', 'valid');
+                            } else{
+                                console.log("Video is not playing");
+                                timeValidationAjax('invalid', 'invalid', 'invalid');
+                            }
+                        }
+                    }
+                });
+            });
+            observer.observe(elemToObserve, {attributes: true});
+
+
+
+
+
             console.log('Lets check the inital timeout');
             // Lets trigger the validation on page load.
-            timeValidationAjax('invalid', 'valid');
+            timeValidationAjax('invalid', 'valid', false);
             // This is critical we basically re-run the timeValidationAjax function every 30 seconds
             function timeValidationChecker() {
+                console.log('Every 30 seconds We trigger the validation checker');
                 console.log('Lets check the timeout');
                 // Lets trigger the validation on page load.
-                timeValidationAjax('invalid', 'valid');
+                timeValidationAjax('invalid', 'valid', false);
             }
             setInterval(timeValidationChecker, (60000/2));
             <?php
@@ -311,22 +371,25 @@ function timeValidationExcution(){
             setTimeout(function() {
                 console.log('Expiration Timer Expiration');
                 // Basically this will kill the mfa and reset everything.
-                timeValidationAjax('valid', 'invalid');
+                timeValidationAjax('valid', 'invalid', false);
             }, timeoutTimeMax);
 
             function idleTimeValidation(){
                 console.log('idle Time Validation');
+                console.log('Detect if user does not interact with site.');
                 // Basically this will kill the mfa and reset everything.
-                timeValidationAjax('valid', 'invalid');
+                timeValidationAjax('valid', 'invalid', false);
             }
-            function timeValidationAjax( killValidation, timeChecker ){
+            function timeValidationAjax( killValidation, timeChecker, videoPlayed ){
                 jQuery.ajax({
                     type: 'POST',
-                    url: "<?php echo esc_url( admin_url('admin-ajax.php') ); ?>",
+                    url: wpVars.ajaxURL,
                     data: {
                         action: 'ronikdesigns_admin_auth_verification',
                         killValidation: killValidation,
                         timeChecker: timeChecker,
+                        videoPlayed: videoPlayed,
+                        nonce: wpVars.nonce
                     },
                     success: data => {
                         if(data.success){

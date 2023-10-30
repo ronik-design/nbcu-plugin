@@ -93,6 +93,7 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
                 <label for="password">Retype Password:</label>
                 <input autocomplete="new-password" type="password" class="adv-passwordchecker" id="retype_password" name="retype_password" value="" required>
                 <input type="hidden" name="action" value="ronikdesigns_admin_password_reset">
+                <input type="hidden" name="nonce" value="<?php echo wp_create_nonce('ajax-nonce'); ?>">
                 <button type="submit" class="ronik-password-disabled" value="Reset Password">Reset Password</button>
             </form>
 		<?php } else { ?>
