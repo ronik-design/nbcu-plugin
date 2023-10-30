@@ -179,25 +179,31 @@ function cleanInputPOST() {
 }
 
 // Simple Ajax Secruity
-function ronik_ajax_security(){
+function ronik_ajax_security( $skip_nonce ){
 	// Check if user is logged in. AKA user is authorized.
 	if (!is_user_logged_in()) {
+		error_log(print_r( 'Failed user is not logged in', true));
 		wp_send_json_success('noreload');
 		return;
 	}
 	// If POST is empty we fail it.
 	if( empty($_POST) ){
+		error_log(print_r( 'Failed post is empty', true));
 		wp_send_json_error('Security check failed', '400');
 		wp_die();
 	}
-	// Check if the NONCE is correct. Otherwise we kill the application.
-	if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
-		wp_send_json_error('Security check failed', '400');
-		wp_die();
-	}
-	// Verifies intent, not authorization AKA protect against clickjacking style attacks
-	if ( !check_admin_referer( 'ajax-nonce', 'nonce' ) ) {
-		wp_send_json_error('Security check failed', '400');
-		wp_die();
+	if($skip_nonce){
+		// Check if the NONCE is correct. Otherwise we kill the application.
+		if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
+			error_log(print_r( 'Failed wp_verify_nonce', true));
+			wp_send_json_error('Security check failed', '400');
+			wp_die();
+		}
+		// Verifies intent, not authorization AKA protect against clickjacking style attacks
+		if ( !check_admin_referer( 'ajax-nonce', 'nonce' ) ) {
+			error_log(print_r( 'Failed check_admin_referer', true));
+			wp_send_json_error('Security check failed', '400');
+			wp_die();
+		}
 	}
 }

@@ -457,11 +457,11 @@ class Ronikdesign_Public
 		foreach (glob(dirname(__FILE__) . '/password-reset/*.php') as $file) {
 			// This is critical without this we would get an infinite loop...
 				// We check if the server REQUEST_URI contains the following "admin-post", "auth", "2fa", "mfa"
-				if( !str_contains($_SERVER['REQUEST_URI'], 'admin-ajax') && 
-					!str_contains($_SERVER['REQUEST_URI'], 'admin-post') && 
-					!str_contains($_SERVER['REQUEST_URI'], 'auth') && 
-					!str_contains($_SERVER['REQUEST_URI'], '2fa') && 
-					!str_contains($_SERVER['REQUEST_URI'], 'mfa')  
+				if( !str_contains($_SERVER['REQUEST_URI'], 'admin-ajax') &&
+					!str_contains($_SERVER['REQUEST_URI'], 'admin-post') &&
+					!str_contains($_SERVER['REQUEST_URI'], 'auth') &&
+					!str_contains($_SERVER['REQUEST_URI'], '2fa') &&
+					!str_contains($_SERVER['REQUEST_URI'], 'mfa')
 				){
 					include $file;
 				}
@@ -537,10 +537,10 @@ class Ronikdesign_Public
 		wp_redirect( esc_url(home_url($r_redirect)) );
 		exit;
 	}
-	
+
 	function ronikdesigns_admin_auth_verification() {
 		// Ajax Security.
-		ronik_ajax_security();
+		ronik_ajax_security(true);
 		// Next lets santize the post data.
 		cleanInputPOST();
 
@@ -575,7 +575,7 @@ class Ronikdesign_Public
 				}
 			}
 		}
-		error_log(print_r('PASSED Secruity Checks.', true));
+		error_log(print_r('PASSED Security Checks.', true));
 
 		// Need to start the session.
 		session_start();
@@ -887,7 +887,7 @@ class Ronikdesign_Public
 
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
-					// This is the logic blocker that will prevent the other code from triggering. 
+					// This is the logic blocker that will prevent the other code from triggering.
 					if($_SESSION["videoPlayed"] == 'valid'){
 						error_log(print_r('killValidation', true));
 						error_log(print_r($_SESSION["videoPlayed"], true));
@@ -916,12 +916,12 @@ class Ronikdesign_Public
 						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
 						update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 						wp_send_json_success('reload');
-					} 
+					}
 					// else {
 					// 	// In code we set the sms to unverified so we have to create logic that auto invalidates the sms secrete and double the unverfied just incase.
 					// 	update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
 					// 	update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-					// 	// wp_send_json_success('reload');	
+					// 	// wp_send_json_success('reload');
 					// }
 					// Catch ALL
 					wp_send_json_success('noreload');
@@ -929,7 +929,7 @@ class Ronikdesign_Public
 
 				// Lets check to see if the user is outbound on the allowed site time.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
-					// This is the logic blocker that will prevent the other code from triggering. 
+					// This is the logic blocker that will prevent the other code from triggering.
 					if($_SESSION["videoPlayed"] == 'valid'){
 						// error_log(print_r('timeChecker', true));
 						// error_log(print_r($_SESSION["videoPlayed"], true));
@@ -961,7 +961,7 @@ class Ronikdesign_Public
 							update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 							wp_send_json_success('reload');
 						}
-					} 
+					}
 					// else {
 					// 	// We must check against the time stamp
 					// 	if($past_date > $sms_code_timestamp ){
@@ -1010,16 +1010,16 @@ class Ronikdesign_Public
 
 	function ajax_do_init_urltracking() {
 		// Ajax Security.
-		ronik_ajax_security();
+		ronik_ajax_security(false);
 		// Next lets santize the post data.
 		cleanInputPOST();
 
 		$user_id = get_current_user_id();
 		$meta_key = 'user_click_actions';
 
-
+		error_log(print_r('PASSED Security Checks.', true));
 		error_log(print_r( $_POST['point_origin'], true) );
-		
+
 		// We are checking if the url contains the /wp-content/
 		if (!str_contains($_POST['point_origin'], '/wp-content/')) {
 			$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
