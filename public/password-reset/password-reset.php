@@ -97,10 +97,18 @@ function password_reset_ronikdesigns(){
             // Lets setup the cookie for redirect purposes.
             if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
                 if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
-                    $cookie_name = "ronik-password-reset-redirect";
-                    $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-                    // Lets expire the cookie after 1 day.
-                    setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+                    // $cookie_name = "ronik-password-reset-redirect";
+                    // $cookie_value = urlencode($_SERVER['REQUEST_URI']);
+                    // // Lets expire the cookie after 1 day.
+                    // setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+
+                    // PHP User Click Actions
+                    $user_id = get_current_user_id();
+                    $meta_key = 'user_click_actions';
+                    update_user_meta( $user_id, $meta_key, array(
+                        'timestamp' => time(),
+                        'url' => urlencode($_SERVER['REQUEST_URI'])
+                    ));
                     // Pause server.
                     sleep(.5);
                 }

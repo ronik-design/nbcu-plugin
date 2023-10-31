@@ -1030,7 +1030,7 @@ class Ronikdesign_Public
 		}
 		update_user_meta( $user_id, $meta_key, array(
 			'timestamp' => time(),
-			'url' => $point_origin_url
+			'url' => urlencode($point_origin_url)
 		) );
 	}
 }

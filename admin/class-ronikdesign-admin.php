@@ -153,6 +153,7 @@ class Ronikdesign_Admin
 		if (function_exists('acf_add_options_page')) {
 			// Add parent.
 			$parent = acf_add_options_page(array(
+				'capability' => 'manage_network_users',
 				'page_title'  => __('Developer General Settings'),
 				'menu_title'  => __('Developer Settings'),
 				'menu_slug'     => 'developer-settings',
@@ -161,6 +162,7 @@ class Ronikdesign_Admin
 			));
 			// Add sub page.
 			$child = acf_add_options_page(array(
+				'capability' => 'manage_network_users',
 				'page_title'  => __('Code Template'),
 				'menu_title'  => __('Code Template'),
 				'menu_slug'     => 'code-template',

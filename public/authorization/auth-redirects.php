@@ -56,8 +56,16 @@ function ronikdesigns_redirect_registered_auth() {
         if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
             if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
                 $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-                // Lets expire the cookie after 30 days.
-                setcookie('ronik-auth-reset-redirect', $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+                // // Lets expire the cookie after 30 days.
+                // setcookie('ronik-auth-reset-redirect', $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
+
+                // PHP User Click Actions
+                $user_id = get_current_user_id();
+                $meta_key = 'user_click_actions';
+                update_user_meta( $user_id, $meta_key, array(
+                    'timestamp' => time(),
+                    'url' => urlencode($_SERVER['REQUEST_URI'])
+                ));
             }
         }
 

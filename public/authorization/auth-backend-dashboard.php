@@ -164,7 +164,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
     }
 
 ?>
-    <h3><?php _e("Extra profile information", "blank"); ?></h3>
+    <h3><?php _e("MFA profile information", "blank"); ?></h3>
     <table class="form-table">
         <?php
         if( strlen($get_auth_lockout_counter) > 6){ ?>
@@ -174,7 +174,6 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
                     <select name="auth_reset_lockdown" id="auth_reset_lockdown">
                         <option value="auth_is_locked" selected="selected">User is Locked</option>
                         <option value="auth_not_locked" >User is Not Locked</option>
-                        <option value="none">none</option>
                     </select>
                     <p>Change the selection and click update user to reset locked down mode.</p>
                 </td>
@@ -250,5 +249,5 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
         <?php } ?>
     </table>
 <?php }
-add_action('show_user_profile', 'ronikdesigns_extra_user_profile_fields_auth');
-add_action('edit_user_profile', 'ronikdesigns_extra_user_profile_fields_auth');
+add_action('show_user_profile', 'ronikdesigns_extra_user_profile_fields_auth', 99, 1 );
+add_action('edit_user_profile', 'ronikdesigns_extra_user_profile_fields_auth', 99, 1 );
