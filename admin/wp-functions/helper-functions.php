@@ -113,6 +113,35 @@ class RonikHelper{
 	}
 }
 
+add_action('password_reset', 'ronikdesigns_password_reset_action_store', 10, 2);
+function ronikdesigns_password_reset_action_store($user, $new_pass) {
+    // USER ID
+	$f_user_id = $user->data->ID;
+    // Target Meta
+    $rk_password_history = 'ronik_password_history';
+    $rk_password_history_array = get_user_meta( $f_user_id, $rk_password_history, true  );
+
+        if($rk_password_history_array){
+            if( count($rk_password_history_array) == 10 ){
+                array_shift($rk_password_history_array);
+                // We reindex the password history array
+                $rk_password_history_array = array_values($rk_password_history_array);
+                array_push($rk_password_history_array, $new_pass);
+            } else {
+                array_push($rk_password_history_array, $new_pass);
+            }
+        } else {
+            $rk_password_history_array  = array($user->data->user_pass, $new_pass);
+        }
+    $updated = update_user_meta( $f_user_id, $rk_password_history, $rk_password_history_array );
+
+    error_log(print_r('$rk_password_history_array' , true));
+    error_log(print_r($rk_password_history_array , true));
+    error_log(print_r('$updated' , true));
+    error_log(print_r($updated , true));
+}
+
+
 function ronikdesigns_getLineWithString_ronikdesigns($fileName, $id) {
 	$f_attached_file = get_attached_file( $id );
 	$pieces = explode('/', $f_attached_file ) ;

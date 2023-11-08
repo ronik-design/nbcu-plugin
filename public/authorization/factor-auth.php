@@ -20,22 +20,26 @@ add_action('auth-registration-page', function () {
         $mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
         $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
         $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+
+        if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
     ?>
-        <div class="dev-notice">
-            <h4>Dev Message:</h4>
-            <p>Current UserID: <?php echo get_current_user_id(); ?></p>
-            <p>Auth Status: <?php echo $get_auth_status; ?></p>
-            <p>MFA Status: <?php echo $mfa_status; ?></p>
-            <p>MFA Validation: <?php echo $mfa_validation; ?></p>
-            <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-            <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                <input type="hidden" type="text" name="re-auth" value="RESET">
-                <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-            </form>
-        </div>
+            <div class="dev-notice">
+                <h4>Dev Message:</h4>
+                <p>Current UserID: <?php echo get_current_user_id(); ?></p>
+                <p>Auth Status: <?php echo $get_auth_status; ?></p>
+                <p>MFA Status: <?php echo $mfa_status; ?></p>
+                <p>MFA Validation: <?php echo $mfa_validation; ?></p>
+                <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
+                <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+                    <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                    <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
+                    <input type="hidden" type="text" name="re-auth" value="RESET">
+                    <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
+                </form>
+            </div>
     <?php 
+        }
+
     // Check if auth_status is not equal to none or empty.
     if (($get_auth_status !== 'none') && !empty($get_auth_status)) {
         $valid = true;

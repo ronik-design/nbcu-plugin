@@ -474,11 +474,11 @@ class Ronikdesign_Public
 		if (!is_user_logged_in()) {
 			return;
 		}
-		// Check if the NONCE is correct. Otherwise we kill the application.
-		if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
-			wp_send_json_error('Security check failed', '400');
-			wp_die();
-		}
+		// Ajax Security.
+		ronik_ajax_security(true);
+		// Next lets santize the post data.
+		cleanInputPOST();
+
 		$f_value = array();
 		if(!empty($_POST['password']) && !empty($_POST['retype_password'])){
 			if($_POST['password'] === $_POST['retype_password']){
@@ -488,7 +488,7 @@ class Ronikdesign_Public
 				if(wp_check_password($_POST['password'], $curr_user->user_pass, $curr_user->ID)){
 					$f_value['pr-error'] = "alreadyexists";
 				} else {
-					if(strlen($_POST['password']) < 8){
+					if(strlen($_POST['password']) < 12){
 						$f_value['pr-error'] = "weak";
 					} else {
 						if (!preg_match('/([~,!,@,#,$,%,^,&,*,-,_,+,=,?,>,<])/', $_POST['password'])){
@@ -509,6 +509,10 @@ class Ronikdesign_Public
 									update_user_meta( $curr_id, 'wp_user-settings-time-password-reset', $current_date );
 									// Get current logged-in user.
 									$user = wp_get_current_user();
+									
+									// This will store the newest password in the database.
+									ronikdesigns_password_reset_action_store($user, $_POST['password']);
+
 									// Send out an email notification.
 									$to = $curr_user->user_email;
 									$subject = 'Password Reset.';

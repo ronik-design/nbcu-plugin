@@ -63,7 +63,7 @@ function password_reset_ronikdesigns(){
     // https://www.timestamp-converter.com/
     // Get the current time.
     $current_date = strtotime((new DateTime())->format( 'd-m-Y' ));
-    // Go back in time. Lets say 30 days.
+    // Go back in time. Lets say 90 days.
     $past_date = strtotime((new DateTime())->modify('-'.$f_password_reset['pr_days'].' day')->format( 'd-m-Y' ));
 
     // Lets check if the usermeta exist if it doesnt we create it.

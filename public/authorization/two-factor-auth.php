@@ -68,20 +68,23 @@ add_action('2fa-registration-page', function () {
             $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
             $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
             $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
-        ?>
-            <div class="dev-notice">
-                <h4>Dev Message:</h4>
-                <p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
-                <p>SMS Status: <?php echo $sms_2fa_status; ?></p>
-                <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-                <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                    <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                    <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                    <input type="hidden" type="text" name="re-auth" value="RESET">
-                    <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-                </form>
-            </div>
+
+            if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
+            ?>
+                <div class="dev-notice">
+                    <h4>Dev Message:</h4>
+                    <p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
+                    <p>SMS Status: <?php echo $sms_2fa_status; ?></p>
+                    <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
+                    <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
+                        <input type="hidden" type="text" name="re-auth" value="RESET">
+                        <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
+                    </form>
+                </div>
         <?php
+            }
         // Based on the session conditions we check if valid if not we default back to the send SMS button.
         if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){
                 $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);

@@ -42,6 +42,8 @@ add_action('mfa-registration-page', function () {
     if($f_error == 'nomatch'){
         $f_error = 'Sorry, the verification code entered is invalid.';
     }
+
+        if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local') ) {
     ?>
         <div class="dev-notice">
             <h4>Dev Message:</h4>
@@ -58,6 +60,7 @@ add_action('mfa-registration-page', function () {
             </form>
         </div>
     <?php
+        }
     // Check if mfa_status is not equal to verified.
     if ($mfa_status == 'mfa_unverified' && is_user_logged_in()) {
         // Get the User Object.

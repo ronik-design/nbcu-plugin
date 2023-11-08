@@ -23,10 +23,10 @@ function checkPasswordStrength($) {
 		var password_message = $(THIS).parent().find('.ronik-password__message');
 		var submitButton;
 
-		if ($password.length < 8) {
+		if ($password.length < 12) {
 			password_message.attr('class', 'ronik-password__message');
 			password_message.addClass('weak-password');
-			password_message.text("Weak (should be atleast 8 characters.)");
+			password_message.text("Weak (should be atleast 12 characters.)");
 			submitted = false;
 
 			if($password.length == 0){
