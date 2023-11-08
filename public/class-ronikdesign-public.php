@@ -513,12 +513,27 @@ class Ronikdesign_Public
 									// This will store the newest password in the database.
 									ronikdesigns_password_reset_action_store($user, $_POST['password']);
 
+
 									// Send out an email notification.
 									$to = $curr_user->user_email;
 									$subject = 'Password Reset.';
-									$body = 'Your password was successfully reset.';
 									$headers = array('Content-Type: text/html; charset=UTF-8');
-									wp_mail($to, $subject, $body, $headers);
+									$email_template_path = get_template_directory() . "/includes/emails/_reset_password-completed.php";
+									// $email_template_path = __DIR__."/email-template.php";
+									ob_start();
+									include $email_template_path;
+									$message_password_reset = ob_get_clean();
+
+									$messaging_password_rest = "The password for your account has been successfully reset. If this wasn't you, please contact <a href='mailto:together@nbcuni.com?subject=Password Reset Error&body='User: ".$curr_user->user_email.">together@nbcuni.com</a>";
+
+									$message_password_reset = str_replace('{MESSAGE}',  $messaging_password_rest, $message_password_reset);                         
+									$headers = array('Content-Type: text/html; charset=UTF-8');
+									$attachments = '';
+									wp_mail( $to, $subject, $message_password_reset, $headers, $attachments );
+
+									
+									// $body = 'Your password was successfully reset.';
+									// wp_mail($to, $subject, $body, $headers);
 									// Change password.
 									wp_set_password( $_POST['password'], $user->ID);
 									// Log-in again.
