@@ -120,18 +120,19 @@ function ronikdesigns_password_reset_action_store($user, $new_pass) {
     // Target Meta
     $rk_password_history = 'ronik_password_history';
     $rk_password_history_array = get_user_meta( $f_user_id, $rk_password_history, true  );
+	$f_hashedPassword = wp_hash_password($new_pass);
 
         if($rk_password_history_array){
             if( count($rk_password_history_array) == 10 ){
                 array_shift($rk_password_history_array);
                 // We reindex the password history array
                 $rk_password_history_array = array_values($rk_password_history_array);
-                array_push($rk_password_history_array, $new_pass);
+                array_push($rk_password_history_array, $f_hashedPassword);
             } else {
-                array_push($rk_password_history_array, $new_pass);
+                array_push($rk_password_history_array, $f_hashedPassword);
             }
         } else {
-            $rk_password_history_array  = array($user->data->user_pass, $new_pass);
+            $rk_password_history_array  = array($user->data->user_pass, $f_hashedPassword);
         }
     $updated = update_user_meta( $f_user_id, $rk_password_history, $rk_password_history_array );
 
