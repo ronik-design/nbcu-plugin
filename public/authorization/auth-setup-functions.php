@@ -150,7 +150,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         if( $post && property_exists($post, 'ID') ){
                             if( !in_array($post->ID, $f_id_array) ){
                                 $get_current_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
-                                if(empty($get_current_auth_status) || $get_current_auth_status == 'none'){                                    
+                                if(empty($get_current_auth_status) || $get_current_auth_status == 'none'){
                                     // By adding the looperdooper we basically invoke the loop to the auth page.
                                     ronikLooperDooper($dataUrl, $cookieName);
                                 }
@@ -171,10 +171,17 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                 } else {
                     // This checks if the user is inside wp-admin
                     if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                        $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
+                        if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
+                            // First lets loop through all the provided urls.
+                            ronikLooperDooper($dataUrl, $cookieName);
+                        }
                         return false;
                     }
                 }
             }
+
+
             // First lets loop through all the provided urls.
             ronikLooperDooper($dataUrl, $cookieName);
         }
@@ -183,8 +190,8 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
     // Pretty much a cool function that helps with redirect without causing the crazy redirect loops.
     function ronikLooperDooper($dataUrl, $cookieName){
         $f_redirect_wp_slugs = array(
-            '/favicon.ico', 
-            '/wp-admin/admin-post.php', 
+            '/favicon.ico',
+            '/wp-admin/admin-post.php',
             '/wp-admin/admin-ajax.php',
         );
         // First lets loop through all the provided urls.
@@ -230,13 +237,13 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
             if( isset($userclick_actions['url']) ){
                 wp_redirect( esc_url(home_url(urldecode($userclick_actions['url']))) );
                 exit;
-            } else {                
+            } else {
                 wp_redirect( esc_url(home_url()) );
                 exit;
             }
         } else {
             wp_redirect( esc_url(home_url()) );
-            exit;  
+            exit;
         }
         // // We disable cookie tracking.
         // $cookie_name = "ronik-auth-reset-redirect";
