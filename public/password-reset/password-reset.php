@@ -135,7 +135,7 @@ function password_reset_ronikdesigns(){
                             $helper->ronikdesigns_write_log_devmode('Password Reset Error 1', 'critical');
                         }
                     } else {
-                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical');
+                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical');              
                     }
                 }
         }

@@ -475,7 +475,7 @@ class Ronikdesign_Public
 			return;
 		}
 		// Ajax Security.
-		ronik_ajax_security(true);
+		ronik_ajax_security('ajax-nonce-password', true);
 		// Next lets santize the post data.
 		cleanInputPOST();
 
@@ -559,7 +559,7 @@ class Ronikdesign_Public
 
 	function ronikdesigns_admin_auth_verification() {
 		// Ajax Security.
-		ronik_ajax_security(true);
+		ronik_ajax_security('ajax-nonce', true);
 		// Next lets santize the post data.
 		cleanInputPOST();
 
@@ -1029,7 +1029,7 @@ class Ronikdesign_Public
 
 	function ajax_do_init_urltracking() {
 		// Ajax Security.
-		ronik_ajax_security(false);
+		ronik_ajax_security(false, false);
 		// Next lets santize the post data.
 		cleanInputPOST();
 
