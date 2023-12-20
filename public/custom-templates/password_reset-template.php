@@ -72,6 +72,10 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
             <?php if($f_error == 'no-lowercase'){ ?>
                 <div class="pass-reset-message__missing">Sorry your input does not contain a lowercase letter!</div>
             <?php } ?>
+            <?php if($f_error == 'pastused'){ ?>
+                <div class="pass-reset-message__missing">This password has already been used! Please choose a different password!</div>
+            <?php } 
+            ?>
             <?php if($f_error == 'no-special-characters'){ ?>
                 <div class="pass-reset-message__missing">Sorry your input does not contain a special character!</div>
             <?php } ?>

@@ -19,18 +19,7 @@ $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
 // Success message
 if($f_success){
 	ronik_authorize_success_redirect_path();
-    // // Lets Check for the password reset url cookie.
-    // $cookie_name = "ronik-auth-reset-redirect";
-    // if(isset($_COOKIE[$cookie_name])) {
-    //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-    //     exit;
-    // } else {
-    //     // We run our backup plan for redirecting back to previous page.
-    //     // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-    // }
 }
-
-
 
 
 get_header(); 

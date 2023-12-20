@@ -28,15 +28,6 @@ if(isset($_GET["mfaredirect"])){
 // Success message
 if($f_success){
 	ronik_authorize_success_redirect_path();
-    // // Lets Check for the password reset url cookie.
-    // $cookie_name = "ronik-auth-reset-redirect";
-    // if(isset($_COOKIE[$cookie_name])) {
-    //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-    //     exit;
-    // } else {
-    //     // We run our backup plan for redirecting back to previous page.
-    //     // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
-    // }
 }
 ?>
 
@@ -72,7 +63,7 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 			<img src="<?php echo plugin_dir_url( __DIR__ ).'/images/flagger.svg'; ?>">
 		</div>
 		<div class="auth-content">
-			<?php if( strlen($get_auth_lockout_counter) > 6){ ?>
+			<?php if( ($get_auth_lockout_counter) > 6){ ?>
 				<div class="mfa-content">
 					<h2>Authentication failed too many times.</h2>
 					<div class="instructions">
@@ -120,83 +111,10 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 					}
 					?>
 				</div>
-			<?php } ?>
-
-
-			<?php
-				if( strlen($get_auth_lockout_counter) > 6){
-					$f_expiration_time = 3;
-					$past_date = strtotime((new DateTime())->modify('-'.$f_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-					if( $past_date > $get_auth_lockout_counter ){
-						// delete_user_meta(get_current_user_id(), 'auth_lockout_counter');
-					} else { ?>
-						<script>
-							timeLockoutValidationChecker();
-							// This is critical we basically re-run the timeValidationAjax function every 30 seconds
-							function timeLockoutValidationChecker() {
-								console.log('Lets check the timeout');
-								// Lets trigger the validation on page load.
-								timeValidationAjax('invalid', 'invalid', 'valid');
-							}
-							setInterval(timeLockoutValidationChecker, (60000/2));
-
-							function timeValidationAjax( killValidation, timeChecker, timeLockoutChecker ){
-								jQuery.ajax({
-									type: 'POST',
-									url: wpVars.ajaxURL,
-									data: {
-										action: 'ronikdesigns_admin_auth_verification',
-										killValidation: killValidation,
-										timeChecker: timeChecker,
-										timeLockoutChecker: timeLockoutChecker,
-										nonce: wpVars.nonce
-									},
-									success: data => {
-										if(data.success){
-											console.log(data);
-											if(data.data == 'reload'){
-												setTimeout(() => {
-													window.location.reload(true);
-												}, 50);
-											}
-										} else{
-											console.log('error');
-											console.log(data);
-											console.log(data.data);
-											// window.location.reload(true);
-										}
-										console.log(data);
-									},
-									error: err => {
-										console.log(err);
-										// window.location.reload(true);
-									}
-								});
-							}
-						</script>
-						<!-- <div id="countdown"></div> -->
-						<script>
-							var timeleft = 60*3;
-							var downloadTimer = setInterval(function(){
-								if(timeleft <= 0){
-									clearInterval(downloadTimer);
-									// document.getElementById("countdown").innerHTML = "Reloading";
-									setTimeout(() => {
-										window.location = window.location.pathname + "?sms-success=success";
-									}, 1000);
-								} else {
-									// document.getElementById("countdown").innerHTML = "Page will reload in: " + timeleft + " seconds";
-								}
-								timeleft -= 1;
-							}, 1000);
-						</script>
-					<?php }
-				?>
-				<?php
-				} else {
-					do_action('mfa-registration-page');
-				}
+			<?php 
+				do_action('mfa-registration-page');
 			?>
+			<?php } ?>
 		</div>
 	</div>
 

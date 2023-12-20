@@ -4,7 +4,10 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 
-add_action('auth-rest', function ($args) { ?>
+add_action('auth-rest', function ($args) {
+    $f_auth = get_field('mfa_settings', 'options');
+    if( ( isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings'] ) && ( isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'] ) ){
+?>
     <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
         <h2>MFA Registeration Reset</h2>
         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
@@ -12,7 +15,9 @@ add_action('auth-rest', function ($args) { ?>
         <input type="hidden" type="text" name="re-auth" value="RESET">
         <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
     </form>
-<?php });
+<?php
+    }
+});
 
 add_action('auth-registration-page', function () {
     $get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
@@ -21,24 +26,7 @@ add_action('auth-registration-page', function () {
         $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
         $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 
-        if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
-    ?>
-            <div class="dev-notice">
-                <h4>Dev Message:</h4>
-                <p>Current UserID: <?php echo get_current_user_id(); ?></p>
-                <p>Auth Status: <?php echo $get_auth_status; ?></p>
-                <p>MFA Status: <?php echo $mfa_status; ?></p>
-                <p>MFA Validation: <?php echo $mfa_validation; ?></p>
-                <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-                <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                    <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                    <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                    <input type="hidden" type="text" name="re-auth" value="RESET">
-                    <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-                </form>
-            </div>
-    <?php 
-        }
+    auth_admin_messages();
 
     // Check if auth_status is not equal to none or empty.
     if (($get_auth_status !== 'none') && !empty($get_auth_status)) {

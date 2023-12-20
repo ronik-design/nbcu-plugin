@@ -87,6 +87,7 @@ function password_reset_ronikdesigns(){
                 '/password-reset/?pr-success=success', 
                 '/password-reset/?pr-error=weak', 
                 '/password-reset/?pr-error=alreadyexists', 
+                '/password-reset/?pr-error=pastused', 
                 '/password-reset/?pr-error=nomatch',
                 '/password-reset/?pr-error=missing',
                 '/password-reset/?pr-error=no-uppercase',
@@ -94,23 +95,13 @@ function password_reset_ronikdesigns(){
                 '/password-reset/?pr-error=no-special-characters',
             );
 
+            $authChecker = new RonikAuthChecker;
+
             // Lets setup the cookie for redirect purposes.
             if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
                 if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
-                    // $cookie_name = "ronik-password-reset-redirect";
-                    // $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-                    // // Lets expire the cookie after 1 day.
-                    // setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
-
                     // PHP User Click Actions
-                    $user_id = get_current_user_id();
-                    $meta_key = 'user_click_actions';
-                    update_user_meta( $user_id, $meta_key, array(
-                        'timestamp' => time(),
-                        'url' => urlencode($_SERVER['REQUEST_URI'])
-                    ));
-                    // Pause server.
-                    sleep(.5);
+                    $authChecker->userTrackerActions($_SERVER['REQUEST_URI']);
                 }
             }
         

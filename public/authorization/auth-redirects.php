@@ -6,6 +6,8 @@
 function ronikdesigns_redirect_registered_auth() {
     // Helper Guide
     $helper = new RonikHelper;
+    $authChecker = new RonikAuthChecker;
+
 
     $f_auth = get_field('mfa_settings', 'options');
     $f_auth_mfa = get_option('options_mfa_settings_enable_mfa_settings');
@@ -53,19 +55,9 @@ function ronikdesigns_redirect_registered_auth() {
         // We check the current user auth status and compare it to the admin auth selection
         $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
 
-        if($_SERVER['REQUEST_URI'] !== '/favicon.ico' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php' && $_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php'){
-            if( !str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa') && !str_contains($_SERVER['REQUEST_URI'], 'auth')  ){
-                $cookie_value = urlencode($_SERVER['REQUEST_URI']);
-                // // Lets expire the cookie after 30 days.
-                // setcookie('ronik-auth-reset-redirect', $cookie_value, time() + (86400 * 30), "/"); // 86400 = 1 day
-
-                // PHP User Click Actions
-                $user_id = get_current_user_id();
-                $meta_key = 'user_click_actions';
-                update_user_meta( $user_id, $meta_key, array(
-                    'timestamp' => time(),
-                    'url' => urlencode($_SERVER['REQUEST_URI'])
-                ));
+        if( $authChecker->urlCheckNoWpPage($_SERVER['REQUEST_URI']) ){
+            if( $authChecker->urlCheckNoAuthPage($_SERVER['REQUEST_URI']) ){
+                $authChecker->userTrackerActions($_SERVER['REQUEST_URI']);
             }
         }
 
@@ -175,11 +167,11 @@ function ronikdesigns_redirect_non_registered_mfa() {
             $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
             // If past date is greater than current date. We reset to unverified & start the process all over again.
             if($past_date > $mfa_status ){
-                error_log(print_r( 'RONIK NEXT FIX 0!', true));
-                // session_destroy();
-                // update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-                // Takes care of the redirection logic
-                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                // if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/')) {
+                //     error_log(print_r( 'RONIK NEXT FIX 0! KM might be fixed by ignoring the wp-admin request uri', true));
+                //     // Takes care of the redirection logic
+                //     // ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                // }
             } else {
                 if (str_contains($_SERVER['REQUEST_URI'], '/mfa/')) {
                 // if($_SERVER['REQUEST_URI'] == '/mfa/'){
@@ -232,10 +224,12 @@ function ronikdesigns_redirect_registered_2fa() {
             $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
             // If past date is greater than current date. We reset to unverified & start the process all over again.
             if($past_date > $sms_code_timestamp ){
-                error_log(print_r( 'RONIK NEXT FIX 1!', true));
-                // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                // Takes care of the redirection logic
-                ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/')) {
+                    error_log(print_r( 'RONIK NEXT FIX 1! KM might be fixed by ignoring the wp-admin request uri', true));
+                    // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+                    // Takes care of the redirection logic
+                    ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                }
             } else {
                 if (str_contains($_SERVER['REQUEST_URI'], '/2fa/')) {
                     // Lets block the user from accessing the 2fa if already authenticated.
@@ -271,7 +265,7 @@ function timeValidationExcution(){
         document.addEventListener("visibilitychange", (event) => {
         if (document.visibilityState == "visible") {
             console.log("tab is active");
-            window.location.reload(true);
+            // window.location.reload(true);
         } else {
             console.log("tab is inactive")
         }
@@ -307,32 +301,47 @@ function timeValidationExcution(){
                         }
                     }
                 });
-            }, 250);
-            // observer that detects changes to the dom...
-            // This is primarily used for the modal video
-            var elemToObserve = document.querySelector('.jqmWindow');
-            var prevClassState = elemToObserve.classList.contains('active');
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if(mutation.attributeName == "class"){
-                        var currentClassState = mutation.target.classList.contains('active');
-                        if(prevClassState !== currentClassState)    {
-                            prevClassState = currentClassState;
-                            if(currentClassState){
-                                console.log("Video is playing");
-                                timeValidationAjax('invalid', 'invalid', 'valid');
-                            } else{
-                                console.log("Video is not playing");
-                                timeValidationAjax('invalid', 'invalid', 'invalid');
-                            }
-                        }
+
+                // observer that detects changes to the dom...
+                // This is primarily used for the modal video
+                // observer that detects changes to the dom...
+                class RonikObserverModal {
+                    constructor(elemToObserve, activeClassTarget) {
+                        this.elemToObserve = elemToObserve;
+                        this.activeClassTarget = activeClassTarget;
                     }
-                });
-            });
-            observer.observe(elemToObserve, {attributes: true});
+                    ronikObserve() {
+                        let elemToObserve = this.elemToObserve;
+                        let activeClassTarget = this.activeClassTarget;
+                        let prevClassState = elemToObserve.classList.contains(activeClassTarget);
+                        let observer = new MutationObserver(function(mutations) {
+                            mutations.forEach(function(mutation) {
+                                if(mutation.attributeName == "class"){
+                                    let currentClassState = mutation.target.classList.contains(activeClassTarget);
+                                    if(prevClassState !== currentClassState)    {
+                                        prevClassState = currentClassState;
+                                        if(currentClassState){
+                                            console.log("Video is playing");
+                                            timeValidationAjax('invalid', 'invalid', 'valid');
+                                        } else{
+                                            console.log("Video is not playing");
+                                            timeValidationAjax('invalid', 'invalid', 'invalid');
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        observer.observe(elemToObserve, {attributes: true});
+                    }
+                }
 
+                const ronikObserverModalTarget1 = new RonikObserverModal(document.querySelector('.jqmWindow'), 'active');
+                ronikObserverModalTarget1.ronikObserve();
 
+                const ronikObserverModalTarget2 = new RonikObserverModal(document.querySelector('.event-video'), 'is-open');
+                ronikObserverModalTarget2.ronikObserve();
 
+            }, 250);
 
 
             console.log('Lets check the inital timeout');

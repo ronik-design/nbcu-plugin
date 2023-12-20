@@ -126,7 +126,21 @@ function addNonce($){
 
 
 
-function log_click_action( ) {
+function log_tracker_action( ) {
+	// Pretty much we track the landing on the page.
+	if( origin.length > 0 && (origin.length > 0)){
+		jQuery.ajax({
+			type: 'POST',
+			url: wpVars.ajaxURL,
+			data: {
+				nonce: wpVars.nonce,
+				action: 'do_init_urltracking',
+				point_origin: window.location.href,
+				triggerType: 'load'
+			}
+		});
+	}
+	// Track click events..
 	$( "a" ).each(function( index ) {	
 		if( $( this ).attr('href') ){
 			if( ($( this ).attr('href').indexOf('/') === 0) || ($( this ).attr('href').includes(window.location.hostname)) ) {
@@ -138,7 +152,8 @@ function log_click_action( ) {
 						data: {
 							nonce: wpVars.nonce,
 							action: 'do_init_urltracking',
-							point_origin: href
+							point_origin: href,
+							triggerType: 'click'
 						}
 					});
 				});
@@ -155,7 +170,7 @@ function log_click_action( ) {
 		// SetTimeOut just incase things havent initialized just yet.
 		setTimeout(() => {
 			addNonce($);
-			log_click_action($);
+			log_tracker_action($);
 		}, 50);
 	});
 })( jQuery );

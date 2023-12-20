@@ -15,6 +15,13 @@ add_action('2fa-registration-page', function () {
     $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
     $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
     $f_mfa_settings = get_field('mfa_settings', 'options');
+
+    $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
+    $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+    $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+    $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+
+
     if( isset($f_mfa_settings['sms_expiration_time']) || $f_mfa_settings['sms_expiration_time'] ){
         $f_sms_expiration_time = $f_mfa_settings['sms_expiration_time'];
     } else {
@@ -65,26 +72,12 @@ add_action('2fa-registration-page', function () {
         $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
     } else { ?>
         <?php
-            $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-            $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
-            $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+                    $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
+                    $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+                    $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 
-            if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
-            ?>
-                <div class="dev-notice">
-                    <h4>Dev Message:</h4>
-                    <p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
-                    <p>SMS Status: <?php echo $sms_2fa_status; ?></p>
-                    <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-                    <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                        <input type="hidden" type="text" name="re-auth" value="RESET">
-                        <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-                    </form>
-                </div>
-        <?php
-            }
+        auth_admin_messages();
+
         // Based on the session conditions we check if valid if not we default back to the send SMS button.
         if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){
                 $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
@@ -110,16 +103,16 @@ add_action('2fa-registration-page', function () {
                 }
                 if( $past_date > $sms_code_timestamp ){
                     error_log(print_r( 'SMS Expired', true));
-                    update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                    update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-                    // This is mostly for messaging purposes..
-                    wp_redirect( esc_url(home_url('/2fa?sms-error=expired')) );
-                    exit;
+                    // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+                    // update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+                    // // This is mostly for messaging purposes..
+                    // wp_redirect( esc_url(home_url('/2fa?sms-error=expired')) );
+                    // exit;
                 }
             ?>
             <div class="auth-content-bottom auth-content-bottom--sms">
                 <form class="auth-content-bottom__submit <?php if($f_error){ echo 'auth-content-bottom__submit_error'; } ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                    <div class="auth-content-bottom__submit-contents"> 
+                    <div class="auth-content-bottom__submit-contents">
                     <div id="sms-expiration"></div>
                         <script>
                             console.log('Init Timevalidation');
@@ -127,7 +120,7 @@ add_action('2fa-registration-page', function () {
                             document.addEventListener("visibilitychange", (event) => {
                             if (document.visibilityState == "visible") {
                                 console.log("tab is active");
-                                window.location.reload(true);
+                                // window.location.reload(true);
                             } else {
                                 console.log("tab is inactive")
                             }

@@ -43,24 +43,8 @@ add_action('mfa-registration-page', function () {
         $f_error = 'Sorry, the verification code entered is invalid.';
     }
 
-        if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local') ) {
-    ?>
-        <div class="dev-notice">
-            <h4>Dev Message:</h4>
-            <p>Current UserID: <?php echo get_current_user_id(); ?></p>
-            <p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
-            <p>MFA Status: <?php echo $mfa_status; ?></p>
-            <p>MFA Validation: <?php echo $mfa_validation; ?></p>
-            <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-            <form  action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-                <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                <input type="hidden" type="text" name="re-auth" value="RESET">
-                <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-            </form>
-        </div>
-    <?php
-        }
+    auth_admin_messages();
+
     // Check if mfa_status is not equal to verified.
     if ($mfa_status == 'mfa_unverified' && is_user_logged_in()) {
         // Get the User Object.

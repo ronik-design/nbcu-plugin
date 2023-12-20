@@ -167,7 +167,7 @@ function ronikdesigns_extra_user_profile_fields_auth($user){
     <h3><?php _e("MFA profile information", "blank"); ?></h3>
     <table class="form-table">
         <?php
-        if( strlen($get_auth_lockout_counter) > 6){ ?>
+        if( ($get_auth_lockout_counter) > 6){ ?>
             <tr>
                 <th><label for="auth_reset_lockdown"><?php _e("Account Locked Down"); ?></label><p>The current user account is locked down!</p></th>
                 <td>

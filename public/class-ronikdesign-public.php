@@ -407,6 +407,49 @@ class Ronikdesign_Public
 	}
 
 	function ronikdesigns_acf_op_init_functions_public(){
+		function auth_admin_messages(){
+			$get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
+			$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
+
+			$sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
+			$sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+			$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+			$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+
+			$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
+			$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
+			$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+
+			if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
+				$f_auth = get_field('mfa_settings', 'options');
+			?>
+				<div class="dev-notice">
+					<h4>Dev Message:</h4>
+					<p>Current UserID: <?php echo get_current_user_id(); ?></p>
+					<p>Auth Status: <?php echo $get_auth_status; ?></p>
+					<br>
+					<p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
+					<p>MFA Status: <?php echo $mfa_status; ?></p>
+					<p>MFA Validation: <?php echo $mfa_validation; ?></p>
+					<br>
+					<p>SMS Phone Number: <?php echo $get_phone_number; ?></p>
+					<p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
+					<p>SMS Status: <?php echo $sms_2fa_status; ?></p>
+					<p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
+					<?php if( ( isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings'] ) && ( isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'] ) ){ ?>
+						<form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+							<input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+							<?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
+							<input type="hidden" type="text" name="re-auth" value="RESET">
+							<button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
+						</form>
+					<?php } ?>
+				</div>
+			<?php
+			}
+		}
+
+
 		// Include the auth.
 		foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
 			global $wpdb;
@@ -505,42 +548,90 @@ class Ronikdesign_Public
 								} else{
 									// Store the id.
 									$curr_id = $curr_user->id;
-									$current_date = strtotime((new DateTime())->format( 'd-m-Y' ));
-									update_user_meta( $curr_id, 'wp_user-settings-time-password-reset', $current_date );
-									// Get current logged-in user.
-									$user = wp_get_current_user();
-									
-									// This will store the newest password in the database.
-									ronikdesigns_password_reset_action_store($user, $_POST['password']);
 
+									// Detects if the password is already used in the password history array..
+									$rk_password_history_array = get_user_meta( $curr_id, 'ronik_password_history', true  );
+									$f_hashedPassword = wp_hash_password($_POST['password']);
+									// Ronik DEV Note:
+										// Pretty much we deactivate until we get validation from client about adding this special feature..
+									if($rk_password_history_array == 'DEACTIVATED'){
+										foreach( $rk_password_history_array as $rk_password_history ){
+											if( $rk_password_history == $f_hashedPassword ){
+												$f_value['pr-error'] = "pastused";
+												$r_redirect = '/password-reset/?'.http_build_query($f_value, '', '&amp;');
+												wp_redirect( esc_url(home_url($r_redirect)) );
+												exit;
+											} else {
+												$current_date = strtotime((new DateTime())->format( 'd-m-Y' ));
+												update_user_meta( $curr_id, 'wp_user-settings-time-password-reset', $current_date );
+												// Get current logged-in user.
+												$user = wp_get_current_user();
+												// This will store the newest password in the database.
+												ronikdesigns_password_reset_action_store($user, $_POST['password']);
 
-									// Send out an email notification.
-									$to = $curr_user->user_email;
-									$subject = 'Password Reset.';
-									$headers = array('Content-Type: text/html; charset=UTF-8');
-									$email_template_path = get_template_directory() . "/includes/emails/_reset_password-completed.php";
-									// $email_template_path = __DIR__."/email-template.php";
-									ob_start();
-									include $email_template_path;
-									$message_password_reset = ob_get_clean();
+												// Send out an email notification.
+												$to = $curr_user->user_email;
+												$subject = 'Password Reset.';
+												$headers = array('Content-Type: text/html; charset=UTF-8');
+												$email_template_path = get_template_directory() . "/includes/emails/_reset_password-completed.php";
+												// $email_template_path = __DIR__."/email-template.php";
+												ob_start();
+												include $email_template_path;
+												$message_password_reset = ob_get_clean();
 
-									$messaging_password_rest = "The password for your account has been successfully reset. If this wasn't you, please contact <a href='mailto:together@nbcuni.com?subject=Password Reset Error&body='User: ".$curr_user->user_email.">together@nbcuni.com</a>";
+												$messaging_password_rest = "The password for your account has been successfully reset. If this wasn't you, please contact <a href='mailto:together@nbcuni.com?subject=Password Reset Error&body='User: ".$curr_user->user_email.">together@nbcuni.com</a>";
 
-									$message_password_reset = str_replace('{MESSAGE}',  $messaging_password_rest, $message_password_reset);                         
-									$headers = array('Content-Type: text/html; charset=UTF-8');
-									$attachments = '';
-									wp_mail( $to, $subject, $message_password_reset, $headers, $attachments );
+												$message_password_reset = str_replace('{MESSAGE}',  $messaging_password_rest, $message_password_reset);
+												$headers = array('Content-Type: text/html; charset=UTF-8');
+												$attachments = '';
+												wp_mail( $to, $subject, $message_password_reset, $headers, $attachments );
 
-									
-									// $body = 'Your password was successfully reset.';
-									// wp_mail($to, $subject, $body, $headers);
-									// Change password.
-									wp_set_password( $_POST['password'], $user->ID);
-									// Log-in again.
-									wp_set_auth_cookie($user->ID);
-									wp_set_current_user($user->ID);
-									do_action('wp_login', $user->user_login, $user);
-									$f_value['pr-success'] = "success";
+												// $body = 'Your password was successfully reset.';
+												// wp_mail($to, $subject, $body, $headers);
+												// Change password.
+												wp_set_password( $_POST['password'], $user->ID);
+												// Log-in again.
+												wp_set_auth_cookie($user->ID);
+												wp_set_current_user($user->ID);
+												do_action('wp_login', $user->user_login, $user);
+												$f_value['pr-success'] = "success";
+											}
+										}
+									} else {
+										$current_date = strtotime((new DateTime())->format( 'd-m-Y' ));
+										update_user_meta( $curr_id, 'wp_user-settings-time-password-reset', $current_date );
+										// Get current logged-in user.
+										$user = wp_get_current_user();
+										// This will store the newest password in the database.
+										ronikdesigns_password_reset_action_store($user, $_POST['password']);
+
+										// Send out an email notification.
+										$to = $curr_user->user_email;
+										$subject = 'Password Reset.';
+										$headers = array('Content-Type: text/html; charset=UTF-8');
+										$email_template_path = get_template_directory() . "/includes/emails/_reset_password-completed.php";
+										// $email_template_path = __DIR__."/email-template.php";
+										ob_start();
+										include $email_template_path;
+										$message_password_reset = ob_get_clean();
+
+										$messaging_password_rest = "The password for your account has been successfully reset. If this wasn't you, please contact <a href='mailto:together@nbcuni.com?subject=Password Reset Error&body='User: ".$curr_user->user_email.">together@nbcuni.com</a>";
+
+										$message_password_reset = str_replace('{MESSAGE}',  $messaging_password_rest, $message_password_reset);
+										$headers = array('Content-Type: text/html; charset=UTF-8');
+										$attachments = '';
+										wp_mail( $to, $subject, $message_password_reset, $headers, $attachments );
+
+										// $body = 'Your password was successfully reset.';
+										// wp_mail($to, $subject, $body, $headers);
+										// Change password.
+										wp_set_password( $_POST['password'], $user->ID);
+										// Log-in again.
+										wp_set_auth_cookie($user->ID);
+										wp_set_current_user($user->ID);
+										do_action('wp_login', $user->user_login, $user);
+										$f_value['pr-success'] = "success";
+									}
 								}
 							}
 						}
@@ -594,7 +685,6 @@ class Ronikdesign_Public
 				}
 			}
 		}
-		error_log(print_r('PASSED Security Checks.', true));
 
 		// Need to start the session.
 		session_start();
@@ -604,6 +694,8 @@ class Ronikdesign_Public
 
 		$f_value = array();
 		$f_auth = get_field('mfa_settings', 'options');
+
+		$get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
 
 		$f_twilio_id = get_option('options_mfa_settings_twilio_id');
 		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
@@ -891,6 +983,7 @@ class Ronikdesign_Public
 					// Then we set it to valid aka true
 					$_SESSION["videoPlayed"] = "valid";
 					error_log(print_r('videoPlayed valid', true));
+					error_log(print_r($_SESSION["videoPlayed"], true));
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -900,6 +993,7 @@ class Ronikdesign_Public
 					// Then we set it to invalid aka false
 					$_SESSION["videoPlayed"] = "invalid";
 					error_log(print_r('videoPlayed invalid', true));
+					error_log(print_r($_SESSION["videoPlayed"], true));
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -907,18 +1001,14 @@ class Ronikdesign_Public
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
 					// This is the logic blocker that will prevent the other code from triggering.
+					error_log(print_r('killValidation', true));
+					error_log(print_r($_SESSION["videoPlayed"], true));
+
 					if($_SESSION["videoPlayed"] == 'valid'){
-						error_log(print_r('killValidation', true));
-						error_log(print_r($_SESSION["videoPlayed"], true));
 						// Catch ALL noreload.
 						wp_send_json_success('noreload');
 					}
 					$helper->ronikdesigns_write_log_devmode('Auth Verification: Kill Validation.', 'low');
-
-					error_log(print_r('killValidation', true));
-					error_log(print_r($mfa_status, true));
-					error_log(print_r($sms_2fa_status, true));
-					error_log(print_r($sms_code_timestamp, true));
 
 					// Lets check if user is accessing a locked page.
 					if($mfa_status !== 'mfa_unverified'){
@@ -948,6 +1038,9 @@ class Ronikdesign_Public
 
 				// Lets check to see if the user is outbound on the allowed site time.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
+					error_log(print_r('timeChecker', true));
+					error_log(print_r('videoPlayed '.$_SESSION["videoPlayed"], true));
+
 					// This is the logic blocker that will prevent the other code from triggering.
 					if($_SESSION["videoPlayed"] == 'valid'){
 						// error_log(print_r('timeChecker', true));
@@ -963,39 +1056,35 @@ class Ronikdesign_Public
 						$f_auth_expiration_time = 30;
 					}
                     $past_date = strtotime((new DateTime())->modify('-'.$f_auth_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-					if($mfa_status !== 'mfa_unverified'){
-						if($past_date > $mfa_status ){
-							update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-							wp_send_json_success('reload');
+
+					if($get_auth_status == 'auth_select_mfa'){
+					} else if( $get_auth_status == 'auth_select_sms') {
+					}
+
+						if($mfa_status !== 'mfa_unverified'){
+							if($past_date > $mfa_status ){
+								update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
+								wp_send_json_success('reload');
+							}
+						} else {
+							// wp_send_json_success('reload');
 						}
-					}
-					if($sms_code_timestamp == 'invalid'){
-						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-						update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-						wp_send_json_success('reload');
-					}
-					if(isset($sms_2fa_status) && $sms_2fa_status && ($sms_2fa_status !== 'sms_2fa_unverified')){
-						if($past_date > $sms_code_timestamp ){
+						if($sms_code_timestamp == 'invalid'){
 							update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
 							update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
 							wp_send_json_success('reload');
 						}
-					}
-					// else {
-					// 	// We must check against the time stamp
-					// 	if($past_date > $sms_code_timestamp ){
-					// 		// In code we set the sms to unverified so we have to create logic that auto invalidates the sms secrete and double the unverfied just incase.
-					// 		update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-					// 		update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-					// 		// wp_send_json_success('reload')
-					// 	}
-					// }
+						if(isset($sms_2fa_status) && $sms_2fa_status && ($sms_2fa_status !== 'sms_2fa_unverified')){
+							if($past_date > $sms_code_timestamp ){
+								update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
+								update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
+								wp_send_json_success('reload');
+							} else {
+								// wp_send_json_success('reload');
+							}
+						}
 
 
-					error_log(print_r('timeChecker', true));
-					error_log(print_r($sms_2fa_status, true));
-					error_log(print_r($sms_code_timestamp, true));
-					error_log(print_r($past_date, true));
 
 
 
@@ -1007,7 +1096,7 @@ class Ronikdesign_Public
 				if(isset($_POST['timeLockoutChecker']) && ($_POST['timeLockoutChecker'] == 'valid')){
 					$helper->ronikdesigns_write_log_devmode('Auth Verification: Lockout Time Checker Validation.', 'low');
 
-					if( isset($get_auth_lockout_counter) && (strlen($get_auth_lockout_counter) > 10) ){
+					if( isset($get_auth_lockout_counter) && (($get_auth_lockout_counter) > 10) ){
 						$f_expiration_time = 3;
 						$past_date = strtotime((new DateTime())->modify('-'.$f_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
 						if( $past_date > $get_auth_lockout_counter ){
@@ -1027,29 +1116,26 @@ class Ronikdesign_Public
 	}
 
 
+	// Ajax function pretty much helps handle the landing of the redirect.
 	function ajax_do_init_urltracking() {
-		// Ajax Security.
+		// Ajax Security check..
 		ronik_ajax_security(false, false);
 		// Next lets santize the post data.
 		cleanInputPOST();
 
-		$user_id = get_current_user_id();
-		$meta_key = 'user_click_actions';
+		$authChecker = new RonikAuthChecker;
 
-		error_log(print_r('PASSED Security Checks.', true));
-		error_log(print_r( $_POST['point_origin'], true) );
-
-		// We are checking if the url contains the /wp-content/
-		if (!str_contains($_POST['point_origin'], '/wp-content/')) {
-			$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
-		} else {
-			if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
-				$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
+		if( $authChecker->urlCheckNoAuthPage($_POST['point_origin']) ){
+			// We are checking if the url contains the /wp-content/
+			if (!str_contains($_POST['point_origin'], '/wp-content/')) {
+				$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
+			} else {
+				if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
+					$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
+				}
 			}
+
+			$authChecker->userTrackerActions($point_origin_url);
 		}
-		update_user_meta( $user_id, $meta_key, array(
-			'timestamp' => time(),
-			'url' => urlencode($point_origin_url)
-		) );
 	}
 }
