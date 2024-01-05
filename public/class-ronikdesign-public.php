@@ -865,11 +865,16 @@ class Ronikdesign_Public
 						wp_redirect( esc_url(home_url($r_redirect)) );
 						exit;
 					}
-
-					$verification_check = $client->verify->v2->services($get_current_secret_2fa)->verificationChecks->create([
-						"to" => $to_number,
-						"code" => $_POST['validate-sms-code']
-					]);
+					// This is critical we try and catch exceptions. Pretty much this will protect us from critical site errors.
+					// It happens if a person tries to access with a incorrect $get_current_secret_2fa. Once a $get_current_secret_2fa is used it auto deletes from twilio.
+					try {
+						$verification_check = $client->verify->v2->services($get_current_secret_2fa)->verificationChecks->create([
+							"to" => $to_number,
+							"code" => $_POST['validate-sms-code']
+						]);
+				   } catch (Exception $e) {
+							error_log(print_r($e->getMessage() , true));					
+				   }
 					if($verification_check->status == 'approved'){
 						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code approved.', 'low');
 
@@ -938,7 +943,6 @@ class Ronikdesign_Public
 						$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
 						if ($valid) {
 							$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Valid.', 'low');
-
 							// Lets store the mfa validation data inside the current usermeta.
 							update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
@@ -949,7 +953,6 @@ class Ronikdesign_Public
 							} else {
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
 							}
-
 							$f_value['mfa-error'] = "nomatch";
 						}
 					}  else {
