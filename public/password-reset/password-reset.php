@@ -58,7 +58,7 @@ function password_reset_ronikdesigns(){
     // Lets get the current user information
     $curr_user = wp_get_current_user();
     // Store the id.
-    $curr_id = $curr_user->id;
+    $curr_id = $curr_user->ID;    
     // Keep in mind all timestamp are within the UTC timezone. For constant all around.
     // https://www.timestamp-converter.com/
     // Get the current time.

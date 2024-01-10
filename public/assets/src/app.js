@@ -382,7 +382,7 @@ window.addEventListener("load", ()=>{
 			if (navigator.serviceWorker) {
 				// /sw.js
 				navigator.serviceWorker.register('/sw.js', {
-					scope: './' // <--- THIS BIT IS REQUIRED
+					scope: '/' // <--- THIS BIT IS REQUIRED
 				}).then(function(registration) {
 					// Registration was successful
 					console.log('ServiceWorker registration successful with scope: ', registration.scope);

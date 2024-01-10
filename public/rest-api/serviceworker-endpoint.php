@@ -1,5 +1,15 @@
 <?php 
 
+// Create a like compare function.
+function ronik_compare_like($a_value , $b_value){
+	if(stripos($a_value, $b_value) !== FALSE){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
 function ronikdesigns_service_worker_data( $data ) {
     global $wp_version;
     // script loader
@@ -24,6 +34,49 @@ function ronikdesigns_service_worker_data( $data ) {
 
     // Image
     if($data['slug'] == 'image'){
+        $pageId = base64_decode($data->get_param( 'pid' ));
+        $sanPageId =  str_replace( '\/', '/', $pageId);
+        
+        if($pageId){
+            $f_get_all_posts = get_posts( array(
+                'post_status' => array('publish', 'pending', 'draft', 'auto-draft', 'future', 'private', 'inherit', 'trash'), // Any sometimes doesnt work for all...
+                'numberposts'       => -1,
+                'fields' => 'ids',
+                'order' => 'ASC',
+                'post__in' => array(url_to_postid($sanPageId)),
+                'post_type' => 'any'  // Any sometimes doesnt work for all, it depends if regisetred..
+    
+            ) );    
+            if($f_get_all_posts){
+                foreach($f_get_all_posts as $f_post_id){
+                    // Lets update the post meta of all posts...
+                    $postmetas = get_post_meta( $f_post_id );
+                    // First we get all the meta values & keys from the current post.
+                    if($postmetas){
+                        $f_collector = array();
+                        foreach($postmetas as $meta_key => $meta_value) {
+                            $f_meta_val = $meta_value[0];
+                            if( (is_int($f_meta_val) || is_numeric($f_meta_val)) && $f_meta_val > 1){
+                                if( wp_get_attachment_image_src($f_meta_val) ){
+                                    $f_collector[] = wp_get_attachment_image_src($f_meta_val)[0];
+                                }
+                            }
+                        }
+                        if($f_collector && !empty($f_collector)){
+                            return $f_collector;
+                        }
+                    }
+                }
+            }
+        }
+    
+
+
+
+
+
+
+
         $select_attachment_type = array(
             "jpg" => "image/jpg",
             "jpeg" => "image/jpeg",
@@ -33,10 +86,11 @@ function ronikdesigns_service_worker_data( $data ) {
         );
         $args = array(
             // 'post_status' => 'publish',
-            'numberposts' => 1, // Throttle the number of posts...
+            'numberposts' => 100, // Throttle the number of posts...
             'post_type' => 'attachment',
             'post_mime_type' => $select_attachment_type,
-            'orderby' => 'date', 
+            // 'orderby' => 'date', 
+            'orderby' => 'rand', 
             'order'  => 'DESC',
         );
         $f_pages = get_posts( $args );
@@ -57,10 +111,16 @@ function ronikdesigns_service_worker_data( $data ) {
     }
     // sitemap
     if($data['slug'] == 'sitemap'){
+        $pageId = base64_decode($data->get_param( 'pid' ));
+        $sanPageId =  str_replace( '\/', '/', $pageId);
         $args = array(
             'post_status' => 'publish',
-            'numberposts' => 5, // Throttle the number of posts...
-            'post_type'   => array('post','page'),
+            'orderby' => 'rand',
+            // 'meta_key' => 'wpb_post_views_count',
+            // 'orderby' => 'meta_value_num',
+            'order' => 'DESC',
+            'numberposts' => 100, // Throttle the number of posts...
+            'post_type' => 'page'  // Any sometimes doesnt work for all, it depends if regisetred..
         );
         $f_pages = get_posts( $args );
         if($f_pages){
@@ -68,6 +128,7 @@ function ronikdesigns_service_worker_data( $data ) {
             foreach($f_pages as $posts){
                 $f_url_array[] = get_permalink($posts->ID);
             }
+            $f_url_array[] = $sanPageId;
             return $f_url_array;
         }
     }  

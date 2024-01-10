@@ -313,25 +313,27 @@ function timeValidationExcution(){
                     ronikObserve() {
                         let elemToObserve = this.elemToObserve;
                         let activeClassTarget = this.activeClassTarget;
-                        let prevClassState = elemToObserve.classList.contains(activeClassTarget);
-                        let observer = new MutationObserver(function(mutations) {
-                            mutations.forEach(function(mutation) {
-                                if(mutation.attributeName == "class"){
-                                    let currentClassState = mutation.target.classList.contains(activeClassTarget);
-                                    if(prevClassState !== currentClassState)    {
-                                        prevClassState = currentClassState;
-                                        if(currentClassState){
-                                            console.log("Video is playing");
-                                            timeValidationAjax('invalid', 'invalid', 'valid');
-                                        } else{
-                                            console.log("Video is not playing");
-                                            timeValidationAjax('invalid', 'invalid', 'invalid');
+                        if(elemToObserve){
+                            let prevClassState = elemToObserve.classList.contains(activeClassTarget);
+                            let observer = new MutationObserver(function(mutations) {
+                                mutations.forEach(function(mutation) {
+                                    if(mutation.attributeName == "class"){
+                                        let currentClassState = mutation.target.classList.contains(activeClassTarget);
+                                        if(prevClassState !== currentClassState)    {
+                                            prevClassState = currentClassState;
+                                            if(currentClassState){
+                                                console.log("Video is playing");
+                                                timeValidationAjax('invalid', 'invalid', 'valid');
+                                            } else{
+                                                console.log("Video is not playing");
+                                                timeValidationAjax('invalid', 'invalid', 'invalid');
+                                            }
                                         }
                                     }
-                                }
+                                });
                             });
-                        });
-                        observer.observe(elemToObserve, {attributes: true});
+                            observer.observe(elemToObserve, {attributes: true});
+                        }
                     }
                 }
 

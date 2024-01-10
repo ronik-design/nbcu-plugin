@@ -39,6 +39,8 @@
                 
                     // register your service worker code here
                     console.log('Service Worker Initialized');
+                    console.log('/wp-json/serviceworker/v1/data/image/?pid='+btoa(self.registration.scope)); // /sw.js
+
                     var cacheName;
                     // Fetch the images from the WordPress REST API and cache them
                     self.addEventListener('install', function(event) {
@@ -55,7 +57,7 @@
                             $version = json;
                             cacheName = 'my-cached-'+$version[0];
                             // Lets get all the images from the WordPress REST API
-                            fetch('/wp-json/serviceworker/v1/data/image')
+                            fetch('/wp-json/serviceworker/v1/data/image/?pid='+btoa(self.registration.scope))
                             .then(function(response) {
                             return response.json();
                             })
@@ -71,8 +73,8 @@
                                     '/wp-includes/js/jquery/jquery.min.js',
                                     '/wp-includes/css/classic-themes.min.css',
                                     // Plugin dependencies
-                                    '/wp-content/plugins/ronikdesign/public/css/ronikdesign-public.css'+`?ver=${$version[1]}`,
-                                    '/wp-content/plugins/ronikdesign/public/assets/dist/main.min.css'+`?ver=${$version[1]}`,
+                                    '/wp-content/plugins/nbcu-plugin/public/css/ronikdesign-public.css'+`?ver=${$version[1]}`,
+                                    '/wp-content/plugins/nbcu-plugin/public/assets/dist/main.min.css'+`?ver=${$version[1]}`,
                                     <?php echo $f_custom_scripts; ?>
                                 ]
                                 const children = cacheFiles.concat(imageUrls);
@@ -88,7 +90,7 @@
                                     return newChild;
                                     })
 
-                                    fetch('/wp-json/serviceworker/v1/data/sitemap')
+                                    fetch('/wp-json/serviceworker/v1/data/sitemap/?pid='+btoa(self.registration.scope))
                                     .then(function(response) {
                                     return response.json();
                                     })
@@ -130,7 +132,6 @@
                     }
                     });
                 }
-
         <?php
         $output = ob_get_contents();
         ob_end_clean();

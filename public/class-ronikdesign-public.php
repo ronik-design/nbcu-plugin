@@ -873,7 +873,7 @@ class Ronikdesign_Public
 							"code" => $_POST['validate-sms-code']
 						]);
 				   } catch (Exception $e) {
-							error_log(print_r($e->getMessage() , true));					
+							error_log(print_r($e->getMessage() , true));
 				   }
 					if($verification_check->status == 'approved'){
 						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code approved.', 'low');

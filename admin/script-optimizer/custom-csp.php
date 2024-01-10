@@ -166,7 +166,7 @@ if ($f_csp_enable) {
             $headers['Referrer-Policy']             = 'no-referrer-when-downgrade'; //This is the default value, the same as if it were not set.
             $headers['X-Content-Type-Options']      = 'nosniff';
             $headers['X-XSS-Protection']            = '1; mode=block';
-            $headers['Permissions-Policy']          = 'fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
+            $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
             //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
             $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
             // $headers['Content-Security-Policy']      = " script-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
