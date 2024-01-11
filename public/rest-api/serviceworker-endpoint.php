@@ -1,7 +1,7 @@
 <?php 
 
 // Create a like compare function.
-function ronik_compare_like($a_value , $b_value){
+function nbcu_compare_like($a_value , $b_value){
 	if(stripos($a_value, $b_value) !== FALSE){
 		return true;
 	} else {
