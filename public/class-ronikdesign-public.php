@@ -406,6 +406,14 @@ class Ronikdesign_Public
 		}
 	}
 
+	function ronikdesigns_cache_on_post_save() {
+		error_log(print_r( 'Ronik_CLEAR CACHE' , true));
+		error_log(print_r( "nbcu-cached-".date("Y")."", true));
+		$version_ronikdesigns_increment = get_option( 'version_ronikdesigns_increment', 1 );
+        update_option( 'version_ronikdesigns_increment', $version_ronikdesigns_increment+1 );
+		wp_cache_flush();
+	}
+
 	function ronikdesigns_acf_op_init_functions_public(){
 		function auth_admin_messages(){
 			$get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);

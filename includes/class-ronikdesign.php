@@ -208,6 +208,8 @@ class Ronikdesign
 		// This will add styles to the admin dashboard side
 		// $this->loader->add_action('admin_enqueue_scripts', $plugin_public, 'enqueue_styles');
 
+		$this->loader->add_action('save_post', $plugin_public, 'ronikdesigns_cache_on_post_save');
+		
 		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
 		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
 
