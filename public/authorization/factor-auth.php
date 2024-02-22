@@ -115,7 +115,10 @@ add_action('auth-registration-page', function () {
                 </span>
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                 <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                <button type="submit" value="Submit">Submit</button>
+                <span class="button-wrapper">
+                    <button type="submit" value="Submit">Submit</button>
+                    <a href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
+                </span>
             </form>
         <?php }
     }

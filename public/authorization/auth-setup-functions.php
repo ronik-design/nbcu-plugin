@@ -101,6 +101,8 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
     function ronikRedirectLoopApproval($dataUrl, $cookieName){
         global $post;
         $f_auth = get_field('mfa_settings', 'options');
+        $authChecker = new RonikAuthChecker;
+
         // If user is not logged in we continue to redirect to home page.
         if(!is_user_logged_in()){
             // Prevent an infinite loop.
@@ -157,24 +159,44 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                                 return false;
                             } else {
                                 // This checks if the user is inside wp-admin
-                                if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                                // if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                                if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin') && !str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
                                     return false;
                                 }
                             }
                         } else {
                             // This checks if the user is inside wp-admin
-                            if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                            // if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                            if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin') && !str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
                                 return false;
                             }
                         }
                     }
                 } else {
                     // This checks if the user is inside wp-admin
-                    if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                    // if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
+                    if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin') && !str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
                         $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
                         if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
                             // First lets loop through all the provided urls.
                             ronikLooperDooper($dataUrl, $cookieName);
+                        } else{
+
+                            // Checks for the wpDashboard if so we redirect!!!!!
+                            if( $authChecker->urlCheckWpDashboard($_SERVER['REQUEST_URI']) ){                    
+                                if( $authChecker->urlCheckNoAuthPage($_SERVER['REQUEST_URI']) ){
+                                    // PHP User Click Actions
+                                    $user_id = get_current_user_id();
+                                    $meta_key = 'user_tracker_actions';
+                                    update_user_meta( $user_id, $meta_key, array(
+                                        'timestamp' => time(),
+                                        'url' => urlencode($_SERVER['REQUEST_URI'])
+                                    ));
+                                }
+                                error_log(print_r( 'THIS IS A WP-ADMIN DASHBOARD', true));                    
+                                wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
+                                exit();
+                            } 
                         }
                         return false;
                     }
@@ -196,6 +218,11 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
             // If value matches with the request_url
             if (!str_contains($_SERVER['REQUEST_URI'], $value)) {
 
+                // // This is the last check for if request_url is admin-ajax. WE DO NOT WANT TO REDIRECT IN ADMIN-AJAX
+                // if (!str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
+                //     return;
+                // }
+
                 if( $authChecker->urlCheckNoWpPage($_SERVER['REQUEST_URI']) ){
                     // Lastly we check if the requested matches the permalink to prevent looping issues.
                     if(get_permalink() !== home_url($dataUrl['reDest'])){
@@ -211,7 +238,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         // Pause server.
                         sleep(.5);
                         wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
-                        exit;
+                        exit();
                     }
                 }
             }
@@ -225,7 +252,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
 
         if($userclick_actions){
             if( isset($userclick_actions['url']) ){
-                wp_redirect( esc_url(home_url(urldecode($userclick_actions['url']))) );
+                wp_redirect( esc_url((urldecode($userclick_actions['url']))) );
                 exit;
             } else {
                 wp_redirect( esc_url(home_url()) );
@@ -243,7 +270,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
         // Pretty much we check for the Authorization pages if provided URL is a Authorization page.
         public function urlCheckNoAuthPage($urlTarget) {
             // Lets check for the auth pages..
-            if (!str_contains($urlTarget, '/mfa') && !str_contains($urlTarget, '/2fa') && !str_contains($urlTarget, '/auth')) {
+            if (!str_contains($urlTarget, 'ronikdesigns_admin_logout') && !str_contains($urlTarget, '/sw.js') && !str_contains($urlTarget, '/mfa') && !str_contains($urlTarget, '/2fa') && !str_contains($urlTarget, '/auth')) {
                 return true;
             } else {
                 return false;
@@ -256,6 +283,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                 '/wp-content/',
                 '/wp-admin/admin-post.php',
                 '/wp-admin/admin-ajax.php',
+                '/wp-admin/admin-ajax.php?action=ronikdesigns_admin_logout',
             );
             if( $customUrlArray ){
                 $f_redirect_wp_slugs = array_merge($f_redirect_wp_slugs, $customUrlArray);;
@@ -265,6 +293,45 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
             } else {
                 return false;
             }
+        }
+
+        public function urlCheckWpDashboard($urlTarget, $customUrlArray=false) {
+            $f_auth = get_field('mfa_settings', 'options');
+
+            if($f_auth['auth_page_enabled_wpadmin']){
+                $f_redirect_wp_slugs = array(
+                    '/wp-admin/import.php',
+                    '/wp-admin/export.php'.
+                    '/wp-admin/site-health.php',
+                    '/wp-admin/export-personal-data.php',
+                    '/wp-admin/erase-personal-data.php',
+                    '/wp-admin/ms-delete-site.php',
+                    '/wp-admin/options-',
+                    '/wp-admin/admin.php?page=',
+                    '/wp-admin/upload.php',
+                    '/wp-admin/tools.php',
+                    '/wp-admin/plugins.php',
+                    '/wp-admin/themes.php',
+                    '/wp-admin/my-sites.php',
+                    '/wp-admin/index.php',
+                    '/wp-admin/edit.php?post_type=',
+                    '/wp-admin/post.php?post=',
+                    '/wp-admin/users.php',
+                    '/wp-admin/user-new.php',
+                );
+            } else {
+                $f_redirect_wp_slugs = array(
+                );
+            }
+            if( $customUrlArray ){
+                $f_redirect_wp_slugs = array_merge($f_redirect_wp_slugs, $customUrlArray);;
+            }
+            foreach($f_redirect_wp_slugs as $wp_slugs){ 
+                if(str_contains( $urlTarget, $wp_slugs )){
+                    return true;
+                }
+            }
+            return false;
         }
 
         public function userTrackerActions($urlTarget){
@@ -354,9 +421,5 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                     do_action('2fa-registration-page');
                 }
             }
-
-
         }
-
-
     }

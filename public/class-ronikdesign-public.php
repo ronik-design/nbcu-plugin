@@ -656,6 +656,24 @@ class Ronikdesign_Public
 		exit;
 	}
 
+	function ronikdesigns_admin_logout() {
+		$user_id = get_current_user_id();
+		$r = '';
+		
+		wp_destroy_current_session();
+		wp_clear_auth_cookie();
+		wp_set_current_user( 0 );
+
+        $userclick_actions = get_user_meta($user_id, 'user_tracker_actions', true);
+		if( isset($userclick_actions['url']) ){
+			$r = '?r='.urldecode($userclick_actions['url']);
+		}
+		wp_redirect( home_url('/nbcuni-sso/login/'.$r.'') );
+
+
+		exit;
+	}
+
 	function ronikdesigns_admin_auth_verification() {
 		// Ajax Security.
 		ronik_ajax_security('ajax-nonce', true);

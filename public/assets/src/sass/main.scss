@@ -257,7 +257,7 @@ body {
   font-size: 32px;
   line-height: 1.4;
   color: #1A1A1A;
-
+  
   h2{
     font-size: 32px;
     line-height: 1;
@@ -311,7 +311,6 @@ body {
       padding-bottom: 32px;
     }
     button{
-      margin-top: 40px;
       font-family: 'gotham-mediumgotham-medium', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -340,6 +339,39 @@ body {
       &:hover{
         background-color: #fff;
         color: #1A1A1A;
+      }
+    }
+
+    .button-wrapper{
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 40px;
+      
+      button {
+        margin-right: 25px;
+        position: relative;
+
+        &::after{
+          content: "";
+          position: absolute;
+          right: -15px;
+          top: 0;
+          width: 1px;
+          height: 100%;
+          background: #1A1A1A;
+        }
+      }
+      a{
+        color: #1A1A1A;
+        transition: all .4s;
+        text-decoration: none;
+        font-family: 'gotham-light', sans-serif;
+        font-size: 14px;
+    
+        &:hover{
+          color: #686868;
+        }
       }
     }
 

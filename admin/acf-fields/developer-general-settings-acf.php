@@ -1395,6 +1395,26 @@ https://test.com/',
 					),
 
 
+					array(
+						'key' => 'field_64aaf9808758212',
+						'label' => 'Enable MFA & 2FA in ADMIN Side',
+						'name' => 'auth_page_enabled_wpadmin',
+						'type' => 'true_false',
+						'instructions' => 'This will enable Authorization on the WP Admin end.',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '100',
+							'class' => '',
+							'id' => '',
+						),
+						'message' => '',
+						'default_value' => 0,
+						'ui' => 1,
+						'ui_on_text' => '',
+						'ui_off_text' => '',
+					),
+
 
 					array(
 						'key' => 'field_64aaf98087583',

@@ -372,25 +372,25 @@
 
 
 
-window.addEventListener("load", ()=>{
-	// var myElement = document.querySelector("#my-element");
-    // myElement.addEventListener("event", handler);
-	// We detect if the user is logged in. If so we dont register the service worker.
-	if((!document.body.classList.contains('wp-admin') || (!document.body.classList.contains('logged-in'))) ){  
+// window.addEventListener("load", ()=>{
+// 	// var myElement = document.querySelector("#my-element");
+//     // myElement.addEventListener("event", handler);
+// 	// We detect if the user is logged in. If so we dont register the service worker.
+// 	if((!document.body.classList.contains('wp-admin') || (!document.body.classList.contains('logged-in'))) ){  
 		
-		if(document.body.classList.contains('enable-serviceworker')){
-			if (navigator.serviceWorker) {
-				// /sw.js
-				navigator.serviceWorker.register('/sw.js', {
-					scope: './' // <--- THIS BIT IS REQUIRED
-				}).then(function(registration) {
-					// Registration was successful
-					console.log('ServiceWorker registration successful with scope: ', registration.scope);
-				}, function(err) {
-					// registration failed :(
-					console.log('ServiceWorker registration failed: ', err);
-				});
-			}
-		}
-	}
-});
+// 		if(document.body.classList.contains('enable-serviceworker')){
+// 			if (navigator.serviceWorker) {
+// 				// /sw.js
+// 				navigator.serviceWorker.register('/sw.js', {
+// 					scope: './' // <--- THIS BIT IS REQUIRED
+// 				}).then(function(registration) {
+// 					// Registration was successful
+// 					console.log('ServiceWorker registration successful with scope: ', registration.scope);
+// 				}, function(err) {
+// 					// registration failed :(
+// 					console.log('ServiceWorker registration failed: ', err);
+// 				});
+// 			}
+// 		}
+// 	}
+// });

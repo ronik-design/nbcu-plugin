@@ -618,7 +618,6 @@ body {
   padding-bottom: 32px;
 }
 .mfa-wrapper form button, .auth-content form button, .twofa-wrapper form button {
-  margin-top: 40px;
   font-family: "gotham-mediumgotham-medium", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -646,6 +645,35 @@ body {
 .mfa-wrapper form button:hover, .auth-content form button:hover, .twofa-wrapper form button:hover {
   background-color: #fff;
   color: #1A1A1A;
+}
+.mfa-wrapper form .button-wrapper, .auth-content form .button-wrapper, .twofa-wrapper form .button-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 40px;
+}
+.mfa-wrapper form .button-wrapper button, .auth-content form .button-wrapper button, .twofa-wrapper form .button-wrapper button {
+  margin-right: 25px;
+  position: relative;
+}
+.mfa-wrapper form .button-wrapper button::after, .auth-content form .button-wrapper button::after, .twofa-wrapper form .button-wrapper button::after {
+  content: "";
+  position: absolute;
+  right: -15px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: #1A1A1A;
+}
+.mfa-wrapper form .button-wrapper a, .auth-content form .button-wrapper a, .twofa-wrapper form .button-wrapper a {
+  color: #1A1A1A;
+  transition: all 0.4s;
+  text-decoration: none;
+  font-family: "gotham-light", sans-serif;
+  font-size: 14px;
+}
+.mfa-wrapper form .button-wrapper a:hover, .auth-content form .button-wrapper a:hover, .twofa-wrapper form .button-wrapper a:hover {
+  color: #686868;
 }
 .mfa-wrapper form [type=radio]:checked,
 .mfa-wrapper form [type=radio]:not(:checked), .auth-content form [type=radio]:checked,
