@@ -58,7 +58,7 @@ function password_reset_ronikdesigns(){
     // Lets get the current user information
     $curr_user = wp_get_current_user();
     // Store the id.
-    $curr_id = $curr_user->ID;    
+    $curr_id = $curr_user->ID;
     // Keep in mind all timestamp are within the UTC timezone. For constant all around.
     // https://www.timestamp-converter.com/
     // Get the current time.
@@ -84,10 +84,10 @@ function password_reset_ronikdesigns(){
         // If past date is greater then current time stamp. We redirect to the reset page.
         if( $current_user_reset_time_stamp <= $past_date ){
             $f_redirect_allowable_slugs = array(
-                '/password-reset/?pr-success=success', 
-                '/password-reset/?pr-error=weak', 
-                '/password-reset/?pr-error=alreadyexists', 
-                '/password-reset/?pr-error=pastused', 
+                '/password-reset/?pr-success=success',
+                '/password-reset/?pr-error=weak',
+                '/password-reset/?pr-error=alreadyexists',
+                '/password-reset/?pr-error=pastused',
                 '/password-reset/?pr-error=nomatch',
                 '/password-reset/?pr-error=missing',
                 '/password-reset/?pr-error=no-uppercase',
@@ -95,16 +95,17 @@ function password_reset_ronikdesigns(){
                 '/password-reset/?pr-error=no-special-characters',
             );
 
-            $authChecker = new RonikAuthChecker;
-
-            // Lets setup the cookie for redirect purposes.
-            if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
-                if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
-                    // PHP User Click Actions
-                    $authChecker->userTrackerActions($_SERVER['REQUEST_URI']);
+            if (class_exists('RonikAuthChecker')) {
+                $authChecker = new RonikAuthChecker;
+                // Lets setup the cookie for redirect purposes.
+                if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
+                    if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
+                        // PHP User Click Actions
+                        $authChecker->userTrackerActions($_SERVER['REQUEST_URI']);
+                    }
                 }
             }
-        
+
             // Due to redirect loop issues we need to check the following parameters to avoid a redirect loop.
                 // Check if the $_SERVER is available via isset. WPE will default to else.
                 if(isset($_SERVER['REDIRECT_URL'])){
@@ -126,7 +127,7 @@ function password_reset_ronikdesigns(){
                             $helper->ronikdesigns_write_log_devmode('Password Reset Error 1', 'critical');
                         }
                     } else {
-                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical');              
+                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical');
                     }
                 }
         }

@@ -84,18 +84,54 @@ add_action('auth-registration-page', function () {
             <script>
                 $(document).ready(function() {
                     $("#auth-phone_number").on('keyup', function() {
-                        var phone = $(this).val().replace(/\D/g, '');
-                        phone = phone.replace(/^1/, '');
-                        phone = phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-                        $(this).val(phone);
+                        var phone = $(this).val().replace(/([^+\d][-.\s])/, '');
+
+                        
+
+                        // var phone = $(this).val().replace(/\D/g, '');
+                        // phone = phone.replace(/^1/, '');
+                        //Check if the input is of correct
+
+                        let formatPhoneNumber = (str) => {
+                            //Filter only numbers from the input
+                            // let cleaned = ('' + str).replace(/\D/g, '');
+                            // let cleaned = str;
+                            //Check if the input is of correct
+                            // let match = cleaned.match(/^(1-9)?(\d{3})(\d{3})(\d{4})$/);
+
+                        //     let match = cleaned.match(/(?:([+]\d{1,4})[-.\s]?)?(?:(\d{1,3})[-.\s]?)?(\d{1,4})[-.\s]?(\d{1,4})[-.\s]?(\d{1,9})/);
+                        //     console.log(match);
+
+                        //     if (match) {
+                        //         //Remove the matched extension code
+                        //         //Change this to format for any country code.
+                        //         let intlCode = (match[1] ? '+1 ' : '')
+                        //         return [intlCode, '', match[2], '', match[3], '', match[4]].join('')
+                        //     }
+                        //     return null;
+
+                            return str
+                        }
+
+                        // console.log( formatPhoneNumber(phone) );
+
+
+                        $(this).val(formatPhoneNumber(phone));
                     });
+
+
+
+
+  
+
+
                 });
             </script>
             <div class="auth-content-bottom auth-content-bottom--sms">
                 <form class="auth-content-bottom__submit" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
                     <div class="auth-content-bottom__submit-contents">
-                        <input type="tel" id="auth-phone_number" name="auth-phone_number" placeholder="234-567-8901" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"  autocomplete="off"  required>
-                        <small>Format: 234-567-8901</small>
+                        <input type="tel" id="auth-phone_number" name="auth-phone_number" placeholder="234-567-8901" pattern="/^\+(?:[0-9] ?){6,14}[0-9]$/;"  autocomplete="off"  required>
+                        <small>Format US: 234-567-8901 || Format EU: +12 3 45 67 89 01</small>
                         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                         <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                     </div>
