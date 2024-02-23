@@ -1152,19 +1152,20 @@ class Ronikdesign_Public
 		// Next lets santize the post data.
 		cleanInputPOST();
 
-		$authChecker = new RonikAuthChecker;
-
-		if( $authChecker->urlCheckNoAuthPage($_POST['point_origin']) ){
-			// We are checking if the url contains the /wp-content/
-			if (!str_contains($_POST['point_origin'], '/wp-content/')) {
-				$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
-			} else {
-				if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
-					$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
+		if (class_exists('RonikAuthChecker')) {
+			$authChecker = new RonikAuthChecker;
+			if( $authChecker->urlCheckNoAuthPage($_POST['point_origin']) ){
+				// We are checking if the url contains the /wp-content/
+				if (!str_contains($_POST['point_origin'], '/wp-content/')) {
+					$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
+				} else {
+					if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
+						$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
+					}
 				}
+	
+				$authChecker->userTrackerActions($point_origin_url);
 			}
-
-			$authChecker->userTrackerActions($point_origin_url);
 		}
 	}
 }
