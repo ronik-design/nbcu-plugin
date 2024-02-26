@@ -564,7 +564,7 @@ body {
             height: 54px;
             border: solid #D3D3D3;
             margin-right: 18px;
-            padding: 0px 12px;
+            padding: 0px 12px 0px 50px;
           }
 
           input[name="validate-sms-code"]{
@@ -582,6 +582,11 @@ body {
           margin-top: 0;
           width: 100%;
           max-width: 205px;
+
+          &.btn-disabled{
+            opacity: 0.5;
+            pointer-events: none;
+          }
         }
       }
     }

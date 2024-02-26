@@ -659,7 +659,7 @@ class Ronikdesign_Public
 	function ronikdesigns_admin_logout() {
 		$user_id = get_current_user_id();
 		$r = '';
-		
+
 		wp_destroy_current_session();
 		wp_clear_auth_cookie();
 		wp_set_current_user( 0 );
@@ -809,9 +809,10 @@ class Ronikdesign_Public
 				// Lets check the auth-phone_number.
 				if(isset($_POST['auth-phone_number']) && $_POST['auth-phone_number']){
 					$helper->ronikdesigns_write_log_devmode('Auth Verification: validating the phone number', 'low');
+					//eliminate every char except 0-9 +
+					// htmlspecialchars the POST DATA, then strip all characters except +
+					$justNums = preg_replace("/[^+0-9]+/", "",  htmlspecialchars($_POST['auth-phone_number']));
 
-					//eliminate every char except 0-9
-					$justNums = preg_replace("/[^0-9]/", '', $_POST['auth-phone_number']);
 					// This is where api validation will be performed...
 					update_user_meta(get_current_user_id(), 'sms_user_phone', $justNums);
 					// End api validation
@@ -1163,7 +1164,7 @@ class Ronikdesign_Public
 						$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
 					}
 				}
-	
+
 				$authChecker->userTrackerActions($point_origin_url);
 			}
 		}

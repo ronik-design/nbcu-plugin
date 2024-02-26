@@ -853,7 +853,7 @@ body {
   height: 54px;
   border: solid #D3D3D3;
   margin-right: 18px;
-  padding: 0px 12px;
+  padding: 0px 12px 0px 50px;
 }
 .mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input[name=validate-sms-code], .auth-content .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input[name=validate-sms-code], .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit .auth-content-bottom__submit-contents input[name=validate-sms-code] {
   width: 269px;
@@ -869,6 +869,10 @@ body {
   margin-top: 0;
   width: 100%;
   max-width: 205px;
+}
+.mfa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit button.btn-disabled, .auth-content .auth-content-bottom--sms .auth-content-bottom__submit button.btn-disabled, .twofa-wrapper .auth-content-bottom--sms .auth-content-bottom__submit button.btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
