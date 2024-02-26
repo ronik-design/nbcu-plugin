@@ -751,7 +751,7 @@ class Ronikdesign_Public
 		// A Twilio number you own with SMS capabilities
 		$twilio_number = $f_twilio_number;
 		// Current user phone number.
-		$to_number = '+1'.$get_phone_number;
+		$to_number = $get_phone_number;
 		$client = new Client($account_sid, $auth_token);
 
 		if(isset($_POST['re-auth']) && $_POST['re-auth']){
