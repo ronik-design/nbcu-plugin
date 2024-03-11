@@ -9,7 +9,7 @@ add_action('auth-rest', function ($args) {
     if( ( isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings'] ) && ( isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'] ) ){
 ?>
     <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-        <h2>MFA Registeration Reset</h2>
+        <h2>MFA Registration Reset</h2>
         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
         <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
         <input type="hidden" type="text" name="re-auth" value="RESET">
