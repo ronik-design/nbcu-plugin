@@ -104,6 +104,7 @@ add_action('mfa-registration-page', function () {
                 </form>
                 <div class="auth-content-bottom__helper">
                     <p>If you encounter any issue, please reach out to the <a href="mailto:together@nbcuni.com?subject=MFA Registration Issue">together@nbcuni.com</a> for support. </p>
+                    <a style="display:inline-block; padding-top: 10px;" href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
                 </div>
             </div>
 

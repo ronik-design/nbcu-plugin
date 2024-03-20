@@ -210,6 +210,7 @@ add_action('2fa-registration-page', function () {
                 </form>
                 <div class="auth-content-bottom__helper">
                     <p>If you don't receive a text message, please reach out to the  <a href="mailto:together@nbcuni.com?subject=2fa Registration Issue">together@nbcuni.com</a> for support. </p>
+                    <a style="display:inline-block; padding-top: 10px;" href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
                 </div>
             </div>
         <?php } else{ ?>
@@ -218,7 +219,10 @@ add_action('2fa-registration-page', function () {
                     <input type="hidden" name="send-sms" value="send-sms">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                     <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                    <button type="submit" value="Send SMS Code">Send SMS Code</button>
+                    <span class="button-wrapper" style="margin-top: 0;">
+                        <button type="submit" value="Send SMS Code">Send SMS Code</button>
+                        <a href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
+                    </span>
                 </form>
             </div>
         <?php }
