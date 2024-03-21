@@ -281,6 +281,8 @@ function timeValidationExcution(){
                         console.log('Video is playing');
 
                         if (mixpanel) {
+                            var mp_params = $.extend( true, {}, _mp_page_parms );
+                                mp_params['Video Name'] = $('.modal-media__title').text();
                             mixpanel.track('Video Play Started', mp_params);
                         }
 
@@ -329,6 +331,8 @@ function timeValidationExcution(){
                                             if(currentClassState){
                                                 console.log("Video is playing");
                                                 if (mixpanel) {
+                                                    var mp_params = $.extend( true, {}, _mp_page_parms );
+                                                        mp_params['Video Name'] = $('.modal-media__title').text();
                                                     mixpanel.track('Video Play Started', mp_params);
                                                 }
                                                 timeValidationAjax('invalid', 'invalid', 'valid');
