@@ -279,6 +279,11 @@ function timeValidationExcution(){
                     var videoPlayer = new Vimeo.Player(iframe);
                     videoPlayer.on('play', function() {
                         console.log('Video is playing');
+
+                        if (mixpanel) {
+                            mixpanel.track('Video Play Started', mp_params);
+                        }
+
                         timeValidationAjax('invalid', 'invalid', 'valid');
                     });
                     videoPlayer.on('pause', function() {
@@ -323,6 +328,9 @@ function timeValidationExcution(){
                                             prevClassState = currentClassState;
                                             if(currentClassState){
                                                 console.log("Video is playing");
+                                                if (mixpanel) {
+                                                    mixpanel.track('Video Play Started', mp_params);
+                                                }
                                                 timeValidationAjax('invalid', 'invalid', 'valid');
                                             } else{
                                                 console.log("Video is not playing");
