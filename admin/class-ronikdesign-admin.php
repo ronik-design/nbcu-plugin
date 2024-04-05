@@ -254,6 +254,139 @@ class Ronikdesign_Admin
 		}
 	}
 
+
+	// https://together.nbcudev.local/wp-admin/admin-ajax.php?action=ronikdesigns_admin_user_email_swap&search=hard&type=soft
+	// https://together.nbcudev.local/wp-admin/admin-ajax.php?action=ronikdesigns_admin_user_email_swap&search=soft&type=medium
+	function ronikdesigns_admin_user_email_swap(){
+		// Check if user is logged in.
+		if (!is_user_logged_in()) {
+			return;
+		}
+		// Check if user is a super admin.
+		if (!is_super_admin(get_current_user_id())) {
+			return;
+		}
+		$helper = new RonikHelper;
+
+		// Template should be csv file two columns first column old email and second column new email.
+		$target_files = glob(dirname(__FILE__) . '/email-swapper/email-swapper.csv');
+		if($target_files){
+			$user_array = array();
+			foreach($target_files as $i => $target_file){
+				$file = fopen($target_file, 'r');
+				while ( ($line = fgetcsv($file)) !== FALSE) {
+					// We validate the email address before storing into the array.
+					if (filter_var($line[0], FILTER_VALIDATE_EMAIL) && filter_var($line[1], FILTER_VALIDATE_EMAIL)) {
+						$user_array[] = $line;
+					}
+				}
+				fclose($file);
+			}
+
+
+			if( $user_array ){
+				global $wpdb;
+				$success_user_list = array();
+				$search_level = isset($_GET['search']) && $_GET['search'] ? $_GET['search'] : "soft";
+				$swap_level = isset($_GET['type']) && $_GET['type'] ? $_GET['type'] : "soft";
+
+				foreach($user_array as $j => $user){
+					// We get the first value from the array.
+					$f_get_user_data = get_user_by( 'email', $user[0] );
+
+					// We check if the f_get_user_data is not empty!
+					if ( ! empty( $f_get_user_data ) ) {
+						// Old Email
+						$f_old_user_email = $user[0];
+						// New Email
+						$f_new_user_email = $user[1];
+						// Store the target id.
+						$f_user_id = $f_get_user_data->data->ID;
+
+						//
+						if( $search_level == 'hard' ){
+							// Update the wp_3_postmeta
+							$meta_key_target_0 = $helper->ronik_database_update('wp_3_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+                            $meta_key_target_0b = $helper->ronik_database_update('wp_6_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+                        } else {
+							$meta_key_target_0 = ' Database Table wp_3_postmeta: Not Synced!';
+                            $meta_key_target_0b = ' Database Table wp_6_postmeta: Not Synced!';
+						}
+
+						if($swap_level == 'hard'){
+							$meta_key_target_0 = $helper->ronik_database_update('wp_3_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+                            $meta_key_target_0b = $helper->ronik_database_update('wp_6_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+                        }
+
+						// Update the wp_usermeta
+						$meta_key_target_1 = $helper->ronik_database_update('wp_usermeta', 'meta_key', 'meta_value' , 'user_id', $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+
+						// Update the wp_sitemeta
+						$meta_key_target_2 = $helper->ronik_database_update('wp_sitemeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+
+						// Update the wp_3_options
+						$meta_key_target_3 = $helper->ronik_database_update('wp_3_options', 'option_name', 'option_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+
+						// Update the wp_6_options
+						$meta_key_target_4 = $helper->ronik_database_update('wp_6_options', 'option_name', 'option_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+
+                        if($swap_level == 'hard' || $swap_level == 'medium'){
+							// Target the do_users table!
+							// We have to target this way since its a custom table
+							$wpdb->query(
+								$wpdb->prepare(
+									"UPDATE do_users SET user_login = %s ,user_email = %s WHERE ID = %d", $f_new_user_email, $f_new_user_email, $f_user_id
+								)
+							);
+                            $wp_meta_datas = $wpdb->get_results("select * from do_users where user_account_updates LIKE '%$f_old_user_email%'");
+                            if($wp_meta_datas){
+                                // Loop through all the rows.
+                                foreach($wp_meta_datas  as $key =>  $wp_meta_data){
+                                    $f_meta_value = $wp_meta_data->user_account_updates;
+                                    if($helper->ronik_compare_like_compare($f_meta_value , $f_old_user_email)){
+                                        if (str_contains($f_meta_value, ';s:')) {
+                                            $f_meta_value_mod = str_replace( 's:'.strlen($f_old_user_email).':"'.$f_old_user_email.'"', 's:'.strlen($f_new_user_email).':"'.$f_new_user_email.'"', $f_meta_value);
+                                        } else{
+                                            $f_meta_value_mod = str_replace( $f_old_user_email, $f_new_user_email, $f_meta_value);
+                                        }
+
+                                        $wpdb->query(
+                                            $wpdb->prepare(
+                                                "UPDATE do_users SET user_account_updates = %s WHERE ID = %d", $f_meta_value_mod, $f_user_id
+                                            )
+                                        );
+                                    }
+                                }
+                            }
+							// Update the
+							$wpdb->query(
+								$wpdb->prepare(
+									"UPDATE wp_users SET user_login = %s ,user_email = %s WHERE ID = %d", $f_new_user_email, $f_new_user_email, $f_user_id
+								)
+							);
+						}
+						$success_user_list[] = $f_old_user_email . ' ' . $f_new_user_email . ' ' . $f_user_id . $meta_key_target_0 . $meta_key_target_0b . $meta_key_target_1 . $meta_key_target_2 . $meta_key_target_3 . $meta_key_target_4;
+					}
+				}
+
+				if( !empty($success_user_list) ){
+					wp_send_json_success( array(
+						'response_counter' => count($success_user_list),
+						'response' => $success_user_list,
+					), 200 );
+				} else {
+					wp_send_json_success( array(
+						'response' => 'No users were updated!',
+					), 200 );
+				}
+			} else {
+				wp_send_json_error('CSV File could not be parsed', '400');
+			}
+		} else {
+			wp_send_json_error('CSV File Not Found', '400');
+		}
+	}
+
 	/**
 	 * Init Page Migration, Basically swap out the original link with the new link.
 	 */

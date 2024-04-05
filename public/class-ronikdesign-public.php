@@ -160,7 +160,6 @@ class Ronikdesign_Public
 			$response = wp_remote_get($f_url, $args);
 			$helper->ronikdesigns_write_log_devmode('Phone Validation: '.$response, 'low');
 
-			// error_log(print_r($response, true ));
 			if ((!is_wp_error($response)) && (200 === wp_remote_retrieve_response_code($response))) {
 				$responseBody = json_decode($response['body']);
 				if (json_last_error() === JSON_ERROR_NONE) {
@@ -193,7 +192,6 @@ class Ronikdesign_Public
 				if (json_last_error() === JSON_ERROR_NONE) {
 					if ($responseBody->is_valid_format->value == 1) {
 						if($f_strict){
-							// error_log(print_r(CSP_NONCE, true));
 							wp_send_json_success($responseBody->is_valid_format->value);
 						} else {
 							wp_send_json_success($responseBody->is_valid_format->value);
@@ -407,8 +405,10 @@ class Ronikdesign_Public
 	}
 
 	function ronikdesigns_cache_on_post_save() {
-		error_log(print_r( 'Ronik_CLEAR CACHE' , true));
-		error_log(print_r( "nbcu-cached-".date("Y")."", true));
+		// Helper Guide
+		$helper = new RonikHelper;
+		$helper->ronikdesigns_write_log_devmode('Ronik_CLEAR CACHE', 'low');
+		$helper->ronikdesigns_write_log_devmode("nbcu-cached-".date("Y")."", 'low');
 		$version_ronikdesigns_increment = get_option( 'version_ronikdesigns_increment', 1 );
         update_option( 'version_ronikdesigns_increment', $version_ronikdesigns_increment+1 );
 		wp_cache_flush();
@@ -421,12 +421,12 @@ class Ronikdesign_Public
 
 			$sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
 			$sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
-			$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+			$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true) ? get_user_meta(get_current_user_id(), 'auth_lockout_counter', true) : (int)0;
 			$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
 
 			$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
 			$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
-			$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+			// $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 
 			if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
 				$f_auth = get_field('mfa_settings', 'options');
@@ -525,10 +525,19 @@ class Ronikdesign_Public
 		if (!is_user_logged_in()) {
 			return;
 		}
-		// Ajax Security.
-		ronik_ajax_security('ajax-nonce-password', true);
+
 		// Next lets santize the post data.
 		cleanInputPOST();
+
+		// autochecker this will pretty much bypass the nonce validation sequence since nonce changes per page and we cant cache restrict all pages.
+		if( isset($_POST['autoChecker']) && $_POST['autoChecker'] == 'valid' ){
+			// Ajax Security.
+			ronik_ajax_security('ajax-nonce-password', false);
+		} else {
+			// Ajax Security.
+			ronik_ajax_security('ajax-nonce-password', true);
+		}
+
 
 		$f_value = array();
 		if(!empty($_POST['password']) && !empty($_POST['retype_password'])){
@@ -675,10 +684,29 @@ class Ronikdesign_Public
 	}
 
 	function ronikdesigns_admin_auth_verification() {
-		// Ajax Security.
-		ronik_ajax_security('ajax-nonce', true);
+		// Helper Guide
+		$helper = new RonikHelper;		
 		// Next lets santize the post data.
 		cleanInputPOST();
+		// autochecker this will pretty much bypass the nonce validation sequence since nonce changes per page and we cant cache restrict all pages.
+		if( isset($_POST['autoChecker']) && $_POST['autoChecker'] == 'valid' ){
+			// Next we check the password just incase someone tries some js overriding stuff..
+			// Pretty much we check for the crypt password and see if it is a match for the current user id.
+			if( ( isset($_POST['crypt']) && $helper->ronik_decrypt_data( '"'. $_POST['crypt'] . '"') == get_current_user_id() )){
+				// Ajax Security.
+				ronik_ajax_security('ajax-nonce', false);
+			} else {
+				// Ajax Security.
+				// We hit the wall on the crypt either expiration timeout or user has more then one window open or impersonation attempt.
+				// If this is the case we log a low error message and we continue on using nonce.
+				// We may need to fix this later but ideally this should prevent security risk by defaulting to nonce...
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: autoChecker ronik_decrypt_data, user failed impersonation attempt, can be either timeout or too many windows open.', 'low');
+				ronik_ajax_security('ajax-nonce', true);
+			}
+		} else {
+			// Ajax Security.
+			ronik_ajax_security('ajax-nonce', true);
+		}
 
 		// We determine if a POST var is in the predetermined list. If not we kill the application.
 		$predeterminedDataArray = array(
@@ -696,7 +724,9 @@ class Ronikdesign_Public
 			'action',
 			'nonce',
 			'_wp_http_referer',
-			'submit'
+			'submit',
+			'autoChecker',
+			'crypt'
 		);
 		$postDataArray = array();
 		foreach ($_POST as $key => $value) {
@@ -705,7 +735,8 @@ class Ronikdesign_Public
 		if($postDataArray){
 			foreach ($postDataArray as $dataArray){
 				if(!in_array($dataArray, $predeterminedDataArray)){
-					error_log(print_r($dataArray, true));
+					$helper->ronikdesigns_write_log_devmode('ronikdesigns_admin_auth_verification', 'critical');
+					$helper->ronikdesigns_write_log_devmode($dataArray, 'critical');
 					wp_send_json_error('Security check failed', '400');
 					wp_die();
 				}
@@ -714,9 +745,6 @@ class Ronikdesign_Public
 
 		// Need to start the session.
 		session_start();
-
-		// Helper Guide
-		$helper = new RonikHelper;
 
 		$f_value = array();
 		$f_auth = get_field('mfa_settings', 'options');
@@ -900,7 +928,7 @@ class Ronikdesign_Public
 							"code" => $_POST['validate-sms-code']
 						]);
 				   } catch (Exception $e) {
-							error_log(print_r($e->getMessage() , true));
+						$helper->ronikdesigns_write_log_devmode($e->getMessage(), 'critical');
 				   }
 					if($verification_check->status == 'approved'){
 						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code approved.', 'low');
@@ -978,7 +1006,8 @@ class Ronikdesign_Public
 							if($get_auth_lockout_counter == 10){
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 							} else {
-								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+								update_user_meta(get_current_user_id(), 'auth_lockout_counter', (int)$get_auth_lockout_counter+1);
+								$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low');								
 							}
 							$f_value['mfa-error'] = "nomatch";
 						}
@@ -1012,8 +1041,9 @@ class Ronikdesign_Public
 					unset($_SESSION["videoPlayed"]);
 					// Then we set it to valid aka true
 					$_SESSION["videoPlayed"] = "valid";
-					error_log(print_r('videoPlayed valid', true));
-					error_log(print_r($_SESSION["videoPlayed"], true));
+					$helper->ronikdesigns_write_log_devmode('videoPlayed valid', 'low');
+					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low');
+
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -1022,8 +1052,8 @@ class Ronikdesign_Public
 					unset($_SESSION["videoPlayed"]);
 					// Then we set it to invalid aka false
 					$_SESSION["videoPlayed"] = "invalid";
-					error_log(print_r('videoPlayed invalid', true));
-					error_log(print_r($_SESSION["videoPlayed"], true));
+					$helper->ronikdesigns_write_log_devmode('videoPlayed invalid', 'low');
+					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low');
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -1031,8 +1061,8 @@ class Ronikdesign_Public
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
 					// This is the logic blocker that will prevent the other code from triggering.
-					error_log(print_r('killValidation', true));
-					error_log(print_r($_SESSION["videoPlayed"], true));
+					$helper->ronikdesigns_write_log_devmode('killValidation', 'low');
+					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low');
 
 					if($_SESSION["videoPlayed"] == 'valid'){
 						// Catch ALL noreload.
@@ -1068,13 +1098,11 @@ class Ronikdesign_Public
 
 				// Lets check to see if the user is outbound on the allowed site time.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
-					error_log(print_r('timeChecker', true));
-					error_log(print_r('videoPlayed '.$_SESSION["videoPlayed"], true));
+					$helper->ronikdesigns_write_log_devmode('timeChecker', 'low');
+					$helper->ronikdesigns_write_log_devmode('videoPlayed '.$_SESSION["videoPlayed"], 'low');
 
 					// This is the logic blocker that will prevent the other code from triggering.
 					if($_SESSION["videoPlayed"] == 'valid'){
-						// error_log(print_r('timeChecker', true));
-						// error_log(print_r($_SESSION["videoPlayed"], true));
 						// Catch ALL noreload.
 						wp_send_json_success('noreload');
 					}

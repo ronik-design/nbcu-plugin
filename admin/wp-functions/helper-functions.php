@@ -6,6 +6,213 @@ class RonikHelper{
     //     add_action( 'init', [$this, 'ronikdesigns_svgconverter'] );
     // }
 
+	// Create a like compare function.
+	public function ronik_compare_like_compare($a_value , $b_value){
+		if(stripos($a_value, $b_value) !== FALSE){
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	// Pretty much a function that removes redundant database uppdates by using a checker function
+	public function ronik_database_update($db_table, $meta_name, $meta_value, $target_id_name = false, $f_user_id, $f_old_data, $f_new_data, $f_pool_large = false, $swap_level = "soft"){
+		global $wpdb;
+		$helper = new RonikHelper;
+
+		if( $target_id_name ){
+			// We check the wp_usermeta where the user id is the target id. 
+			$wp_meta_datas = $wpdb->get_results("select * from $db_table where $target_id_name = '$f_user_id'");
+		} else{
+			if($f_pool_large){
+				$wp_meta_datas = $wpdb->get_results("select * from $db_table where $meta_value LIKE '%$f_old_data%'");
+			} else {
+				$wp_meta_datas = $wpdb->get_results("select * from $db_table");
+			}
+		}
+
+		if($wp_meta_datas){
+			$return_validation = '';
+			// Loop through all the rows.
+			foreach($wp_meta_datas  as $key =>  $wp_meta_data){
+				$f_type_meta_key = $meta_name;
+				$f_type_meta_value = $meta_value;
+				$f_meta_key = $wp_meta_data->$meta_name;
+				$f_meta_value = $wp_meta_data->$meta_value;
+
+				// Using the helper LIKE compare we check the current meta value vs the old user email.
+				if($helper->ronik_compare_like_compare($f_meta_value , $f_old_data)){
+			
+					if (str_contains($f_meta_value, ';s:')) {
+						$f_meta_value_mod = str_replace( 's:'.strlen($f_old_data).':"'.$f_old_data.'"', 's:'.strlen($f_new_data).':"'.$f_new_data.'"', $f_meta_value);
+					} else{
+						$f_meta_value_mod = str_replace( $f_old_data, $f_new_data, $f_meta_value);
+					}
+
+					if($swap_level == 'hard' || $swap_level == 'medium'){
+						if($target_id_name){
+							$wpdb->query( 
+								$wpdb->prepare( 
+									"UPDATE $db_table SET $f_type_meta_value = %s WHERE $target_id_name = %d AND $f_type_meta_key = %s", $f_meta_value_mod, $f_user_id, $f_meta_key  
+								)
+							);
+						} else {
+							if($f_pool_large){								
+								// We must pass the LIKE%% to the argument otherwise it will filter the % out.
+								$f_like_old = '%'.$wpdb->esc_like($f_old_data).'%';
+								$wpdb->query( 
+									$wpdb->prepare( 
+										"UPDATE $db_table SET $f_type_meta_value = %s WHERE $meta_value LIKE %s AND $f_type_meta_key = %s", $f_meta_value_mod, $f_like_old, $f_meta_key  
+									)
+								);	
+							} else {
+								$wpdb->query( 
+									$wpdb->prepare( 
+										"UPDATE $db_table SET $f_type_meta_value = %s WHERE $f_type_meta_key = %s", $f_meta_value_mod, $f_meta_key  
+									)
+								);	
+							}
+						}
+					} 	
+					$return_validation .= $f_meta_key . ', ';
+				}
+			}
+			if(empty($return_validation)){
+				$return_validation = ' Data Not Found.';
+			}
+			return ' Database Table '.$db_table.':' . $return_validation . ' ';		
+		}
+	}
+
+	// All we do is store encrypted data and then we output the data.
+	public function ronik_encrypt_data_meta($input_data){
+		$helper = new RonikHelper;
+		// $user_encrypt_data = get_user_meta( $input_data, 'ronikdesign_initialization_encrypt_data', true );
+		// if(!$user_encrypt_data){
+		// 	$user_encrypt_data = update_user_meta( $input_data, 'ronikdesign_initialization_encrypt_data', $helper->ronik_encrypt_data($input_data) );
+		// }
+		// return $user_encrypt_data;
+
+		//
+		return $helper->ronik_encrypt_data($input_data);
+	}
+
+	// Might be overkill but we encrypt user login and secrete password.
+	public function ronik_encrypt_data($input_data){
+		if (!function_exists('ronik_encrypt')) {
+			function ronik_encrypt($data, $key){
+				// Remove the base64 encoding from our key
+				$encryption_key = base64_decode($key);
+				// Generate an initialization vector
+				// $ivlen = 16;
+				// $iv = random_bytes($ivlen);
+				// $initialization_vector = $iv ;
+				// Length aes-128-CBC treats the 128 bits of a block as 16 bytes
+				$ivlen = openssl_cipher_iv_length('aes-128-CBC');
+				// Generate a pseudo-random string of bytes
+				$initialization_vector = openssl_random_pseudo_bytes($ivlen);
+				// In order to store the iv we have to format it to bin2hex
+				// Ideally we would store the true file but due to santization issue and base_64 modification of the true IV this is the only decent option. Not ideal but good enough.
+				// $reformated_iv = bin2hex($initialization_vector);
+				// // We have to check the length in bits so bin2hex converts to 32 so we remove the last 16 digits
+				// if(mb_strlen($reformated_iv, '8bit') > 16){
+				// 	$reformated_iv = substr($reformated_iv, 0, -16);
+				// }
+
+				$directory = dirname(__FILE__, 2).'/ronik_iv/';
+				//If the directory doesn't already exists.
+				if(!is_dir($directory)){
+					//Create our directory.
+					mkdir($directory, 0777, true);
+					sleep(1);
+				}
+				// We store the IV path in the user meta. Then we create the file as well.
+				// Pretty much everytime the page reloads we start from scratch with a random IV. 
+				$reformated_iv = $initialization_vector;
+				$fp = fopen($directory . "/".get_current_user_id().".txt","wb");
+				fwrite($fp, $reformated_iv);
+				fclose($fp);
+				update_user_meta( get_current_user_id(), 'ronikdesign_initialization_vector', $directory . get_current_user_id().".txt" );
+
+				error_log(print_r('encrypt', true));
+				error_log(print_r($reformated_iv, true));
+
+				// $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+				// Encrypt the data using AES 256 encryption in CBC mode using our encryption key and initialization vector.
+				$encrypted = openssl_encrypt($data, 'aes-128-CBC', $encryption_key, 0, $reformated_iv);
+				// $encrypted = openssl_encrypt($data, 'aes-256-cbc', $encryption_key, 0, $iv);
+				// The $iv is just as important as the key for decrypting, so save it with our encrypted data using a unique separator (::)
+				return base64_encode($encrypted . ':::' . $reformated_iv);
+			}
+		}
+		//$key is our base64 encoded 256bit key. Store and define this key in a config file.
+		$key = '1nA5Nk9iXTh6IY4cMJyuTRzC+NmHGzhatAnynng4UIw=';
+		//our data to be encoded
+		$password_plain = 'data='.$input_data.';time=' . time();
+		//since it's base64 encoded, it can go straight into a varchar or text database field without corruption worry
+		$password_encrypted = ronik_encrypt($password_plain, $key);
+		// We have to rawurlencode the password_encrypted otherwise there will be an error 1 out of 3 tries..
+		return rawurlencode($password_encrypted);
+	}
+	// 3600 == 1 hr
+	// $time=3600*24
+	// 604800 = 7 days * 4 weeks
+	public function ronik_decrypt_data($input_data, $time=(604800*4)){
+		// Decrypt the login data we also have a timer.
+		if (!function_exists('ronik_decrypt')) {
+			function ronik_decrypt($data, $key){
+				// Remove the base64 encoding from our key
+				$encryption_key = base64_decode($key);
+				// To decrypt, split the encrypted data from our IV - our unique separator used was "::"
+				list($encrypted_data, $iv) = explode(':::', base64_decode($data), 2);
+
+				$iv_path = get_user_meta( get_current_user_id(), 'ronikdesign_initialization_vector', true );
+				// If no path is in the metadata we fall back to the previous passed over IV.
+				if($iv_path){
+					$iv = file_get_contents($iv_path, true);
+				}
+
+				error_log(print_r('decrypt', true));
+				error_log(print_r($iv, true));
+
+				// return openssl_decrypt($encrypted_data, 'aes-256-cbc', $encryption_key, 0, $iv);
+				return openssl_decrypt($encrypted_data, 'aes-128-CBC', $encryption_key, 0, $iv);
+			}
+		}
+		//$key is our base64 encoded 256bit key. Store and define this key in a config file.
+		$key = '1nA5Nk9iXTh6IY4cMJyuTRzC+NmHGzhatAnynng4UIw=';
+		// $password_encrypted = rawurldecode( $input_data );
+		$password_encrypted = $input_data;
+
+		//now we turn our encrypted data back to plain text
+		$password_decrypted = ronik_decrypt($password_encrypted, $key);
+		$piecesArray = explode(";", $password_decrypted);
+
+		error_log(print_r($password_encrypted, true));
+		error_log(print_r($piecesArray, true));
+
+		if ($piecesArray) {
+			$info_data = str_replace("data=", "", $piecesArray[0]);
+			$timestamp = str_replace("time=", "", $piecesArray[1]);
+			$dif = (time() - intval($timestamp));
+			// Cancel log in request. If more than desired seconds has passed.
+			if ($dif > $time) {
+				error_log(print_r( 'Cancel log in request. More than desired seconds has passed', true ));
+				return false;
+			} else {
+				return $info_data;
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+
 	// Creates an encoded svg for src, lazy loading.
     public function ronikdesigns_svgplaceholder($imgacf = null, $advanced_mode = null, $custom_css = null) {
 		if( !is_array($imgacf) && !empty($imgacf) ){
@@ -75,9 +282,18 @@ class RonikHelper{
 	}
 	// Write error logs cleanly.
 	public function ronikdesigns_write_log_devmode($log, $severity_level='low') {
-		if($severity_level == 'low'){
-			return false;
+		// https://together.nbcudev.local/wp-admin/?ronik_debug=valid
+		if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'valid' ){
+			setcookie("RonikDebug", 'valid', time()+3600);  /* expire in 1 hour */
 		}
+		if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE)){
+			error_log(print_r( 'DEBUG ACTIVATED', true));
+		} else {
+			if($severity_level == 'low'){
+				return false;
+			}
+		}
+
 		$f_error_email = get_field('error_email', 'option');
 		// Lets run a backtrace to get more useful information.
 		$t = debug_backtrace();
@@ -92,12 +308,13 @@ class RonikHelper{
 				$to = $f_error_email;
 				$subject = 'Error Found';
 				$headers = array('Content-Type: text/html; charset=UTF-8');
-				$body = 'Website URL: '. $_SERVER['HTTP_HOST'] .'<br><br>Error Message: ' . $log . '<br><br>' . $t_file . '<br><br>' . $t_line;
+				$body = 'Userid: '. get_current_user_id() .' Website URL: '. $_SERVER['HTTP_HOST'] .'<br><br>Error Message: ' . $log . '<br><br>' . $t_file . '<br><br>' . $t_line;
 				wp_mail($to, $subject, $body, $headers);
 			}
 		}
 		if (is_array($log) || is_object($log)) {
 			error_log(print_r('<----- ' . $log . ' ----->', true));
+			error_log(print_r( 'USER ID:' . get_current_user_id() , true));
 			error_log(print_r( $t_file , true));
 			error_log(print_r( $t_line , true));
 			error_log(print_r('<----- END LOG '.$log.' ----->', true));
@@ -105,6 +322,7 @@ class RonikHelper{
 
 		} else {
 			error_log(print_r('<----- ' . $log . ' ----->', true));
+			error_log(print_r( 'USER ID:' . get_current_user_id() , true));
 			error_log(print_r( $t_file , true));
 			error_log(print_r( $t_line , true));
 			error_log(print_r('<----- END LOG '.$log.' ----->', true));
@@ -115,6 +333,8 @@ class RonikHelper{
 
 add_action('password_reset', 'ronikdesigns_password_reset_action_store', 10, 2);
 function ronikdesigns_password_reset_action_store($user, $new_pass) {
+	// Helper Guide
+	$helper = new RonikHelper;
     // USER ID
 	$f_user_id = $user->data->ID;
     // Target Meta
@@ -136,10 +356,9 @@ function ronikdesigns_password_reset_action_store($user, $new_pass) {
         }
     $updated = update_user_meta( $f_user_id, $rk_password_history, $rk_password_history_array );
 
-    error_log(print_r('$rk_password_history_array' , true));
-    error_log(print_r($rk_password_history_array , true));
-    error_log(print_r('$updated' , true));
-    error_log(print_r($updated , true));
+	$helper->ronikdesigns_write_log_devmode('rk_password_history_array', 'low');
+	$helper->ronikdesigns_write_log_devmode($rk_password_history_array, 'low');
+	$helper->ronikdesigns_write_log_devmode($updated, 'low');
 }
 
 
@@ -209,31 +428,46 @@ function cleanInputPOST() {
 }
 
 // Simple Ajax Secruity
-function ronik_ajax_security($nonce_name ,$skip_nonce ){
+function ronik_ajax_security($nonce_name, $validate_with_nonce ){
+	// Helper Guide
+	$helper = new RonikHelper;
+	$helper->ronikdesigns_write_log_devmode('Security.', 'low');
+
 	// Check if user is logged in. AKA user is authorized.
 	if (!is_user_logged_in()) {
-		error_log(print_r( 'Failed user is not logged in', true));
-		wp_send_json_success('noreload');
-		return;
+		$helper->ronikdesigns_write_log_devmode('Failed user is not logged in', 'critical');
+		$results['error'] = 'user_logged_is_not_logged_in';
 	}
 	// If POST is empty we fail it.
 	if( empty($_POST) ){
-		error_log(print_r( 'Failed post is empty', true));
-		wp_send_json_error('Security check failed', '400');
-		wp_die();
+		$helper->ronikdesigns_write_log_devmode('Failed post is empty', 'critical');
+		$results['error'] = 'Security check failed. Post is empty';
+		// wp_send_json_error('Security check failed. Post is empty', '400');
+		// wp_die();
 	}
-	if($skip_nonce){
+	if($validate_with_nonce){
 		// Check if the NONCE is correct. Otherwise we kill the application.
 		if (!wp_verify_nonce($_POST['nonce'], $nonce_name)) {
-			error_log(print_r( 'Failed wp_verify_nonce', true));
-			wp_send_json_error('Security check failed', '400');
-			wp_die();
+			$helper->ronikdesigns_write_log_devmode('Failed wp_verify_nonce', 'critical');
+			$helper->ronikdesigns_write_log_devmode($nonce_name, 'critical');
+			$results['error'] = 'Security check failed. wp_verify_nonce';
+			// wp_send_json_error('Security check failed. wp_verify_nonce', '400');
+			// wp_die();
 		}
 		// Verifies intent, not authorization AKA protect against clickjacking style attacks
 		if ( !check_admin_referer($nonce_name, 'nonce' ) ) {
-			error_log(print_r( 'Failed check_admin_referer', true));
-			wp_send_json_error('Security check failed', '400');
-			wp_die();
+			$helper->ronikdesigns_write_log_devmode('Failed check_admin_referer', 'critical');
+			$results['error'] = 'Security check failed. check_admin_referer';
+			// wp_send_json_error('Security check failed. check_admin_referer', '400');
+			// wp_die();
 		}
+	}
+
+	if($results['error'] == 'user_logged_is_not_logged_in'){
+		wp_send_json_success('noreload');
+		return;
+	} else if(isset($results['error']) && $results['error']) {
+		wp_send_json_success('security_check_failed');
+		return;
 	}
 }

@@ -102,6 +102,8 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
         global $post;
         $f_auth = get_field('mfa_settings', 'options');
         $authChecker = new RonikAuthChecker;
+        // Helper Guide
+        $helper = new RonikHelper;
 
         // If user is not logged in we continue to redirect to home page.
         if(!is_user_logged_in()){
@@ -134,14 +136,14 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
                         if($get_auth_status == 'auth_select_sms'){
                             if($post->post_title == 'mfa'){
-                                error_log(print_r('MFA Hit' , true));
+                                $helper->ronikdesigns_write_log_devmode('MFA Hit', 'low');
                                 wp_redirect( esc_url(home_url()) );
                                 exit;
                             }
                         }
                         if($get_auth_status == 'auth_select_mfa'){
                             if($post->post_title == '2fa'){
-                                error_log(print_r('2fa Hit' , true));
+                                $helper->ronikdesigns_write_log_devmode('2fa Hit', 'low');
                                 wp_redirect( esc_url(home_url()) );
                                 exit;
                             }
@@ -173,6 +175,10 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         }
                     }
                 } else {
+                    // CHECK for 404 if so return false.
+                    if(is_404()){
+                        return false;
+                    }
                     // This checks if the user is inside wp-admin
                     // if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin')) {
                     if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin') && !str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
@@ -193,7 +199,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                                         'url' => urlencode($_SERVER['REQUEST_URI'])
                                     ));
                                 }
-                                error_log(print_r( 'THIS IS A WP-ADMIN DASHBOARD', true));                    
+                                $helper->ronikdesigns_write_log_devmode( 'THIS IS A WP-ADMIN DASHBOARD' , 'low');
                                 wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
                                 exit();
                             } 
@@ -345,6 +351,8 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
         }
 
         public function userTimeValidationAjaxJS($templateType){
+            // Helper Guide
+            $helper = new RonikHelper;
             $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 
             if( ($get_auth_lockout_counter) > 6){
@@ -359,11 +367,11 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         function timeLockoutValidationChecker() {
                             console.log('Lets check the timeout. <?= $templateType; ?>');
                             // Lets trigger the validation on page load.
-                            timeValidationAjax('invalid', 'invalid', 'valid');
+                            timeValidationAjax('invalid', 'invalid', 'valid', true);
                         }
                         setInterval(timeLockoutValidationChecker, (60000/2));
 
-                        function timeValidationAjax( killValidation, timeChecker, timeLockoutChecker ){
+                        function timeValidationAjax( killValidation, timeChecker, timeLockoutChecker, autoChecker ){
                             jQuery.ajax({
                                 type: 'POST',
                                 url: wpVars.ajaxURL,
@@ -372,7 +380,9 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                                     killValidation: killValidation,
                                     timeChecker: timeChecker,
                                     timeLockoutChecker: timeLockoutChecker,
-                                    nonce: wpVars.nonce
+                                    nonce: wpVars.nonce,
+                                    autoChecker: 'valid',
+                                    crypt: '<?= $helper->ronik_encrypt_data_meta(get_current_user_id()); ?>'
                                 },
                                 success: data => {
                                     if(data.success){

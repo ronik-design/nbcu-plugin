@@ -225,7 +225,7 @@ function ronikdesigns_redirect_registered_2fa() {
             // If past date is greater than current date. We reset to unverified & start the process all over again.
             if($past_date > $sms_code_timestamp ){
                 if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/')) {
-                    error_log(print_r( 'RONIK NEXT FIX 1! KM might be fixed by ignoring the wp-admin request uri', true));
+                    $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 1! KM might be fixed by ignoring the wp-admin request uri', 'low');
                     // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                     // Takes care of the redirection logic
                     ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
@@ -235,12 +235,12 @@ function ronikdesigns_redirect_registered_2fa() {
                     // Lets block the user from accessing the 2fa if already authenticated.
                     $dataUrl['reUrl'] = array('/');
                     $dataUrl['reDest'] = '/';
-                    error_log(Print_r( 'RONIK NEXT FIX!', true));
+                    $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX!', 'low');
                     ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 }
             }
         } else {
-            error_log(print_r( 'RONIK NEXT FIX 2!', true));
+            $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 2!', 'low');
             // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
             // Takes care of the redirection logic
             ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
@@ -258,7 +258,10 @@ function timeValidationExcution(){
     // Check if user is logged in.
     if (!is_user_logged_in()) {
         return;
-    } ?>
+    } 
+        // Helper Guide
+        $helper = new RonikHelper;
+    ?>
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
     <script>
         // This guy triggers a reload when user leaves page.
@@ -271,7 +274,7 @@ function timeValidationExcution(){
         }
         });
         jQuery(document).ready(function(){
-            timeValidationAjax('invalid', 'invalid', 'invalid');
+            timeValidationAjax('invalid', 'invalid', 'invalid', true);
             // Throttle the execution.
             setTimeout(() => {
                 function videoIframeValidation($target){
@@ -286,11 +289,11 @@ function timeValidationExcution(){
                             mixpanel.track('Video Play Started', mp_params);
                         }
 
-                        timeValidationAjax('invalid', 'invalid', 'valid');
+                        timeValidationAjax('invalid', 'invalid', 'valid', true);
                     });
                     videoPlayer.on('pause', function() {
                         console.log('Video is paused');
-                        timeValidationAjax('invalid', 'invalid', 'invalid');
+                        timeValidationAjax('invalid', 'invalid', 'invalid', true);
                     });
                 }
                 // Pretty much we detect if the iframe is for vimeo if so we add the wrapper
@@ -335,10 +338,10 @@ function timeValidationExcution(){
                                                         mp_params['Video Name'] = $('.modal-media__title').text();
                                                     mixpanel.track('Video Play Started', mp_params);
                                                 }
-                                                timeValidationAjax('invalid', 'invalid', 'valid');
+                                                timeValidationAjax('invalid', 'invalid', 'valid', true);
                                             } else{
                                                 console.log("Video is not playing");
-                                                timeValidationAjax('invalid', 'invalid', 'invalid');
+                                                timeValidationAjax('invalid', 'invalid', 'invalid', true);
                                             }
                                         }
                                     }
@@ -360,13 +363,13 @@ function timeValidationExcution(){
 
             console.log('Lets check the inital timeout');
             // Lets trigger the validation on page load.
-            timeValidationAjax('invalid', 'valid', false);
+            timeValidationAjax('invalid', 'valid', false, true);
             // This is critical we basically re-run the timeValidationAjax function every 30 seconds
             function timeValidationChecker() {
                 console.log('Every 30 seconds We trigger the validation checker');
                 console.log('Lets check the timeout');
                 // Lets trigger the validation on page load.
-                timeValidationAjax('invalid', 'valid', false);
+                timeValidationAjax('invalid', 'valid', false, true);
             }
             setInterval(timeValidationChecker, (60000/2));
             <?php
@@ -402,16 +405,16 @@ function timeValidationExcution(){
             setTimeout(function() {
                 console.log('Expiration Timer Expiration');
                 // Basically this will kill the mfa and reset everything.
-                timeValidationAjax('valid', 'invalid', false);
+                timeValidationAjax('valid', 'invalid', false, true);
             }, timeoutTimeMax);
 
             function idleTimeValidation(){
                 console.log('idle Time Validation');
                 console.log('Detect if user does not interact with site.');
                 // Basically this will kill the mfa and reset everything.
-                timeValidationAjax('valid', 'invalid', false);
+                timeValidationAjax('valid', 'invalid', false, true);
             }
-            function timeValidationAjax( killValidation, timeChecker, videoPlayed ){
+            function timeValidationAjax( killValidation, timeChecker, videoPlayed, autoChecker ){
                 jQuery.ajax({
                     type: 'POST',
                     url: wpVars.ajaxURL,
@@ -420,7 +423,9 @@ function timeValidationExcution(){
                         killValidation: killValidation,
                         timeChecker: timeChecker,
                         videoPlayed: videoPlayed,
-                        nonce: wpVars.nonce
+                        nonce: wpVars.nonce,
+                        autoChecker: 'valid',
+                        crypt: '<?= $helper->ronik_encrypt_data_meta(get_current_user_id()); ?>'
                     },
                     success: data => {
                         if(data.success){

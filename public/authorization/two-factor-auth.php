@@ -5,6 +5,8 @@ use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 
 add_action('2fa-registration-page', function () {
+    // Helper Guide
+    $helper = new RonikHelper;
     // We put this in the header for fast redirect..
     $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
     $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
@@ -102,7 +104,7 @@ add_action('2fa-registration-page', function () {
                     update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
                 }
                 if( $past_date > $sms_code_timestamp ){
-                    error_log(print_r( 'SMS Expired', true));
+                    $helper->ronikdesigns_write_log_devmode( 'SMS Expired' , 'low');
                     // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                     // update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
                     // // This is mostly for messaging purposes..
@@ -147,6 +149,8 @@ add_action('2fa-registration-page', function () {
                                         action: 'ronikdesigns_admin_auth_verification',
                                         smsExpired: true,
                                         nonce: wpVars.nonce,
+                                        autoChecker: 'valid',
+                                        crypt: '<?= $helper->ronik_encrypt_data_meta(get_current_user_id()); ?>'
                                     },
                                     dataType: 'json',
                                     success: data => {
@@ -199,7 +203,7 @@ add_action('2fa-registration-page', function () {
                                 });
                             }
                         </script>
-                        <input type="text" id="validate-sms-code" name="validate-sms-code" type="number" minlength="6" maxlength="6" placeholder="6 Digit Code" autocomplete="off" required>
+                        <input style="padding-left: 12px;" type="text" id="validate-sms-code" name="validate-sms-code" type="number" minlength="6" maxlength="6" placeholder="6 Digit Code" autocomplete="off" required>
                         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
                         <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
                         <?php if($f_error){ ?>
