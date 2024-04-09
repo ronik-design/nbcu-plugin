@@ -104,7 +104,7 @@ add_action('2fa-registration-page', function () {
                     update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
                 }
                 if( $past_date > $sms_code_timestamp ){
-                    $helper->ronikdesigns_write_log_devmode( 'SMS Expired' , 'low');
+                    $helper->ronikdesigns_write_log_devmode( 'SMS Expired' , 'low', 'auth_2fa');
                     // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                     // update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
                     // // This is mostly for messaging purposes..

@@ -136,14 +136,14 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                         $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
                         if($get_auth_status == 'auth_select_sms'){
                             if($post->post_title == 'mfa'){
-                                $helper->ronikdesigns_write_log_devmode('MFA Hit', 'low');
+                                $helper->ronikdesigns_write_log_devmode('MFA Hit', 'low', 'auth_mfa');
                                 wp_redirect( esc_url(home_url()) );
                                 exit;
                             }
                         }
                         if($get_auth_status == 'auth_select_mfa'){
                             if($post->post_title == '2fa'){
-                                $helper->ronikdesigns_write_log_devmode('2fa Hit', 'low');
+                                $helper->ronikdesigns_write_log_devmode('2fa Hit', 'low', 'auth_2fa');
                                 wp_redirect( esc_url(home_url()) );
                                 exit;
                             }
@@ -199,7 +199,7 @@ $f_enable_2fa_settings = get_option('options_mfa_settings_enable_2fa_settings');
                                         'url' => urlencode($_SERVER['REQUEST_URI'])
                                     ));
                                 }
-                                $helper->ronikdesigns_write_log_devmode( 'THIS IS A WP-ADMIN DASHBOARD' , 'low');
+                                $helper->ronikdesigns_write_log_devmode( 'THIS IS A WP-ADMIN DASHBOARD' , 'low', 'auth');
                                 wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
                                 exit();
                             } 

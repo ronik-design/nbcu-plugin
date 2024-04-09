@@ -10,7 +10,7 @@ function ronikdesigns_save_extra_user_profile_fields_auth($user_id){
     }
 
     $helper = new RonikHelper;
-    $helper->ronikdesigns_write_log_devmode('AUTH Backend Dashboard', 'low');
+    $helper->ronikdesigns_write_log_devmode('AUTH Backend Dashboard', 'low', 'auth');
 
     update_user_meta($user_id, 'auth_status', $_POST['auth_select']);
     update_user_meta($user_id, 'sms_user_phone', $_POST['sms_phonenumber']);

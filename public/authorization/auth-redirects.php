@@ -18,12 +18,12 @@ function ronikdesigns_redirect_registered_auth() {
 
     // Kill the entire AUTH if both are not enabled!
     if((!$f_auth_mfa) && (!$f_auth_2fa)){
-        $helper->ronikdesigns_write_log_devmode('Auth is Killed', 'low');
+        $helper->ronikdesigns_write_log_devmode('Auth is Killed', 'low', 'auth');
         return;
     }
     // Restricted Access only login users can proceed.
     if(!is_user_logged_in()){
-        $helper->ronikdesigns_write_log_devmode('Auth is due to not logged in user.', 'low');
+        $helper->ronikdesigns_write_log_devmode('Auth is due to not logged in user.', 'low', 'auth');
         // Redirect Magic, custom function to prevent an infinite loop.
         $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/', '/2fa/', '/mfa/');
         $dataUrl['reDest'] = '';
@@ -64,13 +64,13 @@ function ronikdesigns_redirect_registered_auth() {
         // Okay this is critical: If site admin disables one auth but not the other auth.
         // Basically user selection is thrown away and is automatically set.
         if($f_admin_auth_select['mfa'] && !$f_admin_auth_select['2fa'] ){
-            $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to MFA', 'low');
+            $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to MFA', 'low', 'auth_mfa');
             // update usermeta data
             update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_mfa');
             ronikdesigns_redirect_non_registered_mfa();
             return;
         } else if(!$f_admin_auth_select['mfa'] && $f_admin_auth_select['2fa']) {
-            $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to 2fa', 'low');
+            $helper->ronikdesigns_write_log_devmode('ADMIN Overwrite to 2fa', 'low', 'auth_2fa');
             // update usermeta data
             update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
             ronikdesigns_redirect_registered_2fa();
@@ -81,7 +81,7 @@ function ronikdesigns_redirect_registered_auth() {
         if(($get_auth_status == 'auth_select_sms')){
             if($f_admin_auth_select['2fa']){
                 // Include the 2fa auth.
-                $helper->ronikdesigns_write_log_devmode('ronikdesigns_redirect_registered_2fa', 'low');
+                $helper->ronikdesigns_write_log_devmode('ronikdesigns_redirect_registered_2fa', 'low', 'auth_2fa');
                 ronikdesigns_redirect_registered_2fa();
                 return;
             }
@@ -89,7 +89,7 @@ function ronikdesigns_redirect_registered_auth() {
         if(($get_auth_status == 'auth_select_mfa')){
             if($f_admin_auth_select['mfa']){
                 // Include the mfa auth.
-                $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_non_registered_mfa', 'low');
+                $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_non_registered_mfa', 'low', 'auth_mfa');
                 ronikdesigns_redirect_non_registered_mfa();
                 return;
             }
@@ -105,10 +105,10 @@ function ronikdesigns_redirect_registered_auth() {
 
         // Lets check if the current user status is none or not yet set.
         if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
-            $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_none', 'low');
+            $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_none', 'low', 'auth');
             // If the MFA && 2fa are enabled we auto redirect to the AUTH template for user selection.
             if(($f_admin_auth_select['mfa']) && ($f_admin_auth_select['2fa'])){
-                $helper->ronikdesigns_write_log_devmode('AUTH Route', 'low');
+                $helper->ronikdesigns_write_log_devmode('AUTH Route', 'low', 'auth');
 
                 // Redirect Magic, custom function to prevent an infinite loop.
                 $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
@@ -225,7 +225,7 @@ function ronikdesigns_redirect_registered_2fa() {
             // If past date is greater than current date. We reset to unverified & start the process all over again.
             if($past_date > $sms_code_timestamp ){
                 if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/')) {
-                    $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 1! KM might be fixed by ignoring the wp-admin request uri', 'low');
+                    $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 1! KM might be fixed by ignoring the wp-admin request uri', 'low', 'auth_2fa');
                     // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                     // Takes care of the redirection logic
                     ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
@@ -235,12 +235,12 @@ function ronikdesigns_redirect_registered_2fa() {
                     // Lets block the user from accessing the 2fa if already authenticated.
                     $dataUrl['reUrl'] = array('/');
                     $dataUrl['reDest'] = '/';
-                    $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX!', 'low');
+                    $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX!', 'low', 'auth_2fa');
                     ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                 }
             }
         } else {
-            $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 2!', 'low');
+            $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 2!', 'low', 'auth_2fa');
             // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
             // Takes care of the redirection logic
             ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");

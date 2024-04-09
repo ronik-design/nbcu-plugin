@@ -1,6 +1,6 @@
 <?php
 $helper = new RonikHelper;
-$helper->ronikdesigns_write_log_devmode('Password Reset', 'low');
+$helper->ronikdesigns_write_log_devmode('Password Reset', 'low', 'password');
 
 $f_password_reset = get_field('password_reset_settings', 'options');
 // Validate password reset is enabled if not just return false.
@@ -124,10 +124,10 @@ function password_reset_ronikdesigns(){
                             wp_redirect( esc_url(home_url('/password-reset/')) );
                             exit;
                         } else {
-                            $helper->ronikdesigns_write_log_devmode('Password Reset Error 1', 'critical');
+                            $helper->ronikdesigns_write_log_devmode('Password Reset Error 1', 'critical', 'password');
                         }
                     } else {
-                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical');
+                        $helper->ronikdesigns_write_log_devmode('Password Reset Error 2', 'critical', 'password');
                     }
                 }
         }

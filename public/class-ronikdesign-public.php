@@ -700,7 +700,7 @@ class Ronikdesign_Public
 				// We hit the wall on the crypt either expiration timeout or user has more then one window open or impersonation attempt.
 				// If this is the case we log a low error message and we continue on using nonce.
 				// We may need to fix this later but ideally this should prevent security risk by defaulting to nonce...
-				$helper->ronikdesigns_write_log_devmode('Auth Verification: autoChecker ronik_decrypt_data, user failed impersonation attempt, can be either timeout or too many windows open.', 'low');
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: autoChecker ronik_decrypt_data, user failed impersonation attempt, can be either timeout or too many windows open.', 'low', 'auth');
 				ronik_ajax_security('ajax-nonce', true);
 			}
 		} else {
@@ -735,8 +735,8 @@ class Ronikdesign_Public
 		if($postDataArray){
 			foreach ($postDataArray as $dataArray){
 				if(!in_array($dataArray, $predeterminedDataArray)){
-					$helper->ronikdesigns_write_log_devmode('ronikdesigns_admin_auth_verification', 'critical');
-					$helper->ronikdesigns_write_log_devmode($dataArray, 'critical');
+					$helper->ronikdesigns_write_log_devmode('ronikdesigns_admin_auth_verification', 'critical', 'auth');
+					$helper->ronikdesigns_write_log_devmode($dataArray, 'critical', 'auth');
 					wp_send_json_error('Security check failed', '400');
 					wp_die();
 				}
@@ -784,7 +784,7 @@ class Ronikdesign_Public
 
 		if(isset($_POST['re-auth']) && $_POST['re-auth']){
 			if($_POST['re-auth'] == 'RESET'){
-				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest', 'low');
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest', 'low', 'auth');
 
 				update_user_meta(get_current_user_id(), 'auth_status', 'none');
 				// We build a query and redirect back to auth route.
@@ -802,7 +802,7 @@ class Ronikdesign_Public
 					if($_POST['auth-select'] == '2fa'){
 						// Check if user has a phone number.
 						if($get_phone_number){
-							$helper->ronikdesigns_write_log_devmode('Auth Verification: User Selected 2fa', 'low');
+							$helper->ronikdesigns_write_log_devmode('Auth Verification: User Selected 2fa', 'low', 'auth_2fa');
 
 							update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms');
 							$f_value['auth-select'] = "2fa";
@@ -811,7 +811,7 @@ class Ronikdesign_Public
 							wp_redirect( esc_url(home_url($r_redirect)) );
 							exit;
 						} else {
-							$helper->ronikdesigns_write_log_devmode('Auth Verification: User Selected 2fa but is missing sms number.', 'low');
+							$helper->ronikdesigns_write_log_devmode('Auth Verification: User Selected 2fa but is missing sms number.', 'low', 'auth_2fa');
 
 							// If user has no phone number. We set the auth_status to auth_select_sms-missing.
 							update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
@@ -823,7 +823,7 @@ class Ronikdesign_Public
 						}
 					// Check if value is mfa.
 					} else {
-						$helper->ronikdesigns_write_log_devmode('Auth Verification: User Selected mfa', 'low');
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: User Selected mfa', 'low', 'auth_mfa');
 
 						update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_mfa');
 						$f_value['auth-select'] = "mfa";
@@ -836,7 +836,7 @@ class Ronikdesign_Public
 			// Second Check:
 				// Lets check the auth-phone_number.
 				if(isset($_POST['auth-phone_number']) && $_POST['auth-phone_number']){
-					$helper->ronikdesigns_write_log_devmode('Auth Verification: validating the phone number', 'low');
+					$helper->ronikdesigns_write_log_devmode('Auth Verification: validating the phone number', 'low', 'auth_2fa');
 					//eliminate every char except 0-9 +
 					// htmlspecialchars the POST DATA, then strip all characters except +
 					$justNums = preg_replace("/[^+0-9]+/", "",  htmlspecialchars($_POST['auth-phone_number']));
@@ -869,7 +869,7 @@ class Ronikdesign_Public
 						if($send_sms){
 							$service = $client->verify->v2->services->create("NBCU Together");
 							$verification = $client->verify->v2->services($service->sid)->verifications->create($to_number, "sms");
-							$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS validation: '. $verification->status, 'low');
+							$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS validation: '. $verification->status, 'low', 'auth_2fa');
 
 							// Lets store the sms_2fa_secret data inside the current usermeta.
 							update_user_meta(get_current_user_id(), 'sms_2fa_secret', $service->sid);
@@ -878,7 +878,7 @@ class Ronikdesign_Public
 						}
                         // For developers testing only...
 						if($send_email){
-							$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS validation failed: We send email to default option email.', 'low');
+							$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS validation failed: We send email to default option email.', 'low', 'auth_2fa');
 
 							$sender_email = get_field("email_no_reply_sender", "options");
 							$sender_name = get_field("email_no_reply_sender_name", "options");
@@ -904,7 +904,7 @@ class Ronikdesign_Public
 				if(isset($_POST['validate-sms-code']) && $_POST['validate-sms-code']){
 
 					if( strlen($_POST['validate-sms-code']) !== 6 ){
-						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code.', 'low');
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code.', 'low', 'auth_2fa');
 
 						$f_value['sms-error'] = "nomatch";
 						if(isset($get_auth_lockout_counter) && ($get_auth_lockout_counter == 10)){
@@ -928,10 +928,10 @@ class Ronikdesign_Public
 							"code" => $_POST['validate-sms-code']
 						]);
 				   } catch (Exception $e) {
-						$helper->ronikdesigns_write_log_devmode($e->getMessage(), 'critical');
+						$helper->ronikdesigns_write_log_devmode($e->getMessage(), 'critical', 'auth_2fa');
 				   }
 					if($verification_check->status == 'approved'){
-						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code approved.', 'low');
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code approved.', 'low', 'auth_2fa');
 
 						update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_verified');
 						$f_value['sms-success'] = "success";
@@ -966,7 +966,7 @@ class Ronikdesign_Public
 					$f_sms_expiration_time = 1;
                     $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
                     if( $past_date > $sms_code_timestamp ){
-						$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS Expired.', 'low');
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS Expired.', 'low', 'auth_2fa');
 
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
@@ -997,7 +997,7 @@ class Ronikdesign_Public
 						$code = $_POST["google2fa_code"];
 						$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
 						if ($valid) {
-							$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Valid.', 'low');
+							$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Valid.', 'low', 'auth_mfa');
 							// Lets store the mfa validation data inside the current usermeta.
 							update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 							update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
@@ -1007,13 +1007,13 @@ class Ronikdesign_Public
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 							} else {
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', (int)$get_auth_lockout_counter+1);
-								$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low');								
+								$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low', 'auth_mfa');								
 							}
 							$f_value['mfa-error'] = "nomatch";
 						}
 					}  else {
 						$valid = false;
-						$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Invalid.', 'low');
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Invalid.', 'low', 'auth_mfa');
 
 						// Lets store the mfa validation data inside the current usermeta.
 						update_user_meta(get_current_user_id(), 'mfa_validation', 'invalid');
@@ -1041,8 +1041,8 @@ class Ronikdesign_Public
 					unset($_SESSION["videoPlayed"]);
 					// Then we set it to valid aka true
 					$_SESSION["videoPlayed"] = "valid";
-					$helper->ronikdesigns_write_log_devmode('videoPlayed valid', 'low');
-					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low');
+					$helper->ronikdesigns_write_log_devmode('videoPlayed valid', 'low', 'auth');
+					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low', 'auth');
 
 					// Catch ALL
 					wp_send_json_success('noreload');
@@ -1052,8 +1052,8 @@ class Ronikdesign_Public
 					unset($_SESSION["videoPlayed"]);
 					// Then we set it to invalid aka false
 					$_SESSION["videoPlayed"] = "invalid";
-					$helper->ronikdesigns_write_log_devmode('videoPlayed invalid', 'low');
-					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low');
+					$helper->ronikdesigns_write_log_devmode('videoPlayed invalid', 'low', 'auth');
+					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low', 'auth');
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -1062,13 +1062,13 @@ class Ronikdesign_Public
 				if(isset($_POST['killValidation']) && ($_POST['killValidation'] == 'valid')){
 					// This is the logic blocker that will prevent the other code from triggering.
 					$helper->ronikdesigns_write_log_devmode('killValidation', 'low');
-					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low');
+					$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low', 'auth');
 
 					if($_SESSION["videoPlayed"] == 'valid'){
 						// Catch ALL noreload.
 						wp_send_json_success('noreload');
 					}
-					$helper->ronikdesigns_write_log_devmode('Auth Verification: Kill Validation.', 'low');
+					$helper->ronikdesigns_write_log_devmode('Auth Verification: Kill Validation.', 'low', 'auth');
 
 					// Lets check if user is accessing a locked page.
 					if($mfa_status !== 'mfa_unverified'){
@@ -1098,15 +1098,15 @@ class Ronikdesign_Public
 
 				// Lets check to see if the user is outbound on the allowed site time.
 				if(isset($_POST['timeChecker']) && ($_POST['timeChecker'] == 'valid')){
-					$helper->ronikdesigns_write_log_devmode('timeChecker', 'low');
-					$helper->ronikdesigns_write_log_devmode('videoPlayed '.$_SESSION["videoPlayed"], 'low');
+					$helper->ronikdesigns_write_log_devmode('timeChecker', 'low', 'auth');
+					$helper->ronikdesigns_write_log_devmode('videoPlayed '.$_SESSION["videoPlayed"], 'low', 'auth');
 
 					// This is the logic blocker that will prevent the other code from triggering.
 					if($_SESSION["videoPlayed"] == 'valid'){
 						// Catch ALL noreload.
 						wp_send_json_success('noreload');
 					}
-					$helper->ronikdesigns_write_log_devmode('Auth Verification: Time Checker Validation.', 'low');
+					$helper->ronikdesigns_write_log_devmode('Auth Verification: Time Checker Validation.', 'low', 'auth');
 
 					if( isset($f_auth_expiration_time) && $f_auth_expiration_time ){
 						$f_auth_expiration_time = $f_auth_expiration_time;
@@ -1152,7 +1152,7 @@ class Ronikdesign_Public
 				}
 				// Lets check to see if the user is idealing to long.
 				if(isset($_POST['timeLockoutChecker']) && ($_POST['timeLockoutChecker'] == 'valid')){
-					$helper->ronikdesigns_write_log_devmode('Auth Verification: Lockout Time Checker Validation.', 'low');
+					$helper->ronikdesigns_write_log_devmode('Auth Verification: Lockout Time Checker Validation.', 'low', 'auth');
 
 					if( isset($get_auth_lockout_counter) && (($get_auth_lockout_counter) > 10) ){
 						$f_expiration_time = 3;

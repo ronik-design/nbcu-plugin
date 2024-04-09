@@ -93,7 +93,7 @@ class RonikHelper{
 		// }
 		// return $user_encrypt_data;
 
-		//
+		// Above code was a thought but it seems to not work correctly. 
 		return $helper->ronik_encrypt_data($input_data);
 	}
 
@@ -101,6 +101,8 @@ class RonikHelper{
 	public function ronik_encrypt_data($input_data){
 		if (!function_exists('ronik_encrypt')) {
 			function ronik_encrypt($data, $key){
+				$helper = new RonikHelper;
+
 				// Remove the base64 encoding from our key
 				$encryption_key = base64_decode($key);
 				// Generate an initialization vector
@@ -134,8 +136,8 @@ class RonikHelper{
 				fclose($fp);
 				update_user_meta( get_current_user_id(), 'ronikdesign_initialization_vector', $directory . get_current_user_id().".txt" );
 
-				error_log(print_r('encrypt', true));
-				error_log(print_r($reformated_iv, true));
+				$helper->ronikdesigns_write_log_devmode('encrypt', 'low', 'auth');
+				$helper->ronikdesigns_write_log_devmode($reformated_iv, 'low', 'auth');
 
 				// $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
 				// Encrypt the data using AES 256 encryption in CBC mode using our encryption key and initialization vector.
@@ -161,6 +163,8 @@ class RonikHelper{
 		// Decrypt the login data we also have a timer.
 		if (!function_exists('ronik_decrypt')) {
 			function ronik_decrypt($data, $key){
+				$helper = new RonikHelper;
+
 				// Remove the base64 encoding from our key
 				$encryption_key = base64_decode($key);
 				// To decrypt, split the encrypted data from our IV - our unique separator used was "::"
@@ -172,8 +176,8 @@ class RonikHelper{
 					$iv = file_get_contents($iv_path, true);
 				}
 
-				error_log(print_r('decrypt', true));
-				error_log(print_r($iv, true));
+				$helper->ronikdesigns_write_log_devmode('decrypt', 'low', 'auth');
+				$helper->ronikdesigns_write_log_devmode($iv, 'low', 'auth');
 
 				// return openssl_decrypt($encrypted_data, 'aes-256-cbc', $encryption_key, 0, $iv);
 				return openssl_decrypt($encrypted_data, 'aes-128-CBC', $encryption_key, 0, $iv);
@@ -188,8 +192,11 @@ class RonikHelper{
 		$password_decrypted = ronik_decrypt($password_encrypted, $key);
 		$piecesArray = explode(";", $password_decrypted);
 
-		error_log(print_r($password_encrypted, true));
-		error_log(print_r($piecesArray, true));
+		$helper = new RonikHelper;
+		$helper->ronikdesigns_write_log_devmode('password_encrypted', 'low', 'auth');
+		$helper->ronikdesigns_write_log_devmode($password_encrypted, 'low', 'auth');
+		$helper->ronikdesigns_write_log_devmode($piecesArray, 'low', 'auth');
+
 
 		if ($piecesArray) {
 			$info_data = str_replace("data=", "", $piecesArray[0]);
@@ -197,7 +204,7 @@ class RonikHelper{
 			$dif = (time() - intval($timestamp));
 			// Cancel log in request. If more than desired seconds has passed.
 			if ($dif > $time) {
-				error_log(print_r( 'Cancel log in request. More than desired seconds has passed', true ));
+				$helper->ronikdesigns_write_log_devmode('Cancel log in request. More than desired seconds has passed', 'low', 'auth');
 				return false;
 			} else {
 				return $info_data;
@@ -281,17 +288,56 @@ class RonikHelper{
 		}
 	}
 	// Write error logs cleanly.
-	public function ronikdesigns_write_log_devmode($log, $severity_level='low') {
+	public function ronikdesigns_write_log_devmode($log, $severity_level='low', $error_type='general') {
 		// https://together.nbcudev.local/wp-admin/?ronik_debug=valid
+		// LOG all general errors Logs.
 		if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'valid' ){
-			setcookie("RonikDebug", 'valid', time()+3600);  /* expire in 1 hour */
+			setcookie("RonikDebug", 'valid', time()+1500);  /* expire in 25 min */
 		}
-		if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE)){
+		// https://together.nbcudev.local/wp-admin/?ronik_debug=auth
+		// AUTH represents the combination of MFA and 2FA Process..,
+		if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'auth' ){
+			setcookie("RonikDebug", 'auth', time()+1500);  /* expire in 25 min */
+		}
+		// https://together.nbcudev.local/wp-admin/?ronik_debug=auth_mfa
+		// AUTH MFA errors logs all MFA Processes
+		if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'auth_mfa' ){
+			setcookie("RonikDebug", 'auth_mfa', time()+1500);  /* expire in 25 min */
+		}
+		// https://together.nbcudev.local/wp-admin/?ronik_debug=auth_2fa
+		// AUTH 2FA errors logs all 2FA Processes
+		if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'auth_2fa' ){
+			setcookie("RonikDebug", 'auth_2fa', time()+1500);  /* expire in 25 min */
+		}
+		// https://together.nbcudev.local/wp-admin/?ronik_debug=password
+		// AUTH 2FA errors logs all 2FA Processes
+		if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'password' ){
+			setcookie("RonikDebug", 'password', time()+1500);  /* expire in 25 min */
+		}
+
+
+		$debugger_error_type = 'general';
+		if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'valid'){
 			error_log(print_r( 'DEBUG ACTIVATED', true));
 		} else {
-			if($severity_level == 'low'){
+			if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'auth' ){
+				error_log(print_r( 'DEBUG ACTIVATED AUTH', true));
+				$debugger_error_type = 'auth';
+			} else if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'auth_mfa' ){
+				error_log(print_r( 'DEBUG ACTIVATED AUTH MFA', true));
+				$debugger_error_type = 'auth_mfa';
+			} else if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'auth_2fa' ){
+				error_log(print_r( 'DEBUG ACTIVATED AUTH 2FA', true));
+				$debugger_error_type = 'auth_2fa';
+			} else if(isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'password' ){
+				error_log(print_r( 'DEBUG ACTIVATED AUTH Password', true));
+				$debugger_error_type = 'password';
+			} else if($severity_level == 'low') {
 				return false;
 			}
+		}
+		if($debugger_error_type !== $error_type){
+			return false;
 		}
 
 		$f_error_email = get_field('error_email', 'option');
@@ -301,7 +347,7 @@ class RonikHelper{
 		$t_line = 'On Line: ' .  $t[0]['line'];
 
 		//  Low, Medium, High, and Critical
-		if( $severity_level == 'critical' ){
+		if( $severity_level == 'critical'){
 			if ($f_error_email) {
 				// Remove whitespace.
 				$f_error_email = str_replace(' ', '', $f_error_email);
@@ -356,9 +402,9 @@ function ronikdesigns_password_reset_action_store($user, $new_pass) {
         }
     $updated = update_user_meta( $f_user_id, $rk_password_history, $rk_password_history_array );
 
-	$helper->ronikdesigns_write_log_devmode('rk_password_history_array', 'low');
-	$helper->ronikdesigns_write_log_devmode($rk_password_history_array, 'low');
-	$helper->ronikdesigns_write_log_devmode($updated, 'low');
+	$helper->ronikdesigns_write_log_devmode('rk_password_history_array', 'low', 'password');
+	$helper->ronikdesigns_write_log_devmode($rk_password_history_array, 'low', 'password');
+	$helper->ronikdesigns_write_log_devmode($updated, 'low', 'password');
 }
 
 
@@ -435,7 +481,7 @@ function ronik_ajax_security($nonce_name, $validate_with_nonce ){
 
 	// Check if user is logged in. AKA user is authorized.
 	if (!is_user_logged_in()) {
-		$helper->ronikdesigns_write_log_devmode('Failed user is not logged in', 'critical');
+		$helper->ronikdesigns_write_log_devmode('Failed user is not logged in', 'low');
 		$results['error'] = 'user_logged_is_not_logged_in';
 	}
 	// If POST is empty we fail it.
@@ -463,7 +509,7 @@ function ronik_ajax_security($nonce_name, $validate_with_nonce ){
 		}
 	}
 
-	if($results['error'] == 'user_logged_is_not_logged_in'){
+	if(isset($results['error']) && $results['error'] == 'user_logged_is_not_logged_in'){
 		wp_send_json_success('noreload');
 		return;
 	} else if(isset($results['error']) && $results['error']) {
