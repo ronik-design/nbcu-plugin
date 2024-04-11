@@ -463,7 +463,7 @@ class Ronikdesign_Public
 			global $wpdb;
 			// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
 			$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
-			if($f_bypasser){
+			if($f_bypasser && is_user_logged_in()){
 				// The next part we find the user email.
 				$user_id = get_current_user_id();
 				$user_email = get_user_meta($user_id, "user_email", true);
@@ -472,8 +472,12 @@ class Ronikdesign_Public
 					$sql = "select * from do_users where ID = '$user_id'";
 					$do_users = $wpdb->get_results($sql);
 					if(empty($do_users)){
-						if($do_users[0]->user_email){
-							$user_email = $do_users[0]->user_email;
+						if(isset($do_users[0]) && $do_users[0]){
+							if($do_users[0]->user_email){
+								$user_email = $do_users[0]->user_email;
+							} else {
+								$user_email = 'No email found.';
+							}
 						} else {
 							$user_email = 'No email found.';
 						}
