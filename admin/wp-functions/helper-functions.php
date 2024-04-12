@@ -495,14 +495,14 @@ function ronik_ajax_security($nonce_name, $validate_with_nonce ){
 		// Check if the NONCE is correct. Otherwise we kill the application.
 		if (!wp_verify_nonce($_POST['nonce'], $nonce_name)) {
 			$helper->ronikdesigns_write_log_devmode('Failed wp_verify_nonce', 'critical');
-			$helper->ronikdesigns_write_log_devmode($nonce_name, 'critical');
+			$helper->ronikdesigns_write_log_devmode($nonce_name, 'low');
 			$results['error'] = 'Security check failed. wp_verify_nonce';
 			// wp_send_json_error('Security check failed. wp_verify_nonce', '400');
 			// wp_die();
 		}
 		// Verifies intent, not authorization AKA protect against clickjacking style attacks
 		if ( !check_admin_referer($nonce_name, 'nonce' ) ) {
-			$helper->ronikdesigns_write_log_devmode('Failed check_admin_referer', 'critical');
+			$helper->ronikdesigns_write_log_devmode('Failed check_admin_referer', 'low');
 			$results['error'] = 'Security check failed. check_admin_referer';
 			// wp_send_json_error('Security check failed. check_admin_referer', '400');
 			// wp_die();

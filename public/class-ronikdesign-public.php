@@ -416,6 +416,13 @@ class Ronikdesign_Public
 
 	function ronikdesigns_acf_op_init_functions_public(){
 		function auth_admin_messages(){
+			// https://together.nbcudev.local/auth?ronik_debug=ronik_admin_auth
+			if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'ronik_admin_auth' ){
+				if(is_user_admin() || is_super_admin()){
+					setcookie("RonikDebug", 'ronik_admin_auth_717', time()+1500);  /* expire in 25 min */
+				}
+			}
+
 			$get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
 			$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
 
@@ -428,7 +435,8 @@ class Ronikdesign_Public
 			$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
 			// $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 
-			if ( str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local')  ) {
+			if((isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'ronik_admin_auth_717') || str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local-de')){
+				error_log(print_r( 'DEBUG ACTIVATED', true));
 				$f_auth = get_field('mfa_settings', 'options');
 			?>
 				<div class="dev-notice">
