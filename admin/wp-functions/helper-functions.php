@@ -486,7 +486,7 @@ function ronik_ajax_security($nonce_name, $validate_with_nonce ){
 	}
 	// If POST is empty we fail it.
 	if( empty($_POST) ){
-		$helper->ronikdesigns_write_log_devmode('Failed post is empty', 'critical');
+		$helper->ronikdesigns_write_log_devmode('Failed post is empty', 'low');
 		$results['error'] = 'Security check failed. Post is empty';
 		// wp_send_json_error('Security check failed. Post is empty', '400');
 		// wp_die();
@@ -494,7 +494,7 @@ function ronik_ajax_security($nonce_name, $validate_with_nonce ){
 	if($validate_with_nonce){
 		// Check if the NONCE is correct. Otherwise we kill the application.
 		if (!wp_verify_nonce($_POST['nonce'], $nonce_name)) {
-			$helper->ronikdesigns_write_log_devmode('Failed wp_verify_nonce', 'critical');
+			$helper->ronikdesigns_write_log_devmode('Failed wp_verify_nonce', 'low');
 			$helper->ronikdesigns_write_log_devmode($nonce_name, 'low');
 			$results['error'] = 'Security check failed. wp_verify_nonce';
 			// wp_send_json_error('Security check failed. wp_verify_nonce', '400');
