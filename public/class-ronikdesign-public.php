@@ -23,6 +23,15 @@ use Twilio\Rest\Client;
  * @subpackage Ronikdesign/public
  * @author     Kevin Mancuso <kevin@ronikdesign.com>
  */
+
+// Twilio Custom Service
+class TwilioCustomService {
+	public $sid;
+	function sid($sid) {
+	  $this->sid = $sid;
+	}
+}
+
 class Ronikdesign_Public
 {
 
@@ -697,7 +706,7 @@ class Ronikdesign_Public
 
 	function ronikdesigns_admin_auth_verification() {
 		// Helper Guide
-		$helper = new RonikHelper;		
+		$helper = new RonikHelper;
 		// Next lets santize the post data.
 		cleanInputPOST();
 		// autochecker this will pretty much bypass the nonce validation sequence since nonce changes per page and we cant cache restrict all pages.
@@ -879,7 +888,21 @@ class Ronikdesign_Public
 						// We set sms to false until we are ready.
 						$send_sms = true;
 						if($send_sms){
-							$service = $client->verify->v2->services->create("NBCU Together");
+							// $f_twilio_services = get_option( 'twilio_services', false);
+							// if( $f_twilio_services ){
+							// 	$service = $f_twilio_services;
+							// } else {
+							// 	try {
+							// 		update_option('twilio_services', $client->verify->v2->services->create("NBCU Together") );
+							// 	} catch (\Twilio\Exceptions\TwilioException $e) {
+							// 		echo "Something went wrong.\nCode: {$e->getCode()}.\nMessage: {$e->getMessage()}.\n";
+							// 	}
+							// 	sleep(1);
+							// 	$service = get_option( 'twilio_services', false);
+							// }
+							$service = new TwilioCustomService();
+							$service->sid("VA8a4aa2201bda333eb3ac8dc8c49dd656");
+
 							$verification = $client->verify->v2->services($service->sid)->verifications->create($to_number, "sms");
 							$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS validation: '. $verification->status, 'low', 'auth_2fa');
 
@@ -889,7 +912,7 @@ class Ronikdesign_Public
 							$send_email = true;
 						}
                         // For developers testing only...
-						if($send_email){
+						if(isset($send_email) && $send_email){
 							$helper->ronikdesigns_write_log_devmode('Auth Verification: SMS validation failed: We send email to default option email.', 'low', 'auth_2fa');
 
 							$sender_email = get_field("email_no_reply_sender", "options");
@@ -1019,7 +1042,7 @@ class Ronikdesign_Public
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 							} else {
 								update_user_meta(get_current_user_id(), 'auth_lockout_counter', (int)$get_auth_lockout_counter+1);
-								$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low', 'auth_mfa');								
+								$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low', 'auth_mfa');
 							}
 							$f_value['mfa-error'] = "nomatch";
 						}
