@@ -214,7 +214,8 @@ class Ronikdesign
 		$this->loader->add_action('save_post', $plugin_public, 'ronikdesigns_cache_on_post_save');
 		
 		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
-		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
+		// $this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
+		$this->loader->add_action('admin_init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
 
 
 		$this->loader->add_action('wp_ajax_nopriv_do_init_urltracking', $plugin_public, 'ajax_do_init_urltracking');
