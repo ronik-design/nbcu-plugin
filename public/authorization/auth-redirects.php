@@ -204,6 +204,23 @@ function ronikdesigns_redirect_registered_2fa() {
     $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
     $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
     $f_mfa_settings = get_field('mfa_settings', 'options');
+
+    $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+    if(!$get_phone_number){
+        update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
+        $f_value['auth-select'] = "2fa";
+        $r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+        // // We build a query and redirect back to 2fa route.
+        // wp_redirect( esc_url(home_url($r_redirect)) );
+        // exit;
+
+            // Redirect Magic, custom function to prevent an infinite loop.
+        $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/?auth-select=2fa');
+        $dataUrl['reDest'] = '/auth/?auth-select=2fa';
+        ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+
+    }
+
     if( isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time'] ){
         $f_auth_expiration_time = $f_mfa_settings['auth_expiration_time'];
     } else {
