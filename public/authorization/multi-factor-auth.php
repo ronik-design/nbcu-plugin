@@ -4,8 +4,9 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 
-
 add_action('mfa-registration-page', function () {
+    $authProcessor = new RonikAuthProcessor;
+
     $options = new QROptions([
         'eccLevel' => QRCode::ECC_L,
         'outputType' => QRCode::OUTPUT_MARKUP_SVG,
@@ -22,17 +23,14 @@ add_action('mfa-registration-page', function () {
 
     // Check if user has secret if not add secret.
     if (!$get_current_secret) {
-        // add_user_meta(get_current_user_id(), 'google2fa_secret', $google2fa_secret);
         update_user_meta(get_current_user_id(), 'google2fa_secret', $google2fa_secret);
     }
     // Check if user has mfa_status if not add secret.
     if (!$mfa_status) {
-        // add_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
         update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
     }
     // Check if user has mfa_validation if not add secret.
     if (!$mfa_validation) {
-        // add_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
         update_user_meta(get_current_user_id(), 'mfa_validation', 'not_registered');
     }
     // We put this in the header for fast redirect..
@@ -43,7 +41,10 @@ add_action('mfa-registration-page', function () {
         $f_error = 'Sorry, the verification code entered is invalid.';
     }
 
-    auth_admin_messages();
+    if (class_exists('RonikAuthHelper')) {
+        $authHelper = new RonikAuthHelper;
+        $authHelper->auth_admin_messages();
+    }
 
     // Check if mfa_status is not equal to verified.
     if ($mfa_status == 'mfa_unverified' && is_user_logged_in()) {
@@ -110,15 +111,7 @@ add_action('mfa-registration-page', function () {
 
         <?php }?>
     <?php } else{
-        ronik_authorize_success_redirect_path();
-        // $cookie_name = "ronik-auth-reset-redirect";
-        // if(isset($_COOKIE[$cookie_name])) {
-        //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-        //     exit;
-        // } else {
-        //     wp_redirect( esc_url(home_url()) );
-        //     exit;
-        // }
+        $authProcessor->ronik_authorize_success_redirect_path();
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>

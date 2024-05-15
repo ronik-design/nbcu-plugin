@@ -6,12 +6,15 @@
 
 // Lets check if 2fa is enabled. If not we kill it.
 $f_auth = get_field('mfa_settings', 'options');
+$authProcessor = new RonikAuthProcessor;
+
 if(!$f_auth['enable_mfa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
 	$dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php');
 	$dataUrl['reDest'] = '';
-	ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+	$authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
 }
+
 // We put this in the header for fast redirect..
 $f_success = isset($_GET['mfa-success']) ? $_GET['mfa-success'] : false;
 $f_error = isset($_GET['mfa-error']) ? $_GET['mfa-error'] : false;
@@ -27,14 +30,12 @@ if(isset($_GET["mfaredirect"])){
 }
 // Success message
 if($f_success){
-	ronik_authorize_success_redirect_path();
+	$authProcessor->ronik_authorize_success_redirect_path();
 }
 ?>
 
 <?php
 get_header();
-
-
 $f_header = apply_filters( 'ronikdesign_auth_custom_header', false );
 $f_content = apply_filters( 'ronikdesign_mfa_custom_content', false );
 $f_instructions = apply_filters( 'ronikdesign_mfa_custom_instructions', false );
@@ -42,7 +43,6 @@ $f_post_instructions = apply_filters( 'ronikdesign_mfa_post_custom_instructions'
 $f_footer = apply_filters( 'ronikdesign_mfa_custom_footer', false );
 $f_mfa_settings = get_field( 'mfa_settings', 'options');
 $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
-
 $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
 ?>
 	<?php if($f_header){ ?><?= $f_header(); ?><?php } ?>
@@ -64,24 +64,10 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 		</div>
 		<div class="auth-content">
 			<?php if( ($get_auth_lockout_counter) > 6){ ?>
-				<div class="mfa-content">
-					<h2>Authentication failed too many times.</h2>
-					<div class="instructions">
-						<!-- <h4>Account is locked out for 3 minutes. Please try again later.</h4> -->
-						<h4>Your account is locked.</h4>
-					</div>
-					<div class="auth-content-bottom">
-						<div class="auth-content-bottom__helper" style="padding: 0;">
-							<p>Please reach out to <a href="mailto:together@nbcuni.com?subject=Account Locked Out">together@nbcuni.com</a> for support. </p>
-						</div>
-					</div>
-				</div>
+				<?php do_action('auth_user-lockout'); ?>
 			<?php } else { ?>		
 				<div class="mfa-content">
-					<?php if($f_content){ ?>
-						<?= $f_content(); ?>
-					<?php }
-
+					<?php if($f_content){ ?><?= $f_content(); ?><?php }
 					if($mfa_validation !== 'not_registered'){
 						if($f_mfa_settings['mfa_post_content_title']){ ?>
 							<?= $f_mfa_settings['mfa_post_content_title']; ?>
@@ -117,7 +103,5 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 			<?php } ?>
 		</div>
 	</div>
-
 	<?php if($f_footer){ ?><?= $f_footer(); ?><?php } ?>
-
 <?php get_footer(); ?>

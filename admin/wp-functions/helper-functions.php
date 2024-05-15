@@ -173,7 +173,9 @@ class RonikHelper{
 				$iv_path = get_user_meta( get_current_user_id(), 'ronikdesign_initialization_vector', true );
 				// If no path is in the metadata we fall back to the previous passed over IV.
 				if($iv_path){
-					$iv = file_get_contents($iv_path, true);
+					if(file_exists($iv_path)){
+						$iv = file_get_contents($iv_path, true);
+					}
 				}
 
 				$helper->ronikdesigns_write_log_devmode('decrypt', 'low', 'auth');

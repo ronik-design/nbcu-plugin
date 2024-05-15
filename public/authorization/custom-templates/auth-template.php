@@ -6,21 +6,20 @@
 
 // Lets check if 2fa && MFA  is enabled. If not we kill it. 
 $f_auth = get_field('mfa_settings', 'options');
+$authProcessor = new RonikAuthProcessor;
+
 if(!$f_auth['enable_2fa_settings'] && !$f_auth['enable_mfa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
 	$dataUrl['reUrl'] = array('');
 	$dataUrl['reDest'] = '';
-	ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+	$authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
 }
-
-
 // We put this in the header for fast redirect..
 $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
 // Success message
 if($f_success){
-	ronik_authorize_success_redirect_path();
+	$authProcessor->ronik_authorize_success_redirect_path();
 }
-
 
 get_header(); 
 
@@ -39,7 +38,6 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 		</div>
 		<div class="auth-content">
 			<?php if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
-				
 				<?php if($f_content){ ?>
 					<?= $f_content(); ?>
 				<?php } 
@@ -55,7 +53,6 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 						<?php } ?>
 					</div>
 				<?php } ?>
-	
 			<?php } else { ?>
 				<?php if($f_content){ ?>
 					<?= $f_content(); ?>
@@ -72,14 +69,9 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 						<?php } ?>
 					</div>
 				<?php } ?>
-	
 			<?php } ?>
-		
 			<?php do_action('auth-registration-page'); ?>
 		</div>
 	</div>
-
 	<?php if($f_footer){ ?><?= $f_footer(); ?><?php } ?>
-
 <?php get_footer(); ?>
-

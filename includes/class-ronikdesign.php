@@ -208,26 +208,32 @@ class Ronikdesign
 
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
+
+		// Trigger the helper functions right when ACF Initialization happens.
+		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_helper_functions', 1);
+		// Trigger the include files towards the end of the ACF Initialization.
+		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_include_auth', 99);
+		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_include_password', 99);
+
 		// This will add styles to the admin dashboard side
 		// $this->loader->add_action('admin_enqueue_scripts', $plugin_public, 'enqueue_styles');
 
-		$this->loader->add_action('save_post', $plugin_public, 'ronikdesigns_cache_on_post_save');
-		
-		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
-		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
-		// $this->loader->add_action('admin_init', $plugin_public, 'ronikdesigns_acf_op_init_functions_public', 99);
+		// $this->loader->add_action('ronikdesigns_cron_auth', $plugin_public, 'ronikdesigns_cron_auth');
+		// if (!wp_next_scheduled('ronikdesigns_cron_auth')) {
+		// 	wp_schedule_event(time(), 'one_minute', 'ronikdesigns_cron_auth');
+		// }
 
+		$this->loader->add_action('save_post', $plugin_public, 'ronikdesigns_cache_on_post_save');
+		$this->loader->add_action('rest_api_init', $plugin_public, 'ronikdesigns_rest_api_init');
 
 		$this->loader->add_action('wp_ajax_nopriv_do_init_urltracking', $plugin_public, 'ajax_do_init_urltracking');
 		$this->loader->add_action('wp_ajax_do_init_urltracking', $plugin_public, 'ajax_do_init_urltracking');
 
-		// $this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_auth_verification', $plugin_public, 'ronikdesigns_admin_auth_verification');
 
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_logout', $plugin_public, 'ronikdesigns_admin_logout');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_logout', $plugin_public, 'ronikdesigns_admin_logout');
 
-		// $this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_password_reset', $plugin_public, 'ronikdesigns_admin_password_reset');
 		// Verification API AJAX.
 		$this->loader->add_action('wp_ajax_nopriv_do_verification', $plugin_public, 'ajax_do_verification');

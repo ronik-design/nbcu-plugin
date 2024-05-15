@@ -1024,10 +1024,11 @@ body {
 .dev-notice {
   box-shadow: 10px 10px 33px -26px rgba(0, 0, 0, 0.75);
   position: fixed;
-  top: 5em;
+  top: 0;
   right: 0px;
   z-index: 11111111;
-  background-color: #acff7b;
+  background-color: #4a00ff;
+  color: #fff;
   border-radius: 20px 0px 0px 20px;
   text-align: left;
   margin-top: 20px;
@@ -1037,8 +1038,10 @@ body {
   align-items: flex-start;
   justify-content: center;
   flex-direction: column;
-  transform: scale(0.4);
-  transform-origin: right;
+  transform: scale(0.5);
+  transform-origin: top right;
+  overflow: auto;
+  max-width: 750px;
 }
 
 .dev-notice h4, .dev-notice p {

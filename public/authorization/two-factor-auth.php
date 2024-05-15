@@ -7,6 +7,8 @@ use Twilio\Rest\Client;
 add_action('2fa-registration-page', function () {
     // Helper Guide
     $helper = new RonikHelper;
+    $authProcessor = new RonikAuthProcessor;
+
     // We put this in the header for fast redirect..
     $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
     $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
@@ -43,15 +45,7 @@ add_action('2fa-registration-page', function () {
     }
     // If Valid we redirect
     if ($valid) {
-        ronik_authorize_success_redirect_path();
-        // $cookie_name = "ronik-auth-reset-redirect";
-        // if(isset($_COOKIE[$cookie_name])) {
-        //     wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
-        //     exit;
-        // } else {
-        //     wp_redirect( esc_url(home_url()) );
-        //     exit;
-        // }
+        $authProcessor->ronik_authorize_success_redirect_path();
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
@@ -74,11 +68,12 @@ add_action('2fa-registration-page', function () {
         $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
     } else { ?>
         <?php
-                    $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-                    $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
-                    $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
+        $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
 
-        auth_admin_messages();
+        if (class_exists('RonikAuthHelper')) {
+            $authHelper = new RonikAuthHelper;
+            $authHelper->auth_admin_messages();
+        }
 
         // Based on the session conditions we check if valid if not we default back to the send SMS button.
         if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){
@@ -105,11 +100,6 @@ add_action('2fa-registration-page', function () {
                 }
                 if( $past_date > $sms_code_timestamp ){
                     $helper->ronikdesigns_write_log_devmode( 'SMS Expired' , 'low', 'auth_2fa');
-                    // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                    // update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
-                    // // This is mostly for messaging purposes..
-                    // wp_redirect( esc_url(home_url('/2fa?sms-error=expired')) );
-                    // exit;
                 }
             ?>
             <div class="auth-content-bottom auth-content-bottom--sms">
@@ -127,7 +117,7 @@ add_action('2fa-registration-page', function () {
                                 console.log("tab is inactive")
                             }
                             });
-                            var timeleft = <?= ($f_sms_expiration_time*60); ?>;
+                            var timeleft = <?= ($f_sms_expiration_time*60); ?>;                            
                             var downloadTimer = setInterval(function(){
                                 if(timeleft <= 0){
                                     clearInterval(downloadTimer);

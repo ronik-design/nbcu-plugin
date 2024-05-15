@@ -1,4 +1,6 @@
 <?php
+require_once(dirname(__DIR__, 1) . '/vendor/autoload.php');
+
 // Include Twilio && Google2fa
 use PragmaRX\Google2FA\Google2FA;
 use Twilio\Rest\Client;
@@ -122,23 +124,33 @@ class Ronikdesign_Public
 			wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array(), $this->version, false);
 		}
 
-		// Ajax & Nonce
+		/**
+			* Ajax & Nonce generation 
+		*/
 		wp_localize_script($this->plugin_name, 'wpVars', array(
 			'ajaxURL' => admin_url('admin-ajax.php'),
 			'nonce'	  => wp_create_nonce('ajax-nonce')
 		));
 	}
-
-
-	function ajax_do_verification()
-	{
+	/**
+		* Register helper classes!
+		* This is critical for AUTHORIZATION to work properly!
+	*/
+	public function ronikdesigns_helper_functions(){
+		foreach (glob(dirname(__FILE__) . '/helper/*.php') as $file) {
+			include_once $file;
+		}
+	}
+	/**
+		* Abstract API AJAX function.
+	*/
+	public function ajax_do_verification(){
 		if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
 			wp_send_json_error('Security check failed', '400');
 			wp_die();
 		}
 		// Helper Guide
 		$helper = new RonikHelper;
-
 		$f_val_type = $_POST['validationType'];
 		$f_value = $_POST['validationValue'];
 		$f_strict = $_POST['validationStrict'];
@@ -220,9 +232,10 @@ class Ronikdesign_Public
 		}
 	}
 
-	// Pretty much we add custom classes to the body.
-	function ronik_body_class($classes)
-	{
+	/**
+		* Add custom classes to the body. This helps with improve performance and dynamic js
+	*/
+	public function ronik_body_class($classes){
 		// Helper Guide
 		$helper = new RonikHelper;
 		$f_custom_js_settings = get_field('custom_js_settings', 'options');
@@ -250,12 +263,10 @@ class Ronikdesign_Public
 		}
 		return $classes;
 	}
-
-
 	/**
 	 * Icon Set
 	*/
-	function ajax_do_init_svg_migration_ronik() {
+	public function ajax_do_init_svg_migration_ronik() {
 		if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
 			wp_send_json_error('Security check failed', '400');
 			wp_die();
@@ -389,31 +400,36 @@ class Ronikdesign_Public
 		}
 		wp_send_json_success('Done');
 	}
-
 	// modify the path to the icons directory
-	function acf_icon_path_suffix( $path_suffix ) {
+	public function acf_icon_path_suffix( $path_suffix ) {
 		return $path_suffix;
 		// return 'roniksvg/migration/';
 	}
 	// modify the path to the above prefix
-	function acf_icon_path( $path_suffix ) {
+	public function acf_icon_path( $path_suffix ) {
 		return $path_suffix;
 		// return get_stylesheet_directory_uri();
 	}
 	// modify the URL to the icons directory to display on the page
-	function acf_icon_url( $path_suffix ) {
+	public function acf_icon_url( $path_suffix ) {
 		return $path_suffix;
 		// return get_stylesheet_directory_uri();
 	}
 
-	function ronikdesigns_rest_api_init(){
+	/**
+		* REST API ROUTE
+	*/
+	public function ronikdesigns_rest_api_init(){
 		// Include the Spam Blocker.
 		foreach (glob(dirname(__FILE__) . '/rest-api/*.php') as $file) {
 			include $file;
 		}
 	}
 
-	function ronikdesigns_cache_on_post_save() {
+	/**
+		* CACHE clear on post save function.
+	*/
+	public function ronikdesigns_cache_on_post_save() {
 		// Helper Guide
 		$helper = new RonikHelper;
 		$helper->ronikdesigns_write_log_devmode('Ronik_CLEAR CACHE', 'low');
@@ -423,58 +439,116 @@ class Ronikdesign_Public
 		wp_cache_flush();
 	}
 
-	function ronikdesigns_acf_op_init_functions_public(){
-		function auth_admin_messages(){
-			// https://together.nbcudev.local/auth?ronik_debug=ronik_admin_auth
-			if( isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'ronik_admin_auth' ){
-				if(is_user_admin() || is_super_admin()){
-					setcookie("RonikDebug", 'ronik_admin_auth_717', time()+1500);  /* expire in 25 min */
-				}
-			}
+	/**
+		* Ronikdesigns CRON Authentication EXPERIMENTAL CODE!
+	*/
+	public function ronikdesigns_cron_auth(){
+		// We check the options page increment if its empty we set to 1 or if not empty we add an additional 1.
+		update_option( 'options_ronikdesign_cron_auth_page', intval(get_option('options_ronikdesign_cron_auth_page') ? get_option('options_ronikdesign_cron_auth_page')+1 : 1));
+		// Get the page increment.
+		$f_page_increment = get_option('options_ronikdesign_cron_auth_page');
+		// Limit the number of posts to set amount.
+		$select_numberposts = 1000;
+		// Offset the number of posts to show by -1 * the number of posts.
+		$offsetValue = ($f_page_increment - 1) * $select_numberposts;
 
-			$get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
-			$get_current_secret = get_user_meta(get_current_user_id(), 'google2fa_secret', true);
-
-			$sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-			$sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
-			$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true) ? get_user_meta(get_current_user_id(), 'auth_lockout_counter', true) : (int)0;
-			$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-
-			$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
-			$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
-			// $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
-
-			if((isset($_COOKIE['RonikDebug']) && array_key_exists( 'RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'ronik_admin_auth_717') || str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local-de')){
-				error_log(print_r( 'DEBUG ACTIVATED', true));
-				$f_auth = get_field('mfa_settings', 'options');
-			?>
-				<div class="dev-notice">
-					<h4>Dev Message:</h4>
-					<p>Current UserID: <?php echo get_current_user_id(); ?></p>
-					<p>Auth Status: <?php echo $get_auth_status; ?></p>
-					<br>
-					<p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
-					<p>MFA Status: <?php echo $mfa_status; ?></p>
-					<p>MFA Validation: <?php echo $mfa_validation; ?></p>
-					<br>
-					<p>SMS Phone Number: <?php echo $get_phone_number; ?></p>
-					<p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
-					<p>SMS Status: <?php echo $sms_2fa_status; ?></p>
-					<p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-					<?php if( ( isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings'] ) && ( isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'] ) ){ ?>
-						<form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
-							<input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-							<?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-							<input type="hidden" type="text" name="re-auth" value="RESET">
-							<button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-						</form>
-					<?php } ?>
-				</div>
-			<?php
+		// Blog id to target specific site.
+		// return only ids.
+		// user_confirmed && wp_3_access set to Y
+		// Then we check the login date by current and minus 12 months of current.
+		$blog_id = get_current_blog_id();
+		$user_query = new WP_User_Query( array(
+			'blog_id' => $blog_id,
+			'fields'         => 'id',
+			'offset' => $offsetValue,
+			'number' => $select_numberposts,
+			'meta_query' => array(
+				'relation' => 'AND',
+				array(
+					'key' => 'user_confirmed',
+					'value' => 'Y',
+					'compare' => '=='
+				),
+				array(
+					'key' => 'wp_3_access',
+					'value' => 'Y',
+					'compare' => '=='
+				),
+				array(
+					'key' => 'last_login',
+					'value' => date("Y-m-d H:i:s"),
+					'compare' => '<='
+				),
+				array(
+					'key' => 'last_login',
+					'value' => date("Y-m-d H:i:s", strtotime("-12 months")),
+					'compare' => '>='
+				)
+			)
+		) );
+		// HARD RESET!! After return is 0!
+		if( count( $user_query->get_results()) == 0 ){
+			update_option( 'options_ronikdesign_cron_auth_page', intval(1));
+		}
+		if( $user_query->get_results() ){
+			foreach($user_query->get_results() as $user_id){
+				error_log(print_r($user_id , true ));
 			}
 		}
+		error_log(print_r( 'KEVIN CRON TEST', true ));
+		error_log(print_r(count( $user_query->get_results() ), true ));
+		error_log(print_r(( $user_query->get_results() ), true ));
+	}
 
+	/**
+		* Ronikdesigns Admin Logout
+	*/
+	public function ronikdesigns_admin_logout() {
+		$user_id = get_current_user_id();
+		$r = '';
+		wp_destroy_current_session();
+		wp_clear_auth_cookie();
+		wp_set_current_user( 0 );
+        $userclick_actions = get_user_meta($user_id, 'user_tracker_actions', true);
+		if( isset($userclick_actions['url']) ){
+			$r = '?r='.urldecode($userclick_actions['url']);
+		}
+		wp_redirect( home_url('/nbcuni-sso/login/'.$r.'') );
+		exit;
+	}
 
+	/**
+		* Handles the redirects after user validates auth
+	*/
+	function ajax_do_init_urltracking() {
+		// Ajax Security check..
+		ronik_ajax_security(false, false);
+		// Next lets santize the` post data.
+		cleanInputPOST();
+
+		if (class_exists('RonikAuthProcessor')) {
+			$authProcessor = new RonikAuthProcessor;
+			if( $authProcessor->urlCheckNoWpPage($_POST['point_origin'])) {			
+				if( $authProcessor->urlCheckNoAuthPage($_POST['point_origin']) ){
+					// We are checking if the url contains the /wp-content/
+					if (!str_contains($_POST['point_origin'], '/wp-content/')) {
+						$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
+					} else {
+						if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
+							$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
+						}
+					}
+	
+					$authProcessor->userTrackerActions($point_origin_url);
+				}
+			}
+		}
+	}
+
+	/**
+		* Includes the authorization files within auth folder.
+	*/
+	public function ronikdesigns_include_auth(){
 		// Include the auth.
 		foreach (glob(dirname(__FILE__) . '/authorization/*.php') as $file) {
 			global $wpdb;
@@ -509,7 +583,7 @@ class Ronikdesign_Public
 				if($user_confirmed == 'Y' && $wp_3_access == 'Y'){
 					// If no email we include the file.
 					if($user_email == 'No email found.'){
-						include $file;
+						include_once $file;
 					} else {
 						$f_user_override = get_option('options_mfa_settings_user_override');
 						// We remove all whitespace (including tabs and line ends)
@@ -518,38 +592,45 @@ class Ronikdesign_Public
 						$f_user_override_array = explode(",", trim($f_user_override));
 						// Detect if array is populated.
 						if (!in_array($user_email, $f_user_override_array)) {
-							include $file;
+							include_once $file;
 						}
 					}
 				}
 
 			}
 		}
+		
+	}
+
+	/**
+		* Includes the password reset files within auth folder.
+	*/
+	public function ronikdesigns_include_password(){
 		// Include the password reset.
 		foreach (glob(dirname(__FILE__) . '/password-reset/*.php') as $file) {
 			// This is critical without this we would get an infinite loop...
-				// We check if the server REQUEST_URI contains the following "admin-post", "auth", "2fa", "mfa"
-				if( !str_contains($_SERVER['REQUEST_URI'], 'admin-ajax') &&
-					!str_contains($_SERVER['REQUEST_URI'], 'admin-post') &&
-					!str_contains($_SERVER['REQUEST_URI'], 'auth') &&
-					!str_contains($_SERVER['REQUEST_URI'], '2fa') &&
-					!str_contains($_SERVER['REQUEST_URI'], 'mfa')
-				){
-					include $file;
-				}
+			// We check if the server REQUEST_URI contains the following "admin-post", "auth", "2fa", "mfa"
+			if( !str_contains($_SERVER['REQUEST_URI'], 'admin-ajax') &&
+				!str_contains($_SERVER['REQUEST_URI'], 'admin-post') &&
+				!str_contains($_SERVER['REQUEST_URI'], 'auth') &&
+				!str_contains($_SERVER['REQUEST_URI'], '2fa') &&
+				!str_contains($_SERVER['REQUEST_URI'], 'mfa')
+			){
+				include_once $file;
+			}
 		}
 	}
 
-
-	function ronikdesigns_admin_password_reset() {
+	/**
+		* Logic for Password Reset
+	*/
+	public function ronikdesigns_admin_password_reset() {
 		// Check if user is logged in.
 		if (!is_user_logged_in()) {
 			return;
 		}
-
 		// Next lets santize the post data.
 		cleanInputPOST();
-
 		// autochecker this will pretty much bypass the nonce validation sequence since nonce changes per page and we cant cache restrict all pages.
 		if( isset($_POST['autoChecker']) && $_POST['autoChecker'] == 'valid' ){
 			// Ajax Security.
@@ -558,8 +639,6 @@ class Ronikdesign_Public
 			// Ajax Security.
 			ronik_ajax_security('ajax-nonce-password', true);
 		}
-
-
 		$f_value = array();
 		if(!empty($_POST['password']) && !empty($_POST['retype_password'])){
 			if($_POST['password'] === $_POST['retype_password']){
@@ -642,7 +721,6 @@ class Ronikdesign_Public
 										$user = wp_get_current_user();
 										// This will store the newest password in the database.
 										ronikdesigns_password_reset_action_store($user, $_POST['password']);
-
 										// Send out an email notification.
 										$to = $curr_user->user_email;
 										$subject = 'Password Reset.';
@@ -652,14 +730,11 @@ class Ronikdesign_Public
 										ob_start();
 										include $email_template_path;
 										$message_password_reset = ob_get_clean();
-
 										$messaging_password_rest = "The password for your account has been successfully reset. If this wasn't you, please contact <a href='mailto:together@nbcuni.com?subject=Password Reset Error&body='User: ".$curr_user->user_email.">together@nbcuni.com</a>";
-
 										$message_password_reset = str_replace('{MESSAGE}',  $messaging_password_rest, $message_password_reset);
 										$headers = array('Content-Type: text/html; charset=UTF-8');
 										$attachments = '';
 										wp_mail( $to, $subject, $message_password_reset, $headers, $attachments );
-
 										// $body = 'Your password was successfully reset.';
 										// wp_mail($to, $subject, $body, $headers);
 										// Change password.
@@ -686,24 +761,9 @@ class Ronikdesign_Public
 		exit;
 	}
 
-	function ronikdesigns_admin_logout() {
-		$user_id = get_current_user_id();
-		$r = '';
-
-		wp_destroy_current_session();
-		wp_clear_auth_cookie();
-		wp_set_current_user( 0 );
-
-        $userclick_actions = get_user_meta($user_id, 'user_tracker_actions', true);
-		if( isset($userclick_actions['url']) ){
-			$r = '?r='.urldecode($userclick_actions['url']);
-		}
-		wp_redirect( home_url('/nbcuni-sso/login/'.$r.'') );
-
-
-		exit;
-	}
-
+	/**
+		* Ronikdesigns Admin AUTH Logic
+	*/
 	function ronikdesigns_admin_auth_verification() {
 		// Helper Guide
 		$helper = new RonikHelper;
@@ -730,7 +790,13 @@ class Ronikdesign_Public
 		}
 
 		// We determine if a POST var is in the predetermined list. If not we kill the application.
+		// This allows us to prevent outsiders from trying to access the application.
 		$predeterminedDataArray = array(
+			'user-id',
+			'change-phone-number',
+			're-phone-number',
+			'reset-entire-auth',
+			'reset-lockout',
 			're-auth',
 			'auth-select',
 			'auth-phone_number',
@@ -769,23 +835,17 @@ class Ronikdesign_Public
 
 		$f_value = array();
 		$f_auth = get_field('mfa_settings', 'options');
-
 		$get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
-
 		$f_twilio_id = get_option('options_mfa_settings_twilio_id');
 		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
 		$f_twilio_number = get_option('options_mfa_settings_twilio_number');
-
 		$f_auth_expiration_time = get_option('options_mfa_settings_auth_expiration_time');
-
 		$mfa_status = get_user_meta(get_current_user_id(),'mfa_status', true);
 		$mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
 		$sms_2fa_status = get_user_meta( get_current_user_id(),'sms_2fa_status', true );
 		$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
 		$get_current_secret_2fa = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
-
 		$get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
-
 		// Update the status with timestamp.
 		// Keep in mind all timestamp are within the UTC timezone. For constant all around.
 		// https://www.timestamp-converter.com/
@@ -803,11 +863,14 @@ class Ronikdesign_Public
 		$to_number = $get_phone_number;
 		$client = new Client($account_sid, $auth_token);
 
-		if(isset($_POST['re-auth']) && $_POST['re-auth']){
-			if($_POST['re-auth'] == 'RESET'){
-				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest', 'low', 'auth');
-
-				update_user_meta(get_current_user_id(), 'auth_status', 'none');
+		
+		// Change phone number.
+		if(isset($_POST['re-phone-number']) && $_POST['re-phone-number']){
+			if($_POST['re-phone-number'] == 'RESET'){
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest Phone Number', 'low', 'auth');
+				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
+				
+				update_user_meta($f_user_id, 'sms_user_phone', $_POST['change-phone-number']);
 				// We build a query and redirect back to auth route.
 				$f_value['auth-select'] = "reset";
 				$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
@@ -815,6 +878,56 @@ class Ronikdesign_Public
 				exit;
 			}
 		}
+
+		// Reset Entire Account Authentication Info
+		if(isset($_POST['reset-entire-auth']) && $_POST['reset-entire-auth']){
+			if($_POST['reset-entire-auth'] == 'RESET'){
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest Lockout', 'low', 'auth');
+				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
+				delete_user_meta($f_user_id, 'auth_status' );
+				delete_user_meta($f_user_id, 'google2fa_secret' );
+				delete_user_meta($f_user_id, 'sms_2fa_status' );
+				delete_user_meta($f_user_id, 'sms_2fa_secret' );
+				delete_user_meta($f_user_id, 'sms_user_phone' );
+				delete_user_meta($f_user_id, 'mfa_status' );
+				delete_user_meta($f_user_id, 'mfa_validation' );
+				// We build a query and redirect back to auth route.
+				$f_value['auth-select'] = "reset";
+				$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+				wp_redirect( esc_url(home_url($r_redirect)) );
+				exit;
+			}
+		}
+
+		// Reset Lockout Account Authentication Info
+		if(isset($_POST['reset-lockout']) && $_POST['reset-lockout']){
+			if($_POST['reset-lockout'] == 'RESET'){
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest Lockout', 'low', 'auth');
+				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
+				update_user_meta($f_user_id, 'auth_lockout_counter', 0);
+				// We build a query and redirect back to auth route.
+				$f_value['auth-select'] = "reset";
+				$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+				wp_redirect( esc_url(home_url($r_redirect)) );
+				exit;
+			}
+		}
+
+		// Reset Account Authentication Selection.
+		if(isset($_POST['re-auth']) && $_POST['re-auth']){
+			if($_POST['re-auth'] == 'RESET'){
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest', 'low', 'auth');
+				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
+
+				update_user_meta($f_user_id, 'auth_status', 'none');
+				// We build a query and redirect back to auth route.
+				$f_value['auth-select'] = "reset";
+				$r_redirect = '/auth/?'.http_build_query($f_value, '', '&amp;');
+				wp_redirect( esc_url(home_url($r_redirect)) );
+				exit;
+			}
+		}
+
 		// AUTH Section:
 			// First Check:
 				// Lets get the auth-select value.
@@ -854,6 +967,7 @@ class Ronikdesign_Public
 						exit;
 					}
 				}
+
 			// Second Check:
 				// Lets check the auth-phone_number.
 				if(isset($_POST['auth-phone_number']) && $_POST['auth-phone_number']){
@@ -1010,6 +1124,7 @@ class Ronikdesign_Public
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 						} else {
 							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter+1);
+							// update_user_meta(get_current_user_id(), 'auth_lockout_counter',intval($get_auth_lockout_counter)+1);
 						}
 
 						wp_send_json_success('reload');
@@ -1177,11 +1292,6 @@ class Ronikdesign_Public
 							}
 						}
 
-
-
-
-
-
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
@@ -1206,30 +1316,5 @@ class Ronikdesign_Public
 					// Catch ALL
 					wp_send_json_success('noreload');
 				}
-	}
-
-
-	// Ajax function pretty much helps handle the landing of the redirect.
-	function ajax_do_init_urltracking() {
-		// Ajax Security check..
-		ronik_ajax_security(false, false);
-		// Next lets santize the post data.
-		cleanInputPOST();
-
-		if (class_exists('RonikAuthChecker')) {
-			$authChecker = new RonikAuthChecker;
-			if( $authChecker->urlCheckNoAuthPage($_POST['point_origin']) ){
-				// We are checking if the url contains the /wp-content/
-				if (!str_contains($_POST['point_origin'], '/wp-content/')) {
-					$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_POST['point_origin']);
-				} else {
-					if( $_SERVER['HTTP_ORIGIN'] && $_SERVER['HTTP_REFERER'] ){
-						$point_origin_url = str_replace($_SERVER['HTTP_ORIGIN'], "", $_SERVER['HTTP_REFERER']);
-					}
-				}
-
-				$authChecker->userTrackerActions($point_origin_url);
-			}
-		}
 	}
 }

@@ -95,13 +95,13 @@ function password_reset_ronikdesigns(){
                 '/password-reset/?pr-error=no-special-characters',
             );
 
-            if (class_exists('RonikAuthChecker')) {
-                $authChecker = new RonikAuthChecker;
+            if (class_exists('RonikAuthProcessor')) {
+                $authProcessor = new RonikAuthProcessor;
                 // Lets setup the cookie for redirect purposes.
                 if(($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-ajax.php') && ($_SERVER['REQUEST_URI'] !== '/wp-admin/admin-post.php') && ($_SERVER['REQUEST_URI'] !== '/password-reset/')){
                     if(!in_array($_SERVER['REQUEST_URI'], $f_redirect_allowable_slugs) ){
                         // PHP User Click Actions
-                        $authChecker->userTrackerActions($_SERVER['REQUEST_URI']);
+                        $authProcessor->userTrackerActions($_SERVER['REQUEST_URI']);
                     }
                 }
             }
