@@ -425,7 +425,11 @@ if (function_exists('acf_add_local_field_group')) :
 				'name' => 'csp_enable',
 				'aria-label' => '',
 				'type' => 'true_false',
-				'instructions' => 'Enabling CSP automatically adds script & style optimization such as preload & Defer attributes.',
+				'instructions' => 'Enabling CSP automatically adds script & style optimization such as preload & Defer attributes. <br/>
+					CSP is only enabled on non-logged in users. This is a platform decision. WP does not play well with CSP in the backednd!
+					<br/>
+					If a 503 error occurs please disable the CSP. There is a conflict error within the Content-Security-Policy headers. 
+				',
 				'required' => 0,
 				'conditional_logic' => 0,
 				'wrapper' => array(
