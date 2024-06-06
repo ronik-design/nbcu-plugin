@@ -182,6 +182,8 @@ if ($f_csp_enable) {
             $headers['Content-Security-Policy']     .= " font-src 'self'  " . ALLOWABLE_FONTS . ";  ";
             $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
 
+            $headers['Content-Security-Policy']     .= " media-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
+
             $headers['Content-Security-Policy']     .= " frame-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
 
             $headers['Content-Security-Policy']     .= " report-uri " . ENV_PATH . "; ";
