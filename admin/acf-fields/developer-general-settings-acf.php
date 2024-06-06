@@ -426,7 +426,7 @@ if (function_exists('acf_add_local_field_group')) :
 				'aria-label' => '',
 				'type' => 'true_false',
 				'instructions' => 'Enabling CSP automatically adds script & style optimization such as preload & Defer attributes. <br/>
-					CSP is only enabled on non-logged in users. This is a platform decision. WP does not play well with CSP in the backednd!
+					CSP is only enabled on non-logged in users. This is a platform decision. WP does not play well with CSP in the backend!
 					<br/>
 					If a 503 error occurs please disable the CSP. There is a conflict error within the Content-Security-Policy headers. 
 				',
@@ -548,7 +548,9 @@ https://fonts.com/',
 				'name' => 'csp_allow-scripts',
 				'aria-label' => '',
 				'type' => 'repeater',
-				'instructions' => 'Please include only the root domain.<br>
+				'instructions' => 'Please make sure url is accessible to the public and does not have an Access Denied prompt. If you add a website that is not accessible. It will lead to a global 503 error!
+				<br>
+Please include only the root domain.<br>
 Please do not include any domains that are not ssl certified. By doing so, you will risk the security of your application.<br>
 Please do not include any special characters such as ?, &, etc.<br><br>
 Google analytics automatically registered.<br>

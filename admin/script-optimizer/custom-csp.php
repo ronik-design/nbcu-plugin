@@ -9,7 +9,7 @@ if ($f_csp_enable) {
     define('ENV_PATH', get_site_url());
     // ALLOWABLE_FONTS
     $f_csp_allow_fonts = get_field('csp_allow-fonts', 'option');
-    $csp_allow_fonts = " https://fonts.googleapis.com/ https://fonts.gstatic.com/ data: ";
+    $csp_allow_fonts = " data: https://fonts.googleapis.com/ https://fonts.gstatic.com/  ";
     $csp_allow_fonts .= " " . ENV_PATH . " ";
     if ($f_csp_allow_fonts) {
         foreach ($f_csp_allow_fonts as $allow_fonts) {
@@ -169,17 +169,21 @@ if ($f_csp_enable) {
             $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
             //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
             $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
-
+            // $headers['Content-Security-Policy']      = " script-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
             $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
             $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
 
             $headers['Content-Security-Policy']     .= " object-src 'none'; ";
             $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
 
+
+            // $headers['Content-Security-Policy']     .= " media-src "  . site_url() . " blob: data: " . ";  ";
+
             $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
             $headers['Content-Security-Policy']     .= " style-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
 
-            $headers['Content-Security-Policy']     .= " media-src '" . ENV_PATH . '/' ."' https: 'self' blob: 'data' '; ";
+            $headers['Content-Security-Policy']     .= " media-src https: 'self' blob: data; ";
+
 
             $headers['Content-Security-Policy']     .= " font-src 'self'  " . ALLOWABLE_FONTS . ";  ";
             $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
