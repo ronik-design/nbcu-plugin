@@ -1,5 +1,28 @@
 <?php
 $f_csp_enable = get_field('csp_enable', 'option');
+$f_csp_disallow_url = get_field('csp_disallow-url', 'option');
+
+if($f_csp_disallow_url){
+    foreach($f_csp_disallow_url as $disallow_url ){
+        $santizeDisallowUrlSecure = str_replace(home_url('', 'https' ), "", $disallow_url['handle']);
+        $santizeDisallowUrl = str_replace(home_url('', 'http' ), "", $disallow_url['handle']);
+
+        if( isset($_SERVER['REQUEST_URI']) ){
+            if( $santizeDisallowUrlSecure == $_SERVER['REQUEST_URI'] || $santizeDisallowUrl == $_SERVER['REQUEST_URI'] ){
+                return;
+            }
+        }
+        if( isset($_SERVER['HTTP_REFERER']) ){
+            $santizeRefererUrlSecure = str_replace(home_url('', 'https' ), "", $_SERVER['HTTP_REFERER']);
+            $santizeRefererUrl = str_replace(home_url('', 'http' ), "", $_SERVER['HTTP_REFERER']);
+            if( $santizeRefererUrlSecure == $santizeDisallowUrlSecure || $santizeRefererUrl == $santizeDisallowUrl ){
+                return;
+            }
+        }
+    }
+}
+
+
 if ($f_csp_enable) {
     /**
      * ENV_PATH
