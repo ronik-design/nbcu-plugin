@@ -26,12 +26,24 @@ if($f_csp_disallow_url){
 
 if($f_csp_disallow_query){
     foreach($f_csp_disallow_query as $disallow_query ){
-        if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
-            return;
+        if( isset($_SERVER['REQUEST_URI']) ){
+            if (str_contains($_SERVER['REQUEST_URI'], $disallow_query['handle'])) {
+                return;
+            }
         }
+        if( isset($_SERVER['HTTP_REFERER']) ){
+            if (str_contains($_SERVER['HTTP_REFERER'], $disallow_query['handle'])) {
+                return;
+            }
+        }        
+        if( isset($_SERVER['QUERY_STRING']) ){
+            if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
+                return;
+            }
+        }
+        
     }
 }
-
 
 if ($f_csp_enable) {
     /**
