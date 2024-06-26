@@ -492,6 +492,53 @@ if (function_exists('acf_add_local_field_group')) :
 
 
 			array(
+				'key' => 'field_639a4921626d3sasaabb_ronikdesign',
+				'label' => 'Specify Query Parameter you want to avoid being "CSP Enabled"',
+				'name' => 'csp_disallow-query',
+				'aria-label' => '',
+				'type' => 'repeater',
+				'instructions' => 'Please include only the query parameter',
+				'required' => 0,
+				'conditional_logic' => 0,
+				'wrapper' => array(
+					'width' => '',
+					'class' => '',
+					'id' => '',
+				),
+				'layout' => 'table',
+				'pagination' => 0,
+				'min' => 0,
+				'max' => 0,
+				'collapsed' => '',
+				'button_label' => 'Add Row',
+				'rows_per_page' => 20,
+				'sub_fields' => array(
+					array(
+						'key' => 'field_639a4adcfc742sasaabb_ronikdesign',
+						'label' => 'Handle',
+						'name' => 'handle',
+						'aria-label' => '',
+						'type' => 'text',
+						'instructions' => 'Ex: utm_source',
+						'required' => 0,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '',
+							'class' => '',
+							'id' => '',
+						),
+						'default_value' => '',
+						'maxlength' => '',
+						'placeholder' => '',
+						'prepend' => '',
+						'append' => '',
+						'parent_repeater' => 'field_639a4adcfc742sasaabb_ronikdesign',
+					),
+				),
+			),
+			
+
+			array(
 				'key' => 'field_639a4921626d3sas_ronikdesign',
 				'label' => 'Specify Scripts you want to avoid being "Deferred"',
 				'name' => 'csp_disallow-script-defer',

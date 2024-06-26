@@ -1,6 +1,7 @@
 <?php
 $f_csp_enable = get_field('csp_enable', 'option');
 $f_csp_disallow_url = get_field('csp_disallow-url', 'option');
+$f_csp_disallow_query = get_field('csp_disallow-query', 'option');
 
 if($f_csp_disallow_url){
     foreach($f_csp_disallow_url as $disallow_url ){
@@ -18,6 +19,15 @@ if($f_csp_disallow_url){
             if( $santizeRefererUrlSecure == $santizeDisallowUrlSecure || $santizeRefererUrl == $santizeDisallowUrl ){
                 return;
             }
+        }
+    }
+}
+
+
+if($f_csp_disallow_query){
+    foreach($f_csp_disallow_query as $disallow_query ){
+        if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
+            return;
         }
     }
 }
