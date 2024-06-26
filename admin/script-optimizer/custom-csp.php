@@ -2,6 +2,8 @@
 $f_csp_enable = get_field('csp_enable', 'option');
 $f_csp_disallow_url = get_field('csp_disallow-url', 'option');
 $f_csp_disallow_query = get_field('csp_disallow-query', 'option');
+$f_bypasser_enable = false;
+$f_bypasser_enabled = true;
 
 if($f_csp_disallow_url){
     foreach($f_csp_disallow_url as $disallow_url ){
@@ -10,42 +12,55 @@ if($f_csp_disallow_url){
 
         if( isset($_SERVER['REQUEST_URI']) ){
             if( $santizeDisallowUrlSecure == $_SERVER['REQUEST_URI'] || $santizeDisallowUrl == $_SERVER['REQUEST_URI'] ){
-                return;
+                $f_bypasser_enable .= ' valid ';
+                // return;
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
             $santizeRefererUrlSecure = str_replace(home_url('', 'https' ), "", $_SERVER['HTTP_REFERER']);
             $santizeRefererUrl = str_replace(home_url('', 'http' ), "", $_SERVER['HTTP_REFERER']);
             if( $santizeRefererUrlSecure == $santizeDisallowUrlSecure || $santizeRefererUrl == $santizeDisallowUrl ){
-                return;
+                $f_bypasser_enable .= ' valid ';
+                // return;
             }
         }
     }
 }
+
 
 
 if($f_csp_disallow_query){
     foreach($f_csp_disallow_query as $disallow_query ){
         if( isset($_SERVER['REQUEST_URI']) ){
             if (str_contains($_SERVER['REQUEST_URI'], $disallow_query['handle'])) {
-                return;
+                $f_bypasser_enable .= ' valid ';
+                // return;
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
             if (str_contains($_SERVER['HTTP_REFERER'], $disallow_query['handle'])) {
-                return;
+                $f_bypasser_enable .= ' valid ';
+                // return;
+
             }
         }        
         if( isset($_SERVER['QUERY_STRING']) ){
             if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
-                return;
+                $f_bypasser_enable .= ' valid ';
+                // return;
             }
         }
-        
     }
 }
 
-if ($f_csp_enable) {
+
+if($f_bypasser_enable){
+    if (str_contains($f_bypasser_enable, 'valid')) {
+        $f_bypasser_enabled = false;
+    }
+}
+
+if ($f_csp_enable && $f_bypasser_enabled) {
     /**
      * ENV_PATH
      * This is critcal for csp to work correctly.
