@@ -1,4 +1,11 @@
 <?php
+
+if ( str_contains($_SERVER['REQUEST_URI'], '/wp-cron.php') || str_contains($_SERVER['REQUEST_URI'], '/wp-admin/') || str_contains($_SERVER['REQUEST_URI'], '/wp-content/')) {
+    return false;
+}
+
+// error_log(print_r( $_SERVER['REQUEST_URI'], true));
+
 $f_csp_enable = get_field('csp_enable', 'option');
 $f_csp_disallow_url = get_field('csp_disallow-url', 'option');
 $f_csp_disallow_query = get_field('csp_disallow-query', 'option');
@@ -34,12 +41,14 @@ if($f_csp_disallow_query){
         if( isset($_SERVER['REQUEST_URI']) ){
             if (str_contains($_SERVER['REQUEST_URI'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
+                $_POST['f_bypasser_enable'] = 'valid';
                 // return;
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
             if (str_contains($_SERVER['HTTP_REFERER'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
+                $_POST['f_bypasser_enable'] = 'valid';
                 // return;
 
             }
@@ -47,20 +56,26 @@ if($f_csp_disallow_query){
         if( isset($_SERVER['QUERY_STRING']) ){
             if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
+                $_POST['f_bypasser_enable'] = 'valid';
                 // return;
             }
+        }
+    }
+    if( isset($_POST['point_origin']) ){
+        if (str_contains($_POST['point_origin'], $disallow_query['handle'])) {
+            $f_bypasser_enable .= ' valid ';
+            $_POST['f_bypasser_enable'] = 'valid';
+            // return;
         }
     }
 }
 
 
-if($f_bypasser_enable){
-    if (str_contains($f_bypasser_enable, 'valid')) {
-        $f_bypasser_enabled = false;
-    }
-}
 
-if ($f_csp_enable && $f_bypasser_enabled) {
+
+if ( $f_csp_enable &&  $_POST['f_bypasser_enable'] !== 'valid' ) {
+    error_log(print_r('CSP Activated', true));
+
     /**
      * ENV_PATH
      * This is critcal for csp to work correctly.
