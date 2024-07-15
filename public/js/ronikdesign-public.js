@@ -126,7 +126,7 @@ function addNonce($){
 
 
 
-function log_tracker_action( ) {
+function log_tracker_action($) {
 	// Pretty much we track the landing on the page.
 	if( origin.length > 0 && (origin.length > 0)){
 		jQuery.ajax({
