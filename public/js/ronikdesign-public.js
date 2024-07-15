@@ -163,14 +163,17 @@ function log_tracker_action( ) {
 }
 
 
-(function( $ ) {
-	'use strict';
-	// Load JS once windows is loaded.
-	$(window).on('load', function(){
-		// SetTimeOut just incase things havent initialized just yet.
-		setTimeout(() => {
-			addNonce($);
-			log_tracker_action($);
-		}, 50);
-	});
-})( jQuery );
+if (typeof jQuery !== 'undefined') {
+    // jQuery IS NOT loaded, do stuff here.
+	(function( $ ) {
+		'use strict';
+		// Load JS once windows is loaded.
+		$(window).on('load', function(){
+			// SetTimeOut just incase things havent initialized just yet.
+			setTimeout(() => {
+				addNonce($);
+				log_tracker_action($);
+			}, 50);
+		});
+	})( jQuery );
+}
