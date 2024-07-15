@@ -19,6 +19,7 @@ $f_csp_disallow_url = get_field('csp_disallow-url', 'option');
 $f_csp_disallow_query = get_field('csp_disallow-query', 'option');
 $f_bypasser_enable = 'invalid';
 $f_bypasser_enabled = true;
+$_POST['f_bypasser_enable'] = 'invalid';
 $_SESSION['f_bypasser_enable'] = 'invalid';
 
 
@@ -95,7 +96,10 @@ if($f_csp_disallow_query){
     }
 }
 
-
+error_log(print_r('post f_bypasser_enable', true));
+error_log(print_r($_POST['f_bypasser_enable'], true));
+error_log(print_r('session f_bypasser_enable', true));
+error_log(print_r($_SESSION['f_bypasser_enable'], true));
 
 
 if($f_csp_enable){
