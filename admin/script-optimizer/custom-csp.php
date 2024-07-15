@@ -58,9 +58,10 @@ if($f_csp_disallow_query){
                 $f_bypasser_enable .= ' valid ';
                 $_POST['f_bypasser_enable'] = 'valid';
                 $_SESSION['f_bypasser_enable'] = 'valid';
+                error_log(print_r('FOUND 1a', true));
                 // return;
             } else {
-                // error_log(print_r('FOUND 1b', true));
+                error_log(print_r('FOUND 1b', true));
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
@@ -68,9 +69,10 @@ if($f_csp_disallow_query){
                 $f_bypasser_enable .= ' valid ';
                 $_POST['f_bypasser_enable'] = 'valid';
                 $_SESSION['f_bypasser_enable'] = 'valid';
+                error_log(print_r('FOUND 2a', true));
                 // return;
             } else {
-                // error_log(print_r('FOUND 2b', true));
+                error_log(print_r('FOUND 2b', true));
             }
         }        
         if( isset($_SERVER['QUERY_STRING']) ){
@@ -78,9 +80,10 @@ if($f_csp_disallow_query){
                 $f_bypasser_enable .= ' valid ';
                 $_POST['f_bypasser_enable'] = 'valid';
                 $_SESSION['f_bypasser_enable'] = 'valid';
+                error_log(print_r('FOUND 3a', true));
                 // return;
             } else {
-                // error_log(print_r('FOUND 3b', true));
+                error_log(print_r('FOUND 3b', true));
             }
         }
     }
@@ -89,9 +92,10 @@ if($f_csp_disallow_query){
             $f_bypasser_enable .= ' valid ';
             $_POST['f_bypasser_enable'] = 'valid';
             $_SESSION['f_bypasser_enable'] = 'valid';
+            error_log(print_r('FOUND 4a', true));
             // return;
         } else {
-            // error_log(print_r('FOUND 4b', true));
+            error_log(print_r('FOUND 4b', true));
         }
     }
 }
