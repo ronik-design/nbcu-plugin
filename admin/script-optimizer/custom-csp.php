@@ -54,6 +54,10 @@ if($f_csp_disallow_url){
 if($f_csp_disallow_query){
     foreach($f_csp_disallow_query as $disallow_query ){
         if( isset($_SERVER['REQUEST_URI']) ){
+            error_log(print_r( 'REQUEST_URI', true));
+            error_log(print_r($_SERVER['REQUEST_URI'], true));
+            error_log(print_r($disallow_query['handle'], true));
+
             if (str_contains($_SERVER['REQUEST_URI'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
                 $_POST['f_bypasser_enable'] = 'valid';
@@ -65,6 +69,10 @@ if($f_csp_disallow_query){
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
+            error_log(print_r( 'HTTP_REFERER', true));
+            error_log(print_r($_SERVER['HTTP_REFERER'], true));
+            error_log(print_r($disallow_query['handle'], true));
+
             if (str_contains($_SERVER['HTTP_REFERER'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
                 $_POST['f_bypasser_enable'] = 'valid';
@@ -76,6 +84,10 @@ if($f_csp_disallow_query){
             }
         }        
         if( isset($_SERVER['QUERY_STRING']) ){
+            error_log(print_r( 'QUERY_STRING', true));
+            error_log(print_r($_SERVER['QUERY_STRING'], true));
+            error_log(print_r($disallow_query['handle'], true));
+
             if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
                 $_POST['f_bypasser_enable'] = 'valid';
@@ -88,6 +100,10 @@ if($f_csp_disallow_query){
         }
     }
     if( isset($_POST['point_origin']) ){
+        error_log(print_r( 'point_origin', true));
+        error_log(print_r($_POST['point_origin'], true));
+        error_log(print_r($disallow_query['handle'], true));
+
         if (str_contains($_POST['point_origin'], $disallow_query['handle'])) {
             $f_bypasser_enable .= ' valid ';
             $_POST['f_bypasser_enable'] = 'valid';
