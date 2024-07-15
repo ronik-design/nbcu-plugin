@@ -19,9 +19,40 @@ $f_csp_disallow_url = get_field('csp_disallow-url', 'option');
 $f_csp_disallow_query = get_field('csp_disallow-query', 'option');
 $f_bypasser_enable = 'invalid';
 $f_bypasser_enabled = true;
-$_POST['f_bypasser_enable'] = 'invalid';
-$_SESSION['f_bypasser_enable'] = 'invalid';
+// $_POST['f_bypasser_enable'] = 'invalid';
+// $_SESSION['f_bypasser_enable'] = 'invalid';
 
+
+
+function bypasser_trigger( $bypasserType, $timeStamp, $bypasserHandle ){
+
+
+    $currentDateTime = new DateTime(date('Y-m-d h:i:s', $timeStamp ));
+    $datetime = new DateTime(date('Y-m-d h:i:s', $timeStamp));
+    if( isset($_POST['f_bypasser_enable']) ){
+        $datetime = new DateTime(date('Y-m-d h:i:s', $_POST['f_bypasser_enable']['time']));
+    }
+    $datetime->modify('-1 minute');
+
+
+ 
+    if( $currentDateTime->format('Y-m-d h:i:s') > $datetime->format('Y-m-d h:i:s') ){
+        error_log(print_r( 'Time difference Expired' , true));
+
+        if($bypasserHandle !== $_POST['f_bypasser_enable']['location'] ){
+            $_POST['f_bypasser_enable'] = array(
+                "bypasserType" => $bypasserType, 
+                "time" => time(), 
+                "location" => $bypasserHandle
+            );
+            
+            error_log(print_r( $_POST['f_bypasser_enable'] , true));
+            error_log(print_r('post' . $_POST['f_bypasser_enable']['location']   , true));
+            
+
+        }
+    }
+}
 
 if($f_csp_disallow_url){
     foreach($f_csp_disallow_url as $disallow_url ){
@@ -31,9 +62,8 @@ if($f_csp_disallow_url){
         if( isset($_SERVER['REQUEST_URI']) ){
             if( $santizeDisallowUrlSecure == $_SERVER['REQUEST_URI'] || $santizeDisallowUrl == $_SERVER['REQUEST_URI'] ){
                 $f_bypasser_enable .= ' valid ';
-                $_POST['f_bypasser_enable'] = 'valid';
-                $_SESSION['f_bypasser_enable'] = 'valid';
-                // return;
+                error_log(print_r( 'a' , true));
+                bypasser_trigger( "valid", time(), $disallow_url['handle']);
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
@@ -41,92 +71,59 @@ if($f_csp_disallow_url){
             $santizeRefererUrl = str_replace(home_url('', 'http' ), "", $_SERVER['HTTP_REFERER']);
             if( $santizeRefererUrlSecure == $santizeDisallowUrlSecure || $santizeRefererUrl == $santizeDisallowUrl ){
                 $f_bypasser_enable .= ' valid ';
-                $_POST['f_bypasser_enable'] = 'valid';
-                $_SESSION['f_bypasser_enable'] = 'valid';
-                // return;
+                error_log(print_r( 'c' , true));
+                bypasser_trigger( "valid", time(), $disallow_url['handle']);
             }
         }
     }
 }
-
 
 
 if($f_csp_disallow_query){
     foreach($f_csp_disallow_query as $disallow_query ){
         if( isset($_SERVER['REQUEST_URI']) ){
-            error_log(print_r( 'REQUEST_URI', true));
-            error_log(print_r($_SERVER['REQUEST_URI'], true));
-            error_log(print_r($disallow_query['handle'], true));
-
             if (str_contains($_SERVER['REQUEST_URI'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
-                $_POST['f_bypasser_enable'] = 'valid';
-                $_SESSION['f_bypasser_enable'] = 'valid';
-                error_log(print_r('FOUND 1a', true));
-                // return;
-            } else {
-                error_log(print_r('FOUND 1b', true));
+                error_log(print_r( 'b' , true));
+                bypasser_trigger( "valid", time(), $disallow_query['handle']);
             }
         }
         if( isset($_SERVER['HTTP_REFERER']) ){
-            error_log(print_r( 'HTTP_REFERER', true));
-            error_log(print_r($_SERVER['HTTP_REFERER'], true));
-            error_log(print_r($disallow_query['handle'], true));
-
             if (str_contains($_SERVER['HTTP_REFERER'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
-                $_POST['f_bypasser_enable'] = 'valid';
-                $_SESSION['f_bypasser_enable'] = 'valid';
-                error_log(print_r('FOUND 2a', true));
-                // return;
-            } else {
-                error_log(print_r('FOUND 2b', true));
+                error_log(print_r( 'd' , true));
+                bypasser_trigger( "valid", time(), $disallow_query['handle']);
             }
         }        
         if( isset($_SERVER['QUERY_STRING']) ){
-            error_log(print_r( 'QUERY_STRING', true));
-            error_log(print_r($_SERVER['QUERY_STRING'], true));
-            error_log(print_r($disallow_query['handle'], true));
-
             if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ' valid ';
-                $_POST['f_bypasser_enable'] = 'valid';
-                $_SESSION['f_bypasser_enable'] = 'valid';
-                error_log(print_r('FOUND 3a', true));
-                // return;
-            } else {
-                error_log(print_r('FOUND 3b', true));
+                error_log(print_r( 'e' , true));
+                bypasser_trigger( "valid", time(), $disallow_query['handle']);
             }
         }
-    }
-    if( isset($_POST['point_origin']) ){
-        error_log(print_r( 'point_origin', true));
-        error_log(print_r($_POST['point_origin'], true));
-        error_log(print_r($disallow_query['handle'], true));
-
-        if (str_contains($_POST['point_origin'], $disallow_query['handle'])) {
-            $f_bypasser_enable .= ' valid ';
-            $_POST['f_bypasser_enable'] = 'valid';
-            $_SESSION['f_bypasser_enable'] = 'valid';
-            error_log(print_r('FOUND 4a', true));
-            // return;
-        } else {
-            error_log(print_r('FOUND 4b', true));
+        if( isset($_POST['point_origin']) ){
+            if (str_contains($_POST['point_origin'], $disallow_query['handle'])) {
+                $f_bypasser_enable .= ' valid ';
+                error_log(print_r( 'f' , true));
+                bypasser_trigger( "valid", time(), $disallow_query['handle']);
+            }
         }
     }
 }
 
+
+
+
+
 error_log(print_r('post f_bypasser_enable', true));
 error_log(print_r($_POST['f_bypasser_enable'], true));
-error_log(print_r('session f_bypasser_enable', true));
-error_log(print_r($_SESSION['f_bypasser_enable'], true));
 
 
 if($f_csp_enable){
     // Check post value
-    if( $_POST['f_bypasser_enable'] !== 'valid' ){
+    if( $_POST['f_bypasser_enable']['bypasserType'] !== 'valid' ){
         // If post fails we check the session
-        if( $_SESSION['f_bypasser_enable'] !== 'valid' ){
             error_log(print_r('CSP Activated', true));
             /**
              * ENV_PATH
@@ -338,7 +335,6 @@ if($f_csp_enable){
                 };
                 add_filter('wp_inline_script_attributes', 'mxd_wp_inline_script_attributes');
             }
-        }    
     }    
 }    
 
