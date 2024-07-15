@@ -1,10 +1,33 @@
 <?php
 
+function ronik_query_body_class($classes) {
+    $out = "";
+    $i = 0; /* for illustrative purposes only */
+
+    foreach($_GET as $k => $v) {
+        if($i == 0) {
+            $out .= 'ronik-query|'.$k;
+        } else {
+            $out .= ' ronik-query|'.$k;
+        }
+        $i++;
+    }
+    $classes[] = $out;
+    return $classes;
+}
+add_filter('body_class', 'ronik_query_body_class');
+
+
 if ( str_contains($_SERVER['REQUEST_URI'], '/wp-apxupx.php') || str_contains($_SERVER['REQUEST_URI'], '/wp-cron.php') || str_contains($_SERVER['REQUEST_URI'], '/wp-admin/') || str_contains($_SERVER['REQUEST_URI'], '/wp-content/')) {
     return false;
 }
 
 if( is_user_logged_in() ){
+    return false;
+}
+
+$f_ronik_query = implode(",", get_body_class());
+if ( str_contains($f_ronik_query, 'ronik-query')){
     return false;
 }
 
