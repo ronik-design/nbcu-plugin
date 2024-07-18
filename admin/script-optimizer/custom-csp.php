@@ -330,14 +330,16 @@ if($f_csp_enable){
                     //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
                     $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     // $headers['Content-Security-Policy']      = " script-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
-                    $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+                    $headers['Content-Security-Policy']     .= " default-src  ". get_template_directory_uri().'/manifest.json' ." 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
         
                     $headers['Content-Security-Policy']     .= " object-src 'none'; ";
                     $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
         
-                    // http://together.nbcudev.local/wp-admin/admin-ajax.php 
-                    $headers['Content-Security-Policy']     = " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
+                    // $headers['Content-Security-Policy']     .= " manifest-src '" . get_template_directory_uri().'/manifest.json' . "' ; ";
+                    // $headers['Content-Security-Policy']     .= " sandbox 'allow-orientation-lock' 'allow-presentation' 'allow-scripts'; ";
+                    
+                    $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
 
                     // $headers['Content-Security-Policy']     .= " media-src "  . site_url() . " blob: data: " . ";  ";
         
