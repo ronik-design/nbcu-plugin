@@ -56,20 +56,20 @@ function bypasser_trigger( $bypasserType, $timeStamp, $bypasserHandle ){
     $datetime->modify('+4 second');
 
 
- 
+
     if( $currentDateTime->format('Y-m-d h:i:s') > $datetime->format('Y-m-d h:i:s') ){
         error_log(print_r( 'Time difference Expired' , true));
 
         // if($bypasserHandle !== $_SESSION['f_bypasser_enable']['location'] ){
             $_SESSION['f_bypasser_enable'] = array(
-                "bypasserType" => $bypasserType, 
-                "time" => time(), 
+                "bypasserType" => $bypasserType,
+                "time" => time(),
                 "location" => $bypasserHandle
             );
-            
+
             error_log(print_r( $_SESSION['f_bypasser_enable'] , true));
             error_log(print_r('post' . $_SESSION['f_bypasser_enable']['location']   , true));
-            
+
 
         // }
     } else {
@@ -120,7 +120,7 @@ if($f_csp_disallow_query){
                 error_log(print_r( 'd' , true));
                 bypasser_trigger( "valid", time(), $disallow_query['handle']);
             }
-        }        
+        }
         if( isset($_SERVER['QUERY_STRING']) ){
             if (str_contains($_SERVER['QUERY_STRING'], $disallow_query['handle'])) {
                 $f_bypasser_enable .= ',valid';
@@ -201,7 +201,7 @@ if($f_csp_enable){
             }
             // Based on wp not having a true nonce function... we add a time stamp to the nonce name to auto create a new one after certain amout of time has passed. Not ideal but better than 24 hours or 12 hours.
             define('CSP_NONCE', wp_create_nonce('csp_nonce_' . $csp_time));
-        
+
             /**
              * Add a class to the body class.
              * Primary purpose is to let js know that csp is enabled
@@ -209,19 +209,19 @@ if($f_csp_enable){
             function ronikdesigns_body_class($classes)
             {
                 $classes[] = 'csp-enabled';
-        
+
                 return $classes;
             }
             // add_filter('body_class', 'ronikdesigns_body_class');
-        
+
             function hook_csp() {
                 ?>
                 <span data-csp="<?php echo CSP_NONCE; ?>" style="opacity:0;position:absolute;left:-3000px;top:-3000px;height:0;overflow:hidden;"></span>
                 <?php
             }
             add_action('wp_head', 'hook_csp');
-        
-        
+
+
             /**
              * We only want to trigger when user is not logged in.
              * Due to the complexity of the wp admin interface.
@@ -305,7 +305,7 @@ if($f_csp_enable){
                         // Internal
                         $html = trim(str_replace("<script", '<script type="text/javascript" defer nonce="' . CSP_NONCE . '"', $html));
                     }
-        
+
                     // Basically
                     if(DISALLOW_SCRIPTS_DEFER){
                         foreach(DISALLOW_SCRIPTS_DEFER as $key => $reject_script_defer){
@@ -314,10 +314,10 @@ if($f_csp_enable){
                             }
                         }
                     }
-        
+
                     return $html;
                 }, 1, 2);
-        
+
                 // CSP fix.
                 function additional_securityheaders($headers)
                 {
@@ -332,29 +332,29 @@ if($f_csp_enable){
                     // $headers['Content-Security-Policy']      = " script-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
-        
+
                     $headers['Content-Security-Policy']     .= " object-src 'none'; ";
                     $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
-        
+
                     // $headers['Content-Security-Policy']     .= " media-src "  . site_url() . " blob: data: " . ";  ";
-                    $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
+                    // $headers['Content-Security-Policy']     = " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
 
                     $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
                     $headers['Content-Security-Policy']     .= " style-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
-        
+
                     $headers['Content-Security-Policy']     .= " media-src https: 'self' blob: data; ";
-        
+
                     $headers['Content-Security-Policy']     .= " font-src 'self'  " . ALLOWABLE_FONTS . ";  ";
                     $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
-        
+
                     $headers['Content-Security-Policy']     .= " frame-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
-                    $headers['Content-Security-Policy']     .= " report-uri " . ENV_PATH . "; ";
-        
+                    // $headers['Content-Security-Policy']     .= " report-uri " . ENV_PATH . "; ";
+
                     $headers['X-Frame-Options']             = 'SAMEORIGIN';
                     return $headers;
                 }
                 add_filter('wp_headers', 'additional_securityheaders', 1);
-        
+
                 function wporg_my_wp_script_attributes($attr)
                 {
                     if (!isset($attr['nonce'])) {
@@ -372,8 +372,8 @@ if($f_csp_enable){
                 };
                 add_filter('wp_inline_script_attributes', 'mxd_wp_inline_script_attributes');
             }
-    }    
-}    
+    }
+}
 
 
 
