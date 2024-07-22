@@ -462,14 +462,15 @@ if($f_csp_enable){
                     //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
                     $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
 
+
+                                        
                     $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
 
                     $headers['Content-Security-Policy']     .= " object-src 'none'; ";
                     $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
 
-
-                    $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
+                    $headers['Content-Security-Policy']     .= " connect-src  * data: blob: 'unsafe-inline' ";
 
                     $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
                     $headers['Content-Security-Policy']     .= " style-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
@@ -477,10 +478,38 @@ if($f_csp_enable){
                     $headers['Content-Security-Policy']     .= " media-src https: 'self' blob: data; ";
 
                     $headers['Content-Security-Policy']     .= " font-src 'self'  " . ALLOWABLE_FONTS . ";  ";
-                    $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
 
-                    $headers['Content-Security-Policy']     .= " frame-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
+                    $headers['Content-Security-Policy']     .= " img-src * data: blob: 'unsafe-inline'; ";
+
+                    $headers['Content-Security-Policy']     .= " manifest-src  * data: blob:; ";
+                
+                    $headers['Content-Security-Policy']     .= " frame-src  * data: blob: 'unsafe-inline' ";
+                    $headers['Content-Security-Policy']     .= " frame-ancestors  * data: blob:; ";
+                    
+                    // $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
+                    // $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
+                    // $headers['Content-Security-Policy']     .= " frame-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
                     // $headers['Content-Security-Policy']     .= " report-uri " . ENV_PATH . "; ";
+
+
+
+
+                    // default-src * data: mediastream: blob: filesystem: about: ws: wss: 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; 
+                    // script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; 
+                    // script-src-elem * data: blob: 'unsafe-inline' 'unsafe-eval';
+                    // connect-src * data: blob: 'unsafe-inline'; 
+                    // img-src * data: blob: 'unsafe-inline'; 
+                    // media-src * data: blob: 'unsafe-inline'; 
+                    // frame-src * data: blob: ; 
+                    // style-src * data: blob: 'unsafe-inline';
+                    // font-src * data: blob: 'unsafe-inline';
+                    // frame-ancestors * data: blob:;
+
+
+
+
+
+
 
                     $headers['X-Frame-Options']             = 'SAMEORIGIN';
                     return $headers;
