@@ -470,7 +470,7 @@ if($f_csp_enable){
                     $headers['Content-Security-Policy']     .= " object-src 'none'; ";
                     $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
 
-                    $headers['Content-Security-Policy']     .= " connect-src  * data: blob: 'unsafe-inline' ";
+                    $headers['Content-Security-Policy']     .= " connect-src  * data: blob: 'unsafe-inline' ; ";
 
                     $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
                     $headers['Content-Security-Policy']     .= " style-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
@@ -483,7 +483,7 @@ if($f_csp_enable){
 
                     $headers['Content-Security-Policy']     .= " manifest-src  * data: blob:; ";
                 
-                    $headers['Content-Security-Policy']     .= " frame-src  * data: blob: 'unsafe-inline' ";
+                    $headers['Content-Security-Policy']     .= " frame-src  * data: blob: 'unsafe-inline' ; ";
                     $headers['Content-Security-Policy']     .= " frame-ancestors  * data: blob:; ";
                     
                     // $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
