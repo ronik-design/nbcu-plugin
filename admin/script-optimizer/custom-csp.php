@@ -169,27 +169,105 @@ if($f_csp_enable){
             define('ENV_PATH', get_site_url());
             // ALLOWABLE_FONTS
             $f_csp_allow_fonts = get_field('csp_allow-fonts', 'option');
-            $csp_allow_fonts = " data: https://fonts.googleapis.com/ https://fonts.gstatic.com/  ";
-            $csp_allow_fonts .= " " . ENV_PATH . " ";
+            $csp_allow_fonts = " https://fonts.googleapis.com/ https://fonts.gstatic.com/  ";
             if ($f_csp_allow_fonts) {
                 foreach ($f_csp_allow_fonts as $allow_fonts) {
                     $csp_allow_fonts .= $allow_fonts['link'] . ' ';
                 }
             }
+
+
+
+            function isUrlValid($url) {
+                error_log(print_r(  $url, true ));
+
+                // Disable error reporting for file_get_contents
+                $context = stream_context_create(['http' => ['ignore_errors' => true]]);
+                // Fetch the URL content
+                $content = file_get_contents($url, false, $context);
+                // Get the response headers
+                $headers = $http_response_header;
+                // Check if the response code contains "404"
+                foreach ($headers as $header) {
+
+                    if (str_contains($header, 'HTTP/1.1 40')) {
+                        return false; // URL is invalid or returns a 400 error
+                    }
+                    if (str_contains($header, 'HTTP/1.1 50')) {
+                        return false; // URL is invalid or returns a 500 error
+                    }
+                }
+                return true; // URL is valid
+             }
+
+
+
+
             // ALLOWABLE_SCRIPTS
             $f_csp_allow_scripts = get_field('csp_allow-scripts', 'option');
             // We automatically include the site url and blob data & some of the big companies urls...
-            $csp_allow_scripts = "https://secure.gravatar.com/ https://0.gravatar.com/ https://google.com/ https://www.google.com/ https://www.google-analytics.com/ https://www.googletagmanager.com/ https://tagmanager.google.com https://ajax.googleapis.com/ https://googleads.g.doubleclick.net/ https://ssl.gstatic.com https://www.gstatic.com https://www.facebook.com/ https://connect.facebook.net/ https://twitter.com/ https://analytics.twitter.com/ https://t.co/ https://static.ads-twitter.com/ https://linkedin.com/ https://px.ads.linkedin.com/ https://px4.ads.linkedin.com/ https://player.vimeo.com/ https://www.youtube.com/ https://youtu.be/ " . site_url() . " blob: data: " . $csp_allow_fonts . " ";
+            $csp_allow_scripts = "https://secure.gravatar.com/ https://0.gravatar.com/ https://google.com/ https://www.google.com/ https://www.google-analytics.com/ https://www.googletagmanager.com/ https://tagmanager.google.com https://ajax.googleapis.com/ https://googleads.g.doubleclick.net/ https://ssl.gstatic.com https://www.gstatic.com https://www.facebook.com/ https://connect.facebook.net/ https://twitter.com/ https://analytics.twitter.com/ https://t.co/ https://static.ads-twitter.com/ https://linkedin.com/ https://px.ads.linkedin.com/ https://px4.ads.linkedin.com/ https://player.vimeo.com/ https://www.youtube.com/ https://youtu.be/ ";
             if ($f_csp_allow_scripts) {
                 foreach ($f_csp_allow_scripts as $allow_scripts) {
                     $csp_allow_scripts .= $allow_scripts['link'] . ' ';
                 }
             }
+
+            $csp_allow_scripts_santized = get_transient( 'csp_allow_scripts_santized' );
+            // First check if the csp_allow_scripts_santized is empty..
+            if(empty( $csp_allow_scripts_santized )){
+                $csp_allow_scripts_reformatted = array_values(array_filter(explode(" ", $csp_allow_scripts)));
+                $csp_allow_scripts_santized = '';
+                if ($csp_allow_scripts) {
+                    foreach ($csp_allow_scripts_reformatted as $allow_scripts) {
+                            // Usage
+                            $url = $allow_scripts;
+                            if (isUrlValid($url)) {
+                                // error_log(print_r("URL is valid.", true));
+                                // error_log(print_r($url, true));
+                                $csp_allow_scripts_santized .= $url . ' ';
+                            } else {
+                                // error_log(print_r("URL is invalid or returns a 404 error.", true));
+                                // error_log(print_r($url, true));
+                            }
+                    }
+                }
+                $csp_allow_scripts_santized .=  site_url() . " blob: data: " . $csp_allow_fonts;
+                // Expire the transient after a day or so..
+                set_transient( 'csp_allow_scripts_santized', $csp_allow_scripts_santized, DAY_IN_SECONDS );
+            }
+
+            $csp_allow_fonts_scripts_santized = get_transient( 'csp_allow_fonts_scripts_santized' );
+            // First check if the csp_allow_scripts_santized is empty..
+            if(empty( $csp_allow_fonts_scripts_santized )){
+                $csp_allow_fonts_scripts_reformatted = array_values(array_filter(explode(" ", $csp_allow_fonts)));
+                $csp_allow_fonts_scripts_santized = '';
+                if ($csp_allow_fonts) {
+                    foreach ($csp_allow_fonts_scripts_reformatted as $allow_fonts_scripts) {
+                            // Usage
+                            $url = $allow_fonts_scripts;
+                            if (isUrlValid($url)) {
+                                // error_log(print_r("URL is valid.", true));
+                                // error_log(print_r($url, true));
+                                $csp_allow_fonts_scripts_santized .= $url . ' ';
+                            } else {
+                                error_log(print_r("URL is invalid or returns a 404 error.", true));
+                                error_log(print_r($url, true));
+                            }
+                    }
+                }
+                $csp_allow_fonts_scripts_santized .=  site_url() . " blob: data: ";
+                // Expire the transient after a day or so..
+                set_transient( 'csp_allow_fonts_scripts_santized', $csp_allow_fonts_scripts_santized, DAY_IN_SECONDS );
+            }
+
+
+
             // Disallow scripts Defer.
             $f_csp_disallow_scripts_defer = get_field('csp_disallow-script-defer', 'option');
             define('DISALLOW_SCRIPTS_DEFER', $f_csp_disallow_scripts_defer);
-            define('ALLOWABLE_FONTS', $csp_allow_fonts);
-            define('ALLOWABLE_SCRIPTS', $csp_allow_scripts);
+            define('ALLOWABLE_FONTS', $csp_allow_fonts_scripts_santized);
+            define('ALLOWABLE_SCRIPTS', $csp_allow_scripts_santized);
             /**
              * Custom Nonce
              * This is critcal for csp to work correctly.

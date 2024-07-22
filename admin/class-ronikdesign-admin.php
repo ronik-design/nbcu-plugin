@@ -180,6 +180,11 @@ class Ronikdesign_Admin
 		}
 	}
 
+	//* delete transient
+	function ronikdesigns_delete_custom_csp_transient(){
+		delete_transient('csp_allow_fonts_scripts_santized');
+		delete_transient('csp_allow_scripts_santized');
+	}
 
 	function ronikdesigns_acf_op_init_functions()
 	{

@@ -178,6 +178,10 @@ class Ronikdesign
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_fields', 2);
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_functions', 99);
 
+		$this->loader->add_action('update option', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+		$this->loader->add_action('save_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+		$this->loader->add_action('delete_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+
 		// $this->loader->add_action('admin_menu', $plugin_admin, 'remove_menus', 99);
 		$this->loader->add_filter('upload_mimes', $plugin_admin, 'roniks_add_svg_mime_types', 99);
 
