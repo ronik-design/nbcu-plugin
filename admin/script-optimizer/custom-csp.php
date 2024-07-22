@@ -228,56 +228,95 @@ if($f_csp_enable){
                 }
             }
 
-            $csp_allow_scripts_santized = get_transient( 'csp_allow_scripts_santized' );
-            // First check if the csp_allow_scripts_santized is empty..
-            if(empty( $csp_allow_scripts_santized )){
-                $csp_allow_scripts_reformatted = array_values(array_filter(explode(" ", $csp_allow_scripts)));
-                $csp_allow_scripts_santized = '';
-                if ($csp_allow_scripts) {
-                    foreach ($csp_allow_scripts_reformatted as $allow_scripts) {
-                            // Usage
-                            $url = $allow_scripts;
-                            if (isUrlValid($url)) {
-                                // error_log(print_r("URL is valid.", true));
-                                // error_log(print_r($url, true));
-                                $csp_allow_scripts_santized .= $url . ' ';
-                            } else {
-                                error_log(print_r("URL is invalid or returns a 400 - 500 error.", true));
-                                error_log(print_r($url, true));
-                            }
-                    }
-                }
-                $csp_allow_scripts_santized .=  site_url() . " blob: data: " . $csp_allow_fonts;
-                // Expire the transient after a day or so..
-                set_transient( 'csp_allow_scripts_santized', $csp_allow_scripts_santized, DAY_IN_SECONDS );
-            }
+
+
 
             $csp_allow_fonts_scripts_santized = get_transient( 'csp_allow_fonts_scripts_santized' );
             // First check if the csp_allow_scripts_santized is empty..
             if(empty( $csp_allow_fonts_scripts_santized )){
                 $csp_allow_fonts_scripts_reformatted = array_values(array_filter(explode(" ", $csp_allow_fonts)));
-                $csp_allow_fonts_scripts_santized = '';
+                $csp_allow_fonts_scripts_santized_r1 = '';
                 if ($csp_allow_fonts) {
                     foreach ($csp_allow_fonts_scripts_reformatted as $allow_fonts_scripts) {
-                            // Usage
-                            $url = $allow_fonts_scripts;
-                            if (isUrlValid($url)) {
-                                // error_log(print_r("URL is valid.", true));
-                                // error_log(print_r($url, true));
-                                $csp_allow_fonts_scripts_santized .= $url . ' ';
-                            } else {
-                                error_log(print_r("URL is invalid or returns a 404 error.", true));
-                                error_log(print_r($url, true));
-                            }
+                        // Usage
+                        $url = $allow_fonts_scripts;
+                        if (isUrlValid($url)) {
+                            // error_log(print_r("URL is valid.", true));
+                            // error_log(print_r($url, true));
+                            $csp_allow_fonts_scripts_santized_r1 .= $url . ' ';
+                        } else {
+                            error_log(print_r("URL is invalid or returns a 404 error.", true));
+                            error_log(print_r($url, true));
+                        }
                     }
                 }
-                $csp_allow_fonts_scripts_santized .=  site_url() . " blob: data: " . $csp_allow_scripts_santized;
+                $csp_allow_fonts_scripts_santized_r1 .=  site_url() . " blob: data: ";
+                $csp_allow_fonts_scripts_santized_r2 = implode(' ',array_unique(explode(' ', $csp_allow_fonts_scripts_santized_r1)));
                 // Expire the transient after a day or so..
-                set_transient( 'csp_allow_fonts_scripts_santized', $csp_allow_fonts_scripts_santized, DAY_IN_SECONDS );
+                set_transient( 'csp_allow_fonts_scripts_santized', $csp_allow_fonts_scripts_santized_r2, DAY_IN_SECONDS );
+                $csp_allow_fonts_scripts_santized = $csp_allow_fonts_scripts_santized_r2;
             }
 
 
 
+
+
+
+
+
+            $csp_allow_scripts_santized = get_transient( 'csp_allow_scripts_santized' );
+            // First check if the csp_allow_scripts_santized is empty..
+            if(empty( $csp_allow_scripts_santized )){
+                if ($csp_allow_scripts) {
+                    $csp_allow_scripts_santized_r1 = '';
+                    $csp_allow_scripts_reformatted = array_values(array_filter(explode(" ", $csp_allow_scripts)));
+                    foreach ($csp_allow_scripts_reformatted as $allow_scripts) {
+                        // Usage
+                        $url = $allow_scripts;
+                        if (isUrlValid($url)) {
+                            // error_log(print_r("URL is valid.", true));
+                            // error_log(print_r($url, true));
+                            $csp_allow_scripts_santized_r1 .= $url . ' ';
+                        } else {
+                            error_log(print_r("URL is invalid or returns a 400 - 500 error.", true));
+                            error_log(print_r($url, true));
+                        }
+                    }
+                }
+                $csp_allow_scripts_santized_r1 .= $csp_allow_fonts_scripts_santized;
+                $csp_allow_scripts_santized_r2 = implode(' ', array_unique( explode(' ', $csp_allow_scripts_santized_r1 ) ) );
+                // Expire the transient after a day or so..
+                set_transient( 'csp_allow_scripts_santized', $csp_allow_scripts_santized_r2, DAY_IN_SECONDS );
+                $csp_allow_scripts_santized = $csp_allow_scripts_santized_r2;
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+            error_log(print_r('$csp_allow_fonts_scripts_santized ' . $csp_allow_fonts_scripts_santized, true));
+            error_log(print_r('$csp_allow_scripts_santized ' . $csp_allow_scripts_santized, true));
+
+
+
+
+
+
+
+
+
+
+
+            
             // Disallow scripts Defer.
             $f_csp_disallow_scripts_defer = get_field('csp_disallow-script-defer', 'option');
             define('DISALLOW_SCRIPTS_DEFER', $f_csp_disallow_scripts_defer);
@@ -421,13 +460,14 @@ if($f_csp_enable){
                     $headers['X-XSS-Protection']            = '1; mode=block';
                     $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
                     //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
-                    $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+                    $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
 
                     $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
 
                     $headers['Content-Security-Policy']     .= " object-src 'none'; ";
                     $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
+
 
                     $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
 
