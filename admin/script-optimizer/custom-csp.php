@@ -338,6 +338,7 @@ if($f_csp_enable){
 
                     // $headers['Content-Security-Policy']     .= " media-src "  . site_url() . " blob: data: " . ";  ";
                     // $headers['Content-Security-Policy']     = " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
+                    $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
 
                     $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
                     $headers['Content-Security-Policy']     .= " style-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
