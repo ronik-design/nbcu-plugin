@@ -187,26 +187,30 @@ if($f_csp_enable){
                 $headers = $http_response_header;
                 // Check if the response code contains "404"
                 foreach ($headers as $header) {
-                    error_log(print_r($url, true));
-                    error_log(print_r($header, true));
 
-                    // Check to make sure response type is not application
-                    if (!str_contains($header, 'Content-Type: application/')) {
+                    // if($url == 'https://static.ads-twitter.com/'){                        
+                    //     error_log(print_r($url, true));
+                    //     error_log(print_r($header, true));
+                    //     error_log(print_r($content, true));
+                    // }
 
-                        // Check to make sure
-                        if (!str_contains($header, 'HTTP/1.1 400')) {
+                    if (!str_contains($content, 'Access Denied')) {                        
+                        // Check to make sure response type is not application
+                        if (!str_contains($header, 'Content-Type: application/')) {
+                            // Check to make sure
+                            if (!str_contains($header, 'HTTP/1.1 400')) {
 
-                            if (str_contains($header, 'HTTP/1.1 40')) {
-                                return false; // URL is invalid or returns a 400 error
-                            }
-                            if (str_contains($header, 'HTTP/1.1 50')) {
-                                // error_log(print_r($url, true));
-                                // error_log(print_r($header, true));
-                                return false; // URL is invalid or returns a 500 error
+                                if (str_contains($header, 'HTTP/1.1 40')) {
+                                    return false; // URL is invalid or returns a 400 error
+                                }
+                                if (str_contains($header, 'HTTP/1.1 50')) {
+                                    // error_log(print_r($url, true));
+                                    // error_log(print_r($header, true));
+                                    return false; // URL is invalid or returns a 500 error
+                                }
                             }
                         }
                     }
-                    
                 }
                 return true; // URL is valid
              }
@@ -267,7 +271,7 @@ if($f_csp_enable){
                             }
                     }
                 }
-                $csp_allow_fonts_scripts_santized .=  site_url() . " blob: data: ";
+                $csp_allow_fonts_scripts_santized .=  site_url() . " blob: data: " . $csp_allow_scripts_santized;
                 // Expire the transient after a day or so..
                 set_transient( 'csp_allow_fonts_scripts_santized', $csp_allow_fonts_scripts_santized, DAY_IN_SECONDS );
             }
@@ -417,15 +421,14 @@ if($f_csp_enable){
                     $headers['X-XSS-Protection']            = '1; mode=block';
                     $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
                     //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
-                    $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
-                    // $headers['Content-Security-Policy']      = " script-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+                    $headers['Content-Security-Policy']     = " script-src 'strict-dynamic' '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+
                     $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
 
                     $headers['Content-Security-Policy']     .= " object-src 'none'; ";
                     $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
 
-                    // $headers['Content-Security-Policy']     .= " media-src "  . site_url() . " blob: data: " . ";  ";
                     $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
 
                     $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
