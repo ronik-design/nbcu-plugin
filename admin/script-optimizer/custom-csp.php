@@ -421,7 +421,7 @@ if($f_csp_enable){
                     $headers['X-XSS-Protection']            = '1; mode=block';
                     $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
                     //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
-                    $headers['Content-Security-Policy']     = " script-src 'strict-dynamic' '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+                    $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
 
                     $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
                     $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
