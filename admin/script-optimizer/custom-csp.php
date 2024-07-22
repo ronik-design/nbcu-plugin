@@ -179,8 +179,6 @@ if($f_csp_enable){
 
 
             function isUrlValid($url) {
-                error_log(print_r(  $url, true ));
-
                 // Disable error reporting for file_get_contents
                 $context = stream_context_create(['http' => ['ignore_errors' => true]]);
                 // Fetch the URL content
@@ -189,13 +187,26 @@ if($f_csp_enable){
                 $headers = $http_response_header;
                 // Check if the response code contains "404"
                 foreach ($headers as $header) {
+                    error_log(print_r($url, true));
+                    error_log(print_r($header, true));
 
-                    if (str_contains($header, 'HTTP/1.1 40')) {
-                        return false; // URL is invalid or returns a 400 error
+                    // Check to make sure response type is not application
+                    if (!str_contains($header, 'Content-Type: application/')) {
+
+                        // Check to make sure
+                        if (!str_contains($header, 'HTTP/1.1 400')) {
+
+                            if (str_contains($header, 'HTTP/1.1 40')) {
+                                return false; // URL is invalid or returns a 400 error
+                            }
+                            if (str_contains($header, 'HTTP/1.1 50')) {
+                                // error_log(print_r($url, true));
+                                // error_log(print_r($header, true));
+                                return false; // URL is invalid or returns a 500 error
+                            }
+                        }
                     }
-                    if (str_contains($header, 'HTTP/1.1 50')) {
-                        return false; // URL is invalid or returns a 500 error
-                    }
+                    
                 }
                 return true; // URL is valid
              }
@@ -227,8 +238,8 @@ if($f_csp_enable){
                                 // error_log(print_r($url, true));
                                 $csp_allow_scripts_santized .= $url . ' ';
                             } else {
-                                // error_log(print_r("URL is invalid or returns a 404 error.", true));
-                                // error_log(print_r($url, true));
+                                error_log(print_r("URL is invalid or returns a 400 - 500 error.", true));
+                                error_log(print_r($url, true));
                             }
                     }
                 }
