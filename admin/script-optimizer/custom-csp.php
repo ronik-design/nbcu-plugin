@@ -453,27 +453,88 @@ if($f_csp_enable){
                 // CSP fix.
                 function additional_securityheaders($headers)
                 {
+                    // Need to redeclare csp with nonce-.
                     $nonce = 'nonce-' . CSP_NONCE;
-
-                    // Default security headers
-                    $headers['Referrer-Policy']             = 'no-referrer-when-downgrade';
+                    $headers['Referrer-Policy']             = 'no-referrer-when-downgrade'; //This is the default value, the same as if it were not set.
                     $headers['X-Content-Type-Options']      = 'nosniff';
                     $headers['X-XSS-Protection']            = '1; mode=block';
                     $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
+                    //Note: In the presence of a CSP nonce the unsafe-inline directive will be ignored by modern browsers. Older browsers, which don't support nonces, will see unsafe-inline and allow inline scripts to execute. For site to work properly.
+                    $headers['Content-Security-Policy']     = " script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+
+
+                                        
+                    $headers['Content-Security-Policy']     .= " default-src 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+                    $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
+
+                    $headers['Content-Security-Policy']     .= " object-src 'none'; ";
+                    $headers['Content-Security-Policy']     .= " base-uri 'none'; ";
+
+                    $headers['Content-Security-Policy']     .= " connect-src  * data: blob: 'unsafe-inline' ; ";
+
+                    $headers['Content-Security-Policy']     .= " child-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
+                    $headers['Content-Security-Policy']     .= " style-src  'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
+
+                    $headers['Content-Security-Policy']     .= " media-src https: 'self' blob: data; ";
+
+                    $headers['Content-Security-Policy']     .= " font-src 'self'  " . ALLOWABLE_FONTS . ";  ";
+
+                    $headers['Content-Security-Policy']     .= " img-src * data: blob: 'unsafe-inline'; ";
+
+                    $headers['Content-Security-Policy']     .= " manifest-src  * data: blob:; ";
                 
-                    // CSP header with recommended settings
-                    $headers['Content-Security-Policy']     = "default-src 'self' data: blob:; ";
-                    $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'strict-dynamic'; ";
-                    $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline'; ";
-                    $headers['Content-Security-Policy']    .= "img-src 'self' data: blob:; ";
-                    $headers['Content-Security-Policy']    .= "font-src 'self' data:; ";
-                    $headers['Content-Security-Policy']    .= "media-src 'self' data: blob:; ";
-                    $headers['Content-Security-Policy']    .= "connect-src 'self' data: blob:; ";
-                    $headers['Content-Security-Policy']    .= "object-src 'none'; ";
-                    $headers['Content-Security-Policy']    .= "frame-src 'self' data: blob:; ";
-                    $headers['Content-Security-Policy']    .= "frame-ancestors 'self'; ";
-                    $headers['Content-Security-Policy']    .= "base-uri 'none'; "; // Added base-uri directive
+                    $headers['Content-Security-Policy']     .= " frame-src  * data: blob: 'unsafe-inline' ; ";
+                    $headers['Content-Security-Policy']     .= " frame-ancestors  * data: blob:; ";
+                    
+                    // $headers['Content-Security-Policy']     .= " img-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
+                    // $headers['Content-Security-Policy']     .= " connect-src '" . $nonce . "' 'unsafe-inline' 'unsafe-eval' " . ALLOWABLE_SCRIPTS . "  https: 'self'; ";
+                    // $headers['Content-Security-Policy']     .= " frame-src 'self'  " . ALLOWABLE_SCRIPTS . ";  ";
+                    // $headers['Content-Security-Policy']     .= " report-uri " . ENV_PATH . "; ";
+
+
+
+
+                    // default-src * data: mediastream: blob: filesystem: about: ws: wss: 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; 
+                    // script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; 
+                    // script-src-elem * data: blob: 'unsafe-inline' 'unsafe-eval';
+                    // connect-src * data: blob: 'unsafe-inline'; 
+                    // img-src * data: blob: 'unsafe-inline'; 
+                    // media-src * data: blob: 'unsafe-inline'; 
+                    // frame-src * data: blob: ; 
+                    // style-src * data: blob: 'unsafe-inline';
+                    // font-src * data: blob: 'unsafe-inline';
+                    // frame-ancestors * data: blob:;
+
+
+
+
+
+
+                    
+                    // $nonce = 'nonce-' . CSP_NONCE;
+
+                    // // Default security headers
+                    // $headers['Referrer-Policy']             = 'no-referrer-when-downgrade';
+                    // $headers['X-Content-Type-Options']      = 'nosniff';
+                    // $headers['X-XSS-Protection']            = '1; mode=block';
+                    // $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=()';
                 
+                    // // CSP header with backward compatibility
+                    // $headers['Content-Security-Policy']     = "default-src 'self' data: blob:; ";
+                    // $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'unsafe-inline' 'strict-dynamic' https: http:; ";
+                    // $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline'; ";
+                    // $headers['Content-Security-Policy']    .= "img-src 'self' data: blob:; ";
+                    // $headers['Content-Security-Policy']    .= "font-src 'self' data:; ";
+                    // $headers['Content-Security-Policy']    .= "media-src 'self' data: blob:; ";
+                    // $headers['Content-Security-Policy']    .= "connect-src 'self' data: blob:; ";
+                    // $headers['Content-Security-Policy']    .= "object-src 'none'; ";
+                    // $headers['Content-Security-Policy']    .= "frame-src 'self' data: blob:; ";
+                    // $headers['Content-Security-Policy']    .= "frame-ancestors 'self'; ";
+                    // $headers['Content-Security-Policy']    .= "base-uri 'none'; "; // Added base-uri directive
+                
+                    // $headers['X-Frame-Options']             = 'SAMEORIGIN';
+
+
                     $headers['X-Frame-Options']             = 'SAMEORIGIN';
                     return $headers;
                 }
