@@ -473,7 +473,7 @@ if($f_csp_enable){
                     $headers['Content-Security-Policy']    .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: http: 'self' https://pix.cadent.tv; ";
 
                     // Allows script elements from self, https, http, pix.cadent.tv, and any sources specified in ALLOWABLE_SCRIPTS
-                    $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: https://pix.cadent.tv " . ALLOWABLE_SCRIPTS . "; ";
+                    $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: https://pix.cadent.tv 'unsafe-inline' " . ALLOWABLE_SCRIPTS . "; ";
 
                     // Allows styles from self, unsafe-inline, https, and sources specified in ALLOWABLE_SCRIPTS
                     $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_SCRIPTS . "; ";
