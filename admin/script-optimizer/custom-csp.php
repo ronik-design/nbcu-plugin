@@ -453,35 +453,61 @@ if($f_csp_enable){
                 // CSP fix.
                 function additional_securityheaders($headers)
                 {
+                    // Generate a nonce value for inline scripts
                     $nonce = 'nonce-' . CSP_NONCE; // Assume CSP_NONCE is defined somewhere
 
                     // Default security headers
                     $headers['Referrer-Policy']             = 'no-referrer-when-downgrade'; 
-                    $headers['X-Content-Type-Options']      = 'nosniff';
-                    $headers['X-XSS-Protection']            = '1; mode=block';
-                
+                    $headers['X-Content-Type-Options']      = 'nosniff'; // Prevents MIME type sniffing
+                    $headers['X-XSS-Protection']            = '1; mode=block'; // Enables XSS filter in browsers
+
                     // Permissions Policy to include encrypted-media
                     $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self), geolocation=*, camera=(), encrypted-media=*';
-                
-                    // Content Security Policy
-                    $headers['Content-Security-Policy']     = "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; ";
-                    // $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'strict-dynamic' https: http: script.crazyegg.com; ";
-                    $headers['Content-Security-Policy'] .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
-                    // $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: script.crazyegg.com; ";
-                    $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
+                    // Allows access to encrypted media (like DRM content) from any origin
 
+                    // Content Security Policy
+                    $headers['Content-Security-Policy']     = "default-src 'self' https: data: blob:; ";
+                    // Allows resources (like images and fonts) to be loaded from 'self', https, data URLs, and blob URLs
+
+                    // Allows scripts from self, nonce, strict-dynamic, unsafe-inline, unsafe-eval, https, http, and pix.cadent.tv
+                    $headers['Content-Security-Policy']    .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: http: 'self' https://pix.cadent.tv; ";
+
+                    // Allows script elements from self, https, http, pix.cadent.tv, and any sources specified in ALLOWABLE_SCRIPTS
+                    $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: https://pix.cadent.tv " . ALLOWABLE_SCRIPTS . "; ";
+
+                    // Allows styles from self, unsafe-inline, https, and sources specified in ALLOWABLE_SCRIPTS
                     $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_SCRIPTS . "; ";
-                    $headers['Content-Security-Policy']    .= "img-src 'self' https: data: blob:; ";
+
+                    // Allows images from any source, data URLs, blob URLs, and pix.cadent.tv
+                    $headers['Content-Security-Policy']    .= "img-src * data: blob: https://pix.cadent.tv; ";
+                    // Note: Allowing `*` makes your CSP more permissive and may expose your site to risks
+
+                    // Allows fonts from self, https, and data URLs
                     $headers['Content-Security-Policy']    .= "font-src 'self' https: data:; ";
+
+                    // Allows media (like video and audio) from self, https, data URLs, and blob URLs
                     $headers['Content-Security-Policy']    .= "media-src 'self' https: data: blob:; ";
+
+                    // Allows connections (like WebSockets) to self, https, data URLs, and blob URLs
                     $headers['Content-Security-Policy']    .= "connect-src 'self' https: data: blob:; ";
+
+                    // Disallows loading of plugins (like Flash) for security reasons
                     $headers['Content-Security-Policy']    .= "object-src 'none'; ";
-                    $headers['Content-Security-Policy']    .= "frame-src 'self' https: data: blob:; ";
+
+                    // Allows iframes and frames from any source, data URLs, and blob URLs
+                    // Note: Allowing '*' for frame-src can be a significant security risk
+                    $headers['Content-Security-Policy']    .= "frame-src * data: blob: 'unsafe-inline'; ";
+
+                    // Restricts who can embed this content in frames or iframes (only 'self')
                     $headers['Content-Security-Policy']    .= "frame-ancestors 'self'; ";
+
+                    // Restricts the base URL for relative URLs to prevent injection attacks
                     $headers['Content-Security-Policy']    .= "base-uri 'none'; ";
-                
+
+                    // Protects against clickjacking attacks
                     $headers['X-Frame-Options']             = 'SAMEORIGIN';
 
+                    
 
 
                     // $nonce = 'nonce-' . CSP_NONCE;
