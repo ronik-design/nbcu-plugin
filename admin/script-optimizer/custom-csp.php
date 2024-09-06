@@ -467,8 +467,9 @@ if($f_csp_enable){
                     $headers['Content-Security-Policy']     = "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; ";
                     // $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'strict-dynamic' https: http: script.crazyegg.com; ";
                     $headers['Content-Security-Policy'] .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+                    // $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: script.crazyegg.com; ";
+                    $headers['Content-Security-Policy']     .= " script-src-elem 'unsafe-inline' " . ALLOWABLE_SCRIPTS . " https; ";
 
-                    $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: script.crazyegg.com; ";
                     $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_SCRIPTS . "; ";
                     $headers['Content-Security-Policy']    .= "img-src 'self' https: data: blob:; ";
                     $headers['Content-Security-Policy']    .= "font-src 'self' https: data:; ";
