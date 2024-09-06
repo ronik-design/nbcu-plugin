@@ -453,23 +453,22 @@ if($f_csp_enable){
                 // CSP fix.
                 function additional_securityheaders($headers)
                 {
-                    // Need to redeclare csp with nonce-.
                     $nonce = 'nonce-' . CSP_NONCE;
 
                     // Default security headers
                     $headers['Referrer-Policy']             = 'no-referrer-when-downgrade'; 
                     $headers['X-Content-Type-Options']      = 'nosniff';
                     $headers['X-XSS-Protection']            = '1; mode=block';
-                    
-                    // Updated Permissions Policy to include encrypted-media
-                    $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self "' . ENV_PATH . '"), geolocation=*, camera=(), encrypted-media=*';
-                    
+                
+                    // Permissions Policy to include encrypted-media
+                    $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self), geolocation=*, camera=(), encrypted-media=*';
+                
                     // Content Security Policy
                     $headers['Content-Security-Policy']     = "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; ";
                     $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'unsafe-inline' 'strict-dynamic' https: http: script.crazyegg.com; ";
-                    $headers['Content-Security-Policy']    .= "script-src-elem 'self' 'unsafe-inline' https: http: script.crazyegg.com; ";
+                    $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: script.crazyegg.com; ";
                     $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_SCRIPTS . "; ";
-                    $headers['Content-Security-Policy']    .= "img-src 'self' https: data: blob:; ";
+                    $headers['Content-Security-Policy']    .= "img-src 'self' https: data: blob: pix.cadent.tv; "; // Allow images from pix.cadent.tv
                     $headers['Content-Security-Policy']    .= "font-src 'self' https: data:; ";
                     $headers['Content-Security-Policy']    .= "media-src 'self' https: data: blob:; ";
                     $headers['Content-Security-Policy']    .= "connect-src 'self' https: data: blob:; ";
@@ -479,7 +478,6 @@ if($f_csp_enable){
                     $headers['Content-Security-Policy']    .= "base-uri 'none'; ";
                 
                     $headers['X-Frame-Options']             = 'SAMEORIGIN';
-
 
 
 
