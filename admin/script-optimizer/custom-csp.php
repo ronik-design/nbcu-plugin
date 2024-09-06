@@ -453,7 +453,7 @@ if($f_csp_enable){
                 // CSP fix.
                 function additional_securityheaders($headers)
                 {
-                    $nonce = 'nonce-' . CSP_NONCE;
+                    $nonce = 'nonce-' . CSP_NONCE; // Assume CSP_NONCE is defined somewhere
 
                     // Default security headers
                     $headers['Referrer-Policy']             = 'no-referrer-when-downgrade'; 
@@ -465,10 +465,12 @@ if($f_csp_enable){
                 
                     // Content Security Policy
                     $headers['Content-Security-Policy']     = "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; ";
-                    $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'unsafe-inline' 'strict-dynamic' https: http: script.crazyegg.com; ";
+                    // $headers['Content-Security-Policy']    .= "script-src 'self' 'nonce-" . CSP_NONCE . "' 'strict-dynamic' https: http: script.crazyegg.com; ";
+                    $headers['Content-Security-Policy'] .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: 'self'; ";
+
                     $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: script.crazyegg.com; ";
                     $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_SCRIPTS . "; ";
-                    $headers['Content-Security-Policy']    .= "img-src 'self' https: data: blob: pix.cadent.tv; "; // Allow images from pix.cadent.tv
+                    $headers['Content-Security-Policy']    .= "img-src 'self' https: data: blob:; ";
                     $headers['Content-Security-Policy']    .= "font-src 'self' https: data:; ";
                     $headers['Content-Security-Policy']    .= "media-src 'self' https: data: blob:; ";
                     $headers['Content-Security-Policy']    .= "connect-src 'self' https: data: blob:; ";
