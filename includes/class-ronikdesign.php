@@ -213,6 +213,9 @@ class Ronikdesign
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 
+		$this->loader->add_filter('init', $plugin_public, 'ronikdesigns_xss_sanitize_all_get_params', 1);
+		$this->loader->add_filter('wp_redirect', $plugin_public, 'ronikdesigns_xss_redirect_init_functions', 10, 2);
+
 		// Trigger the helper functions right when ACF Initialization happens.
 		$this->loader->add_action('acf/init', $plugin_public, 'ronikdesigns_helper_functions', 1);
 		// Trigger the include files towards the end of the ACF Initialization.

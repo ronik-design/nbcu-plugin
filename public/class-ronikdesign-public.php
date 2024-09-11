@@ -232,6 +232,70 @@ class Ronikdesign_Public
 		}
 	}
 
+    /**
+     * Function to sanitize redirect URLs for XSS
+     */
+    public function ronikdesigns_xss_redirect_init_functions($location, $status) {
+		error_log(print_r( 'ronikdesigns_xss_redirect_init_functions', true));
+
+        // Parse the URL to isolate query parameters
+        $parsed_url = wp_parse_url($location);
+
+        // Check if there are query parameters
+        if (isset($parsed_url['query'])) {
+            // Parse the query string
+            parse_str($parsed_url['query'], $query_params);
+
+            // Sanitize the 'r' parameter (or any others)
+            if (isset($query_params['r'])) {
+                $query_params['r'] = sanitize_redirect_param($query_params['r']);
+            }
+
+            // Rebuild the query string with sanitized parameters
+            $parsed_url['query'] = http_build_query($query_params);
+
+            // Rebuild the sanitized URL
+            $location = unparse_url($parsed_url);
+        }
+
+        // Use esc_url_raw to sanitize the entire URL
+        $sanitized_url = esc_url_raw($location);
+
+        // If the URL is invalid or unsafe, redirect to the home page as a fallback
+        if (filter_var($sanitized_url, FILTER_VALIDATE_URL) === false) {
+            return home_url();
+        }
+
+        return $sanitized_url;
+    }
+
+	// Function to sanitize all $_GET parameters
+	public function ronikdesigns_xss_sanitize_all_get_params() {
+		foreach ($_GET as $key => $value) {
+			if (is_array($value)) {
+				$_GET[$key] = array_map('sanitize_text_field', $value);
+			} else {
+				switch ($key) {
+					case 'r':
+						// Sanitize URL using esc_url_raw
+						$_GET[$key] = esc_url_raw($value);
+						if (!filter_var($_GET[$key], FILTER_VALIDATE_URL)) {
+							// Handle invalid URL
+							$_GET[$key] = '';
+						}
+						break;
+					default:
+						// Sanitize general text fields
+						$_GET[$key] = sanitize_text_field($value);
+				}
+			}
+		}
+		
+		// Debugging output
+		error_log('Sanitized GET parameters: ' . print_r($_GET, true));
+	}
+		
+
 	/**
 		* Add custom classes to the body. This helps with improve performance and dynamic js
 	*/
