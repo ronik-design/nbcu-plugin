@@ -236,38 +236,65 @@ class Ronikdesign_Public
      * Function to sanitize redirect URLs for XSS
      */
     public function ronikdesigns_xss_redirect_init_functions($location, $status) {
-		error_log(print_r( 'ronikdesigns_xss_redirect_init_functions', true));
-
-        // Parse the URL to isolate query parameters
-        $parsed_url = wp_parse_url($location);
-
-        // Check if there are query parameters
-        if (isset($parsed_url['query'])) {
-            // Parse the query string
-            parse_str($parsed_url['query'], $query_params);
-
-            // Sanitize the 'r' parameter (or any others)
-            if (isset($query_params['r'])) {
-                $query_params['r'] = sanitize_redirect_param($query_params['r']);
-            }
-
-            // Rebuild the query string with sanitized parameters
-            $parsed_url['query'] = http_build_query($query_params);
-
-            // Rebuild the sanitized URL
-            $location = unparse_url($parsed_url);
-        }
-
-        // Use esc_url_raw to sanitize the entire URL
-        $sanitized_url = esc_url_raw($location);
-
-        // If the URL is invalid or unsafe, redirect to the home page as a fallback
-        if (filter_var($sanitized_url, FILTER_VALIDATE_URL) === false) {
-            return home_url();
-        }
-
-        return $sanitized_url;
-    }
+			error_log(print_r('ronikdesigns_xss_redirect_init_functions', true));
+		
+			// Helper function to rebuild URL from parsed components
+			function unparse_url($parsed_url) {
+				$scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+				$host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+				$port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+				$user     = isset($parsed_url['user']) ? $parsed_url['user'] : '';
+				$pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass'] : '';
+				$pass     = ($user || $pass) ? "$pass@" : '';
+				$path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+				$query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+				$fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+				return "$scheme$user$pass$host$port$path$query$fragment";
+			}
+		
+			// Helper function to sanitize query parameters
+			function sanitize_redirect_param($param) {
+				// Remove potential harmful attributes and tags
+				$xss_pattern = '/(<|>|javascript:|data:text\/html|on\w+=|%22|%3C|%3E)/i';
+				
+				// Replace dangerous elements with safe content
+				$sanitized_param = preg_replace($xss_pattern, '', $param);
+		
+				// Return the sanitized parameter
+				return $sanitized_param;
+			}
+		
+			// Parse the URL to isolate query parameters
+			$parsed_url = wp_parse_url($location);
+		
+			// Check if there are any query parameters
+			if (isset($parsed_url['query'])) {
+				// Parse the query string
+				parse_str($parsed_url['query'], $query_params);
+		
+				// Sanitize the 'r' parameter (or any others)
+				if (isset($query_params['r'])) {
+					$query_params['r'] = sanitize_redirect_param($query_params['r']);
+				}
+		
+				// Rebuild the query string with sanitized parameters
+				$parsed_url['query'] = http_build_query($query_params);
+		
+				// Rebuild the sanitized URL
+				$location = unparse_url($parsed_url);
+			}
+		
+			// Use esc_url_raw to sanitize the entire URL
+			$sanitized_url = esc_url_raw($location);
+		
+			// If the URL is invalid or unsafe, redirect to the home page as a fallback
+			if (filter_var($sanitized_url, FILTER_VALIDATE_URL) === false) {
+				return home_url();
+			}
+		
+			return $sanitized_url;
+		}
+		
 
 	// Function to sanitize all $_GET parameters
 	public function ronikdesigns_xss_sanitize_all_get_params() {
