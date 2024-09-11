@@ -236,6 +236,10 @@ class Ronikdesign_Public
      * Function to sanitize redirect URLs for XSS
      */
     public function ronikdesigns_xss_redirect_init_functions($location, $status) {
+		if (is_admin()) {
+			// Don't sanitize anything if in admin area
+			return;
+		}
 			error_log(print_r('ronikdesigns_xss_redirect_init_functions', true));
 		
 			// Helper function to rebuild URL from parsed components
@@ -298,6 +302,11 @@ class Ronikdesign_Public
 
 	// Function to sanitize all $_GET parameters
 	public function ronikdesigns_xss_sanitize_all_get_params() {
+		if (is_admin()) {
+			// Don't sanitize anything if in admin area
+			return;
+		}
+
 		foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
 				$_GET[$key] = array_map('sanitize_text_field', $value);
