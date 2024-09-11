@@ -193,8 +193,22 @@ add_filter('wp_headers', function ($headers) {
     $headers['Content-Security-Policy']    .= "frame-src * data: blob: 'unsafe-inline'; ";
     $headers['Content-Security-Policy']    .= "frame-ancestors 'self'; ";
     $headers['Content-Security-Policy']    .= "base-uri 'none'; ";
-    $headers['Content-Security-Policy']    .= "report-uri " . esc_url(ENV_PATH . '/wp-json/csp/v1/report'); // Add report URI
+
+    $headers['Content-Security-Policy']    .= "report-uri " . esc_url(ENV_PATH . '/wp-json/csp/v1/report') . "; "; // Add report URI
+    $headers['Content-Security-Policy']    .= "report-to 'csp-endpoint'; "; // Add report-to
+
     $headers['X-Frame-Options']             = 'SAMEORIGIN';
+
+
+    // Report-To header configuration
+    $headers['Report-To'] = json_encode([
+        "group" => "csp-endpoint",
+        "max_age" => 10886400, // 3 months in seconds
+        "endpoints" => [
+            ["url" => esc_url(ENV_PATH . '/wp-json/csp/v1/report')]
+        ],
+        "include_subdomains" => true
+    ]);
 
     return $headers;
 });
