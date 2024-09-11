@@ -185,9 +185,7 @@ add_filter('wp_headers', function ($headers) {
     $headers['Content-Security-Policy']    .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: http: 'self' https://pix.cadent.tv; ";
     $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: https://pix.cadent.tv 'unsafe-inline' " . ALLOWABLE_SCRIPTS . "; ";
     $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_FONTS . "; ";
-    // $headers['Content-Security-Policy']    .= "img-src * data: blob: https://pix.cadent.tv; ";
-    $headers['Content-Security-Policy']    .= "img-src 'self'; ";
-
+    $headers['Content-Security-Policy']    .= "img-src * data: blob: https://pix.cadent.tv; ";
     $headers['Content-Security-Policy']    .= "font-src 'self' https: data:; ";
     $headers['Content-Security-Policy']    .= "media-src 'self' https: data: blob:; ";
     $headers['Content-Security-Policy']    .= "connect-src 'self' https: data: blob:; ";

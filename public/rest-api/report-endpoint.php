@@ -1,5 +1,4 @@
 <?php
-
 function handle_csp_report(WP_REST_Request $request) {
     $data = $request->get_json_params();
     error_log('CSP Report Data: ' . print_r($data, true)); // Log the received data
@@ -28,16 +27,10 @@ function handle_csp_report(WP_REST_Request $request) {
     return new WP_REST_Response($response, 200);
 }
 
+
+
 register_rest_route('csp/v1', '/report', array(
-    'methods' => 'POST',
+    'methods' => 'GET',
     'callback' => 'handle_csp_report',
     'permission_callback' => '__return_true', // Adjust permissions as needed
 ));
-
-
-// // Register REST API endpoint for CSP reports using GET
-// register_rest_route('csp/v1', '/report', array(
-//     'methods' => 'GET',
-//     'callback' => 'handle_csp_report',
-//     'permission_callback' => '__return_true', // Adjust permissions as needed
-// ));
