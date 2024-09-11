@@ -334,7 +334,7 @@ class Ronikdesign_Public
 		}
 	
 		// Debugging output
-		error_log('Sanitized GET parameters: ' . print_r($_GET, true));
+		// error_log('Sanitized GET parameters: ' . print_r($_GET, true));
 	}
 		
 
