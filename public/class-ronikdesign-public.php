@@ -306,18 +306,24 @@ class Ronikdesign_Public
 			// Don't sanitize anything if in admin area
 			return;
 		}
-
+	
 		foreach ($_GET as $key => $value) {
 			if (is_array($value)) {
 				$_GET[$key] = array_map('sanitize_text_field', $value);
 			} else {
 				switch ($key) {
 					case 'r':
-						// Sanitize URL using esc_url_raw
-						$_GET[$key] = esc_url_raw($value);
-						if (!filter_var($_GET[$key], FILTER_VALIDATE_URL)) {
-							// Handle invalid URL
-							$_GET[$key] = '';
+						// Allow relative URLs, sanitize otherwise
+						if (strpos($value, '/') === 0) {
+							// It's a relative URL, allow it but escape it to ensure no malicious content
+							$_GET[$key] = esc_url_raw($value, ['http', 'https', '']);
+						} else {
+							// It's a full URL, sanitize it
+							$_GET[$key] = esc_url_raw($value);
+							if (!filter_var($_GET[$key], FILTER_VALIDATE_URL)) {
+								// Handle invalid full URL
+								$_GET[$key] = '';
+							}
 						}
 						break;
 					default:
@@ -326,7 +332,7 @@ class Ronikdesign_Public
 				}
 			}
 		}
-		
+	
 		// Debugging output
 		error_log('Sanitized GET parameters: ' . print_r($_GET, true));
 	}
