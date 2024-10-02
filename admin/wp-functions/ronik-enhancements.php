@@ -23,12 +23,12 @@ add_action( 'wp_head', 'ronikdesigns_header_manipulation' );
 $f_custom_js_settings = get_field('custom_js_settings', 'option');
 if(isset($f_custom_js_settings['enable_serviceworker']) && $f_custom_js_settings['enable_serviceworker']){
     //* delete transient
-    function delete_custom_transient(){
+    function nbcu_revamp_delete_custom_transient(){
         delete_transient('frontend-script-loader');
     }
-    add_action('update option', 'delete_custom_transient');
-    add_action('save_post', 'delete_custom_transient');
-    add_action('delete_post', 'delete_custom_transient');
+    add_action('update option', 'nbcu_revamp_delete_custom_transient');
+    add_action('save_post', 'nbcu_revamp_delete_custom_transient');
+    add_action('delete_post', 'nbcu_revamp_delete_custom_transient');
     
     // Lets store all the styles and scripts inside an array.
     function ronikdesigns_scripts_styles() {

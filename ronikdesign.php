@@ -9,15 +9,15 @@
  * that starts the plugin.
  *
  * @link              https://www.ronikdesign.com/
- * @since             2.0.1.1.5
+ * @since             2.0.1.1.7
  * @package           Ronikdesign
  *
  * @wordpress-plugin
  * Plugin Name:       Revamp 2023 | Ronik Designs Developer Toolbox
  * Plugin URI:        https://github.com/ronik-design/ronikdesign
  * Description:       Theme Code Optimizer. ACF is necessary for plugin to work correctly.
- * Version:           2.0.1.1.5
- * Author:            Kevin Mancuso
+ * Version:           2.0.1.1.7
+ * Author:            Ronik Design
  * Author URI:        https://www.ronikdesign.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
@@ -35,7 +35,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'RONIKDESIGN_VERSION', '2.0.1.1.5' );
+define( 'RONIKDESIGN_VERSION', '2.0.1.1.7' );
 
 
 

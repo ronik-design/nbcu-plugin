@@ -132,6 +132,58 @@ class Ronikdesign_Public
 			'nonce'	  => wp_create_nonce('ajax-nonce')
 		));
 	}
+
+
+	private function ronikdesign_miniorange_is_demo(){
+		$current_user = wp_get_current_user(); // Get the current user
+		// Array of specific emails to check
+		$specific_emails = [
+			'kevin.m.mancuso@gmail.com',
+			'specific2@example.com',
+			'specific3@example.com',
+		]; // Add more emails as needed
+		
+		// Define the domain to check
+		$specific_domain = '@ronikdesign.com';
+		// Check if the user is logged in and matches any of the specific emails or has the specific domain
+		if (is_user_logged_in() && 
+			(in_array($current_user->user_email, $specific_emails) || 
+			 strpos($current_user->user_email, $specific_domain) !== false)) {
+			// User is logged in and matches one of the specific emails or has the specific domain
+			error_log('User is logged in and matches the criteria.');
+			return 'valid';
+		} else {
+			// User is either not logged in or does not match the criteria
+			error_log('User is not logged in or does not match the criteria.');
+			return 'invalid';
+		}
+		return 'invalid';
+	}
+	/**
+		* Register Miniorange!
+		* https://developers.miniorange.com/docs/saml/wordpress/hooks
+	*/
+	public function ronikdesign_miniorange(){
+		if($this->ronikdesign_miniorange_is_demo() == 'invalid'){
+			return;
+		}
+		foreach (glob(dirname(__FILE__) . '/miniorange/*.php') as $file) {
+			include_once $file;
+		}
+		foreach (glob(dirname(__FILE__) . '/miniorange/ronik-classes/*.php') as $file) {
+			include_once $file;
+		}
+		
+	}
+	public function ronikdesign_miniorange_ajax(){
+		if($this->ronikdesign_miniorange_is_demo() == 'invalid'){
+			return;
+		}
+		foreach (glob(dirname(__FILE__) . '/miniorange/ajax/*.php') as $file) {
+			include_once $file;
+		}
+	}
+	
 	/**
 		* Register helper classes!
 		* This is critical for AUTHORIZATION to work properly!
