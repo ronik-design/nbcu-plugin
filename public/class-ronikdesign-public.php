@@ -135,6 +135,8 @@ class Ronikdesign_Public
 
 
 	private function ronikdesign_miniorange_is_demo(){
+		return 'bypass';
+		
 		$current_user = wp_get_current_user(); // Get the current user
 		// Array of specific emails to check
 		$specific_emails = [
