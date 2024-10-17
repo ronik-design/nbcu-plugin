@@ -774,7 +774,59 @@ class Ronikdesign_Public
 				!str_contains($_SERVER['REQUEST_URI'], '2fa') &&
 				!str_contains($_SERVER['REQUEST_URI'], 'mfa')
 			){
-				include_once $file;
+
+
+
+				global $wpdb;
+				// This piece of code is critical. It determines if the user should be allowed to bypass the authorization app.
+				$f_bypasser = apply_filters( 'ronikdesign_auth_bypasser', false );
+				if($f_bypasser && is_user_logged_in()){
+					// The next part we find the user email.
+					$user_id = get_current_user_id();
+					$user_email = get_user_meta($user_id, "user_email", true);
+					// If default user email is not found we look through a custom data path. do_users.
+					if(!$user_email){
+						$sql = "select * from do_users where ID = '$user_id'";
+						$do_users = $wpdb->get_results($sql);
+						if(empty($do_users)){
+							if(isset($do_users[0]) && $do_users[0]){
+								if($do_users[0]->user_email){
+									$user_email = $do_users[0]->user_email;
+								} else {
+									$user_email = 'No email found.';
+								}
+							} else {
+								$user_email = 'No email found.';
+							}
+						} else {
+							$user_email = 'No email found.';
+						}
+					}
+	
+					$user_confirmed = get_user_meta($user_id, "user_confirmed", true);
+					$wp_3_access = get_user_meta($user_id, "wp_3_access", true);
+					// Pretty much want to only trigger the MFA if the user is confirmed and is granted access.
+					if($user_confirmed == 'Y' && $wp_3_access == 'Y'){
+						// If no email we include the file.
+						if($user_email == 'No email found.'){
+							include_once $file;
+						} else {
+							$f_user_override = get_option('options_mfa_settings_user_override');
+							// We remove all whitespace (including tabs and line ends)
+							$f_user_override = preg_replace('/\s+/', '', $f_user_override);
+							// Lets trim just incase as well.
+							$f_user_override_array = explode(",", trim($f_user_override));
+							// Detect if array is populated.
+							if (!in_array($user_email, $f_user_override_array)) {
+								include_once $file;
+							}
+						}
+					}
+	
+				}
+				
+
+				// include_once $file;
 			}
 		}
 	}
