@@ -15,7 +15,7 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
 
 
         error_log(print_r($attrs, true));
-        
+
 
         // If $attrs is an array, log the attributes received
         if (is_array($attrs)) {
@@ -24,6 +24,12 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
                 error_log( "Attribute $key: $value" );
             }
         }
+
+
+
+
+        exit();
+        
     }
 }
 
