@@ -7,21 +7,20 @@ if ( !has_action( 'mo_saml_attributes' ) ) {
     */
 
 
-    // Temporary diagnostic function to see what's being passed
-function diagnostic_mo_saml_attributes() {
-    $args = func_get_args(); // Gets all passed arguments
+    // Register the action hook
+    add_action( 'mo_saml_attributes', 'ronik_mo_saml_attributes', 10, 5 );
 
-    error_log('Number of arguments passed: ' . count($args)); // Log number of arguments passed
+    // Define the callback function that will run when the action is triggered
+    function ronik_mo_saml_attributes( $user_name, $user_email, $first_name, $last_name, $group_name ) {
+        // Log some basic info for debugging purposes
+        error_log( "Username: " . $user_name );
+        error_log( "User Email: " . $user_email );
+        error_log( "First Name: " . $first_name );
+        error_log( "Last Name: " . $last_name );
+        error_log( "Group Name: " . $group_name );
 
-    foreach ($args as $index => $arg) {
-        error_log("Argument $index: " . (is_array($arg) ? json_encode($arg) : var_export($arg, true)));
+        // Perform any additional tasks such as updating user metadata, redirecting, etc.
     }
-}
-
-// Hook the diagnostic function to log arguments passed by 'mo_saml_attributes'
-add_action('mo_saml_attributes', 'diagnostic_mo_saml_attributes', 10);
-
-
 
 
     // add_action( 'mo_saml_attributes', 'ronik_mo_saml_attributes', 10, 8 );
