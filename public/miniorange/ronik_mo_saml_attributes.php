@@ -10,29 +10,27 @@ if ( !has_action( 'mo_saml_attributes' ) ) {
 
     // Define the callback function that will run when the action is triggered
     function ronik_mo_saml_attributes( $user_email, $firstName, $lastName, $userName, $groupName, $identity_provider, $relayState, $attrs ) {
-        // Log some basic info for debugging purposes
-        error_log( "User Email: " . $user_email );
-        error_log( "First Name: " . $firstName );
-        error_log( "Last Name: " . $lastName );
-        error_log( "Username: " . $userName );
-        error_log( "Group: " . $groupName );
-        error_log( "Identity Provider: " . $identity_provider );
-        error_log( "Relay State: " . $relayState );
-    
-        // If $attrs is an array of attributes, you can loop through it:
-        foreach ( $attrs as $key => $value ) {
-            error_log( "Attribute $key: $value" );
+        // Log the values of each argument to check if they are passed
+        error_log("Checking passed arguments:");
+        error_log( "User Email: " . (isset($user_email) ? $user_email : 'NOT PASSED') );
+        error_log( "First Name: " . (isset($firstName) ? $firstName : 'NOT PASSED') );
+        error_log( "Last Name: " . (isset($lastName) ? $lastName : 'NOT PASSED') );
+        error_log( "Username: " . (isset($userName) ? $userName : 'NOT PASSED') );
+        error_log( "Group: " . (isset($groupName) ? $groupName : 'NOT PASSED') );
+        error_log( "Identity Provider: " . (isset($identity_provider) ? $identity_provider : 'NOT PASSED') );
+        error_log( "Relay State: " . (isset($relayState) ? $relayState : 'NOT PASSED') );
+        
+        // Log the attributes array
+        if (isset($attrs) && is_array($attrs)) {
+            foreach ( $attrs as $key => $value ) {
+                error_log( "Attribute $key: $value" );
+            }
+        } else {
+            error_log( "Attributes: NOT PASSED or EMPTY" );
         }
     
         // Perform any additional tasks such as updating user metadata, redirecting, etc.
     }
-    
-    // Use ReflectionFunction to check the number of arguments expected by the function
-    $reflection = new ReflectionFunction('ronik_mo_saml_attributes');
-    
-    // Log the number of required parameters and total parameters
-    error_log('Number of required parameters: ' . $reflection->getNumberOfRequiredParameters());
-    error_log('Total number of parameters: ' . $reflection->getNumberOfParameters());
     
 
 }     
