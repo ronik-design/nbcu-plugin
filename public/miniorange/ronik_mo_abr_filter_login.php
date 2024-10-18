@@ -8,10 +8,10 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
     add_action( 'mo_abr_filter_login', 'ronik_mo_abr_filter_login', 10, 3 );
 
     // Define the callback function that will run when the action is triggered
-    function ronik_mo_abr_filter_login( $attrs, $nameId, $sessionIndex ) {
+    function ronik_mo_abr_filter_login( $attrs, $nameId = '', $sessionIndex = '' ) {
         // Log some basic info for debugging purposes
-        error_log( "NameID: " . $nameId );
-        error_log( "Session Index: " . (isset($sessionIndex) ? $sessionIndex : 'NULL') );
+        error_log( "NameID: " . (isset($nameId) && !empty($nameId) ? $nameId : 'No NameID Provided') );
+        error_log( "Session Index: " . (isset($sessionIndex) && !empty($sessionIndex) ? $sessionIndex : 'No SessionIndex Provided') );
 
         // If $attrs is an array, log the attributes received
         if (is_array($attrs)) {
@@ -19,8 +19,6 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
                 error_log( "Attribute $key: $value" );
             }
         }
-
-        // Perform any additional tasks before user login, such as custom authentication checks
     }
 }
 
