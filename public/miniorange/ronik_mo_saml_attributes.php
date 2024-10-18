@@ -1,18 +1,18 @@
 <?php
 if ( !has_action( 'mo_saml_attributes' ) ) {
     /**
-        * Fires after a user is created/updated in WordPress for SSO. 
+        * Fires after a user is created/updated in WordPress for SSO.
         * This allows you to perform actions after the user has logged in and also provides the basic user attributes received from the IDP.
-    
+
     */
-    
+
 
     // Temporary diagnostic function to see what's being passed
 function diagnostic_mo_saml_attributes() {
     $args = func_get_args(); // Gets all passed arguments
-    
+
     error_log('Number of arguments passed: ' . count($args)); // Log number of arguments passed
-    
+
     foreach ($args as $index => $arg) {
         error_log("Argument $index: " . (is_array($arg) ? json_encode($arg) : var_export($arg, true)));
     }
@@ -37,7 +37,7 @@ add_action('mo_saml_attributes', 'diagnostic_mo_saml_attributes', 10);
     //     error_log( "Group: " . (isset($groupName) ? $groupName : 'NOT PASSED') );
     //     error_log( "Identity Provider: " . (isset($identity_provider) ? $identity_provider : 'NOT PASSED') );
     //     error_log( "Relay State: " . (isset($relayState) ? $relayState : 'NOT PASSED') );
-        
+
     //     // Log the attributes array
     //     if (isset($attrs) && is_array($attrs)) {
     //         foreach ( $attrs as $key => $value ) {
@@ -46,10 +46,10 @@ add_action('mo_saml_attributes', 'diagnostic_mo_saml_attributes', 10);
     //     } else {
     //         error_log( "Attributes: NOT PASSED or EMPTY" );
     //     }
-    
+
     //     // Perform any additional tasks such as updating user metadata, redirecting, etc.
     // }
-    
 
-}     
+
+}
 
