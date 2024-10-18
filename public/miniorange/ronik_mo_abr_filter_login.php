@@ -14,22 +14,35 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
         error_log( "Session Index: " . (isset($sessionIndex) && !empty($sessionIndex) ? $sessionIndex : 'No SessionIndex Provided') );
 
 
-        error_log(print_r($attrs, true));
 
-
-        // If $attrs is an array, log the attributes received
-        if (is_array($attrs)) {
-            foreach ($attrs as $key => $value) {
-                
-                error_log( "Attribute $key: $value" );
-            }
-        }
-
-
-
-
-        exit();
+        $attributes = [
+            "email" => isset($attrs['email'][0]) ? $attrs['email'][0] : '',
+            "Email" => isset($attrs['email'][0]) ? $attrs['email'][0] : '', // Alternative casing
+            "firstname" => isset($attrs['FirstName'][0]) ? $attrs['FirstName'][0] : '',
+            "FirstName" => isset($attrs['FirstName'][0]) ? $attrs['FirstName'][0] : '', // Alternative casing
+            "lastname" => isset($attrs['LastName'][0]) ? $attrs['LastName'][0] : '',
+            "LastName" => isset($attrs['LastName'][0]) ? $attrs['LastName'][0] : '', // Alternative casing
+            "accountstatus" => isset($attrs['accountstatus'][0]) && $attrs['accountstatus'][0] == 'a' ? 'active' : 'inactive', // Could be "active" or "inactive"
+            "uid" => isset($attrs['uid'][0]) ? $attrs['uid'][0] : '',
+            "UID" => isset($attrs['uid'][0]) ? $attrs['uid'][0] : '', // Alternative casing
+            "jobtitle" => '', // Static value
+            "telephonenumber" => '', // Static value
+        ]; 
         
+        $mo_helper = new RonikMoHelper();
+        // Assume $mo_helper is an object and userFlowProcessor() is a method that processes the user flow
+        $post_login_redirect = $mo_helper->userFlowProcessor($attributes);
+        
+        // Check if the result is valid (non-empty, non-false) and redirect
+        wp_redirect( !empty($post_login_redirect) ? $post_login_redirect : home_url() );
+        exit(); // Always call exit() after wp_redirect() to stop further execution
+        
+
+
+
+
+
+
     }
 }
 
