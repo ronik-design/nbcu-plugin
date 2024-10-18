@@ -14,6 +14,14 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
         error_log( "Session Index: " . (isset($sessionIndex) && !empty($sessionIndex) ? $sessionIndex : 'No SessionIndex Provided') );
 
 
+        error_log(print_r($attrs , true));
+        error_log(print_r($attrs['email'] , true));
+        error_log(print_r('TEST' , true));
+
+        error_log(print_r($attrs['email'][0] , true));
+        error_log(print_r($attrs['FirstName'][0] , true));
+        error_log(print_r($attrs['LastName'][0] , true));
+
 
         $attributes = [
             "email" => isset($attrs['email'][0]) ? [$attrs['email'][0]] : [''],
