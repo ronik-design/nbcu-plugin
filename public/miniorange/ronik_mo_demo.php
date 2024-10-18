@@ -2,10 +2,10 @@
 if( MO_DEMO !== 'valid' ) {
     return false;
 }
-// // Fail safe checking for local 
-// if (!str_contains($_SERVER['HTTP_HOST'], '.local')) {
-//     return false;
-// }
+// Fail safe checking for local 
+if (!str_contains($_SERVER['HTTP_HOST'], '.local')) {
+    return false;
+}
 
 
 // Function to sanitize all GET parameters dynamically

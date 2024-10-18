@@ -13,9 +13,14 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
         error_log( "NameID: " . (isset($nameId) && !empty($nameId) ? $nameId : 'No NameID Provided') );
         error_log( "Session Index: " . (isset($sessionIndex) && !empty($sessionIndex) ? $sessionIndex : 'No SessionIndex Provided') );
 
+
+        error_log(print_r($attrs, true));
+        
+
         // If $attrs is an array, log the attributes received
         if (is_array($attrs)) {
             foreach ($attrs as $key => $value) {
+                
                 error_log( "Attribute $key: $value" );
             }
         }
