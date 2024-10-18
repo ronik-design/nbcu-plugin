@@ -224,6 +224,7 @@ class Ronikdesign
 
 		define('MO_DEMO', 'valid');
 		$this->loader->add_action('init', $plugin_public, 'ronikdesign_miniorange', 1);
+		
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesign_miniorange_ajax', $plugin_public, 'ronikdesign_miniorange_ajax');
 		$this->loader->add_action('wp_ajax_ronikdesign_miniorange_ajax', $plugin_public, 'ronikdesign_miniorange_ajax');
 
