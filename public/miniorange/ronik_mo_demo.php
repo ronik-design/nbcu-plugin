@@ -3,9 +3,45 @@ if( MO_DEMO !== 'valid' ) {
     return false;
 }
 // Fail safe checking for local 
-if (!str_contains($_SERVER['HTTP_HOST'], '.local')) {
-    return false;
+if (str_contains($_SERVER['HTTP_HOST'], '.local')) {
+    // Activate SSO DEMO support
+        // http://together.nbcudev.local/home/?sso-miniorange=true
+    // deactivate SSO DEMO support
+        // http://together.nbcudev.local/home/?sso-miniorange=false
+
+    // Cookie name
+    $cookie_name = "sso_miniorange";
+    // Check if the 'sso-miniorange' parameter exists in the URL
+    if (isset($_GET['sso-miniorange'])) {
+        // Get the value of the parameter
+        $param_value = $_GET['sso-miniorange'];
+        if ($param_value === 'true') {
+            // Set the cookie to expire in 20 minutes (1200 seconds)
+            $cookie_expiration = time() + 1200; // 1200 seconds = 20 minutes
+            // Set the cookie
+            setcookie($cookie_name, "true", $cookie_expiration, "/");
+            // Optionally uncomment for debugging
+            // echo "Cookie '$cookie_name' has been set for 20 minutes.";
+        } elseif ($param_value === 'false') {
+            // Deactivate and remove the cookie by setting the expiration date in the past
+            setcookie($cookie_name, "", time() - 3600, "/");
+            // Optionally uncomment for debugging
+            // echo "Cookie '$cookie_name' has been removed.";
+        }
+    }
+    // To check if the cookie is set
+    if (isset($_COOKIE[$cookie_name])) {
+        // Optionally uncomment for debugging
+        // echo "Cookie '$cookie_name' is set with value: " . $_COOKIE[$cookie_name];
+    } else {
+        // Cookie is not set or has been removed
+        // Optionally uncomment for debugging
+        // echo "Cookie '$cookie_name' is not set.";
+        return false;
+    }
 }
+
+
 
 
 // Function to sanitize all GET parameters dynamically
@@ -47,20 +83,14 @@ $json_get_params = json_encode($sanitized_get_params, JSON_UNESCAPED_UNICODE);
 
     <script>
     jQuery(document).ready(function($) {
-        
         $('#ajax-sso-form').on('submit', function(e) {
             e.preventDefault();
-
             var formData = $(this).serialize();
-
             $.post('<?php echo esc_url(admin_url('admin-ajax.php')); ?>', formData, function(response) {                
                 if (response.success && response.data.redirect) {
                     window.location.href = response.data.redirect; // Redirect in the browser
                 } else {
-
                     console.log(response.data);
-
-
                     alert(response.data); // Handle error message
                 }
             });

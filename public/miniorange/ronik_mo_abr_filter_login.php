@@ -41,9 +41,10 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
         $mo_helper = new RonikMoHelper();
         // Assume $mo_helper is an object and userFlowProcessor() is a method that processes the user flow
         $post_login_redirect = $mo_helper->userFlowProcessor($attributes);
-        
-
+        sleep(1);
+        error_log( '$post_login_redirect' );
         error_log( $post_login_redirect );
+        error_log( 'eod $post_login_redirect' );
 
 
 
@@ -51,12 +52,6 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
         wp_redirect( !empty($post_login_redirect) ? $post_login_redirect : home_url() );
         exit(); // Always call exit() after wp_redirect() to stop further execution
         
-
-
-
-
-
-
     }
 }
 

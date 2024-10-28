@@ -207,6 +207,8 @@ class RonikMoHelper{
 
         $user_manager->login($user_id, true, 'nbcuni-sso-new');
         error_log(print_r('login '  , true));
+        error_log(print_r($user_id  , true));
+
 
         // Validate redirect URL before redirecting
         if (filter_var($post_login_redirect, FILTER_VALIDATE_URL) || 
