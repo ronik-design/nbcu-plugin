@@ -3,7 +3,7 @@ if( MO_DEMO !== 'valid' ) {
     return false;
 }
 // Fail safe checking for local 
-if (str_contains($_SERVER['HTTP_HOST'], '.local')) {
+if (!str_contains($_SERVER['HTTP_HOST'], '.local')) {
     // Activate SSO DEMO support
         // http://together.nbcudev.local/home/?sso-miniorange=true
     // deactivate SSO DEMO support
