@@ -13,8 +13,8 @@ if ( !has_action( 'mo_saml_attributes' ) ) {
         // Example: Convert the username to lowercase
         $sanitized_userName = strtolower( $sanitized_userName );
     
-        // Log the modified username for debugging
-        error_log( 'Modified Username: ' . $sanitized_userName );
+        // // Log the modified username for debugging
+        // error_log( 'Modified Username: ' . $sanitized_userName );
     
         // Return the modified username
         return $sanitized_userName;

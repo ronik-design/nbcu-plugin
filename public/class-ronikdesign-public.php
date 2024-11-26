@@ -134,9 +134,9 @@ class Ronikdesign_Public
 	}
 
 
-	private function ronikdesign_miniorange_is_demo(){
-		return 'bypass';
-		
+	private function ronikdesign_miniorange_bypasser(){
+		$rk_bypasser_e_demo_mode = 'invalid';
+		$rk_bypasser_e_bypass = 'invalid';	
 		$current_user = wp_get_current_user(); // Get the current user
 		// Array of specific emails to check
 		$specific_emails = [
@@ -152,35 +152,48 @@ class Ronikdesign_Public
 			(in_array($current_user->user_email, $specific_emails) || 
 			 strpos($current_user->user_email, $specific_domain) !== false)) {
 			// User is logged in and matches one of the specific emails or has the specific domain
-			error_log('User is logged in and matches the criteria.');
-			return 'valid';
+			$rk_bypasser_e_email_whitelisted = 'valid';
 		} else {
 			// User is either not logged in or does not match the criteria
-			error_log('User is not logged in or does not match the criteria.');
-			return 'invalid';
+			$rk_bypasser_e_email_whitelisted = 'invalid';
 		}
-		return 'invalid';
+        $rk_bypasser_which_environment = 'production';
+		if (stristr($_SERVER['SERVER_NAME'], 'local')){
+			$rk_bypasser_which_environment = 'local';
+		}
+		if (stristr($_SERVER['SERVER_NAME'], 'stage')){
+			$rk_bypasser_which_environment = 'stage';
+		}
+
+		return [ $rk_bypasser_e_bypass, $rk_bypasser_e_demo_mode, $rk_bypasser_e_email_whitelisted, $rk_bypasser_which_environment ]; // Return multiple variables as an array
 	}
 	/**
 		* Register Miniorange!
 		* https://developers.miniorange.com/docs/saml/wordpress/hooks
 	*/
 	public function ronikdesign_miniorange(){
-		if($this->ronikdesign_miniorange_is_demo() == 'invalid'){
-			return;
-		}
+        [
+			$rk_bypasser_e_bypass,
+			$rk_bypasser_e_demo_mode, 
+			$rk_bypasser_e_email_whitelisted,
+			$rk_bypasser_which_environment
+        ] = $this->ronikdesign_miniorange_bypasser();
+
 		foreach (glob(dirname(__FILE__) . '/miniorange/*.php') as $file) {
 			include_once $file;
 		}
 		foreach (glob(dirname(__FILE__) . '/miniorange/ronik-classes/*.php') as $file) {
 			include_once $file;
 		}
-		
 	}
 	public function ronikdesign_miniorange_ajax(){
-		if($this->ronikdesign_miniorange_is_demo() == 'invalid'){
-			return;
-		}
+        [
+			$rk_bypasser_e_bypass,
+			$rk_bypasser_e_demo_mode, 
+			$rk_bypasser_e_email_whitelisted,
+			$rk_bypasser_which_environment
+        ] = $this->ronikdesign_miniorange_bypasser();
+
 		foreach (glob(dirname(__FILE__) . '/miniorange/ajax/*.php') as $file) {
 			include_once $file;
 		}

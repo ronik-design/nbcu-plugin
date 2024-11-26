@@ -1,5 +1,5 @@
 <?php 
-if( MO_DEMO !== 'valid' ) {
+if( $rk_bypasser_e_demo_mode == 'valid' && $rk_bypasser_which_environment !== 'live' ){
     return false;
 }
 // Fail safe checking for local 
@@ -41,9 +41,6 @@ if (!str_contains($_SERVER['HTTP_HOST'], '.local')) {
     }
 }
 
-
-
-
 // Function to sanitize all GET parameters dynamically
 function sanitize_all_get_params($filter = FILTER_SANITIZE_STRING) {
     $sanitized_params = [];
@@ -56,10 +53,10 @@ function sanitize_all_get_params($filter = FILTER_SANITIZE_STRING) {
 
 add_action('wp_head','my_added_login_field');
 function my_added_login_field(){ 
-// Get sanitized GET parameters
-$sanitized_get_params = sanitize_all_get_params();
-// Encode the sanitized parameters to a JSON string without escaping
-$json_get_params = json_encode($sanitized_get_params, JSON_UNESCAPED_UNICODE);
+    // Get sanitized GET parameters
+    $sanitized_get_params = sanitize_all_get_params();
+    // Encode the sanitized parameters to a JSON string without escaping
+    $json_get_params = json_encode($sanitized_get_params, JSON_UNESCAPED_UNICODE);
 ?>
     <div class=""  style="position: absolute;z-index: 11111111;">
         <form id="ajax-sso-form" action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">

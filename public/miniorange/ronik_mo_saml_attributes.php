@@ -10,11 +10,11 @@ if ( !has_action( 'mo_saml_attributes' ) ) {
     // Define the callback function that will run when the action is triggered
     function ronik_mo_saml_attributes( $user_name, $user_email, $first_name, $last_name, $group_name ) {
         // Log some basic info for debugging purposes
-        error_log( "Username: " . $user_name );
-        error_log( "User Email: " . $user_email );
-        error_log( "First Name: " . $first_name );
-        error_log( "Last Name: " . $last_name );
-        error_log( "Group Name: " . $group_name );
+        // error_log( "Username: " . $user_name );
+        // error_log( "User Email: " . $user_email );
+        // error_log( "First Name: " . $first_name );
+        // error_log( "Last Name: " . $last_name );
+        // error_log( "Group Name: " . $group_name );
 
         // Perform any additional tasks such as updating user metadata, redirecting, etc.
     }

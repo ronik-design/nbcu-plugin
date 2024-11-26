@@ -10,12 +10,12 @@ class RonikMoHelper{
     public function siteAssigner(){
         // Talentroom Site: Production && Staging
         $site_production_talentroom = 'https://talentroom.nbcuni.com/';
-        $site_staging_talentroom = 'https://talent-room.nbcuni.divisionof.com/';
-        $site_local_talentroom = 'https://talentroom.nbcudevelopment.local/';
+        $site_staging_talentroom = 'https://stage.talent-room.nbcuni.com/';
+        $site_local_talentroom = 'https://talentroom.nbcudev.local/';
         // Together Site: Production && Staging
         $site_production_together = 'https://together.nbcuni.com/';
-        $site_staging_together = 'https://together.nbcuni.divisionof.com/';
-        $site_local_together = 'http://together.nbcudevelopment.local/';
+        $site_staging_together = 'https://stage.together.nbcuni.com/';
+        $site_local_together = 'http://together.nbcudev.local/';
         // Blog ID for each site.
         $blog_id_together = 3;
         $blog_id_talent = 7;
@@ -25,7 +25,7 @@ class RonikMoHelper{
 
     public function getEnvironment($server_name) {
         if (stristr($server_name, 'local')) return 'local';
-        if (stristr($server_name, 'staging')) return 'stage';
+        if (stristr($server_name, 'stage')) return 'stage';
         return 'production';
     }
 
@@ -178,9 +178,9 @@ class RonikMoHelper{
         $user_manager = new UserManager();
         // Assign attributes
         list($user_data, $sso_id) = $mo_helper->attributesAssigner($attributes);
-        error_log(print_r($user_data , true));
-        error_log(print_r('User SSO: '.$sso_id , true));
-        error_log(print_r('User Email: '.$user_data['email'] , true));
+        // error_log(print_r($user_data , true));
+        // error_log(print_r('User SSO: '.$sso_id , true));
+        // error_log(print_r('User Email: '.$user_data['email'] , true));
         // Check if user exists
         $user_exists = get_user_by("email", $user_data['email']);
         if ($user_exists) {

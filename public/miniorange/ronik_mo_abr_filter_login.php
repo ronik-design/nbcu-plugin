@@ -5,24 +5,10 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
         * This allows you to perform actions before the user has logged in and also provides all the user attributes received from the IDP.
     */
     // Register the action hook
-    add_action( 'mo_abr_filter_login', 'ronik_mo_abr_filter_login', 10, 3 );
+    add_action( 'mo_abr_filter_login', 'ronik_mo_abr_filter_login', 10, 4 );
 
     // Define the callback function that will run when the action is triggered
-    function ronik_mo_abr_filter_login( $attrs, $nameId = '', $sessionIndex = '' ) {
-        // Log some basic info for debugging purposes
-        error_log( "NameID: " . (isset($nameId) && !empty($nameId) ? $nameId : 'No NameID Provided') );
-        error_log( "Session Index: " . (isset($sessionIndex) && !empty($sessionIndex) ? $sessionIndex : 'No SessionIndex Provided') );
-
-
-        error_log(print_r($attrs , true));
-        error_log(print_r($attrs['email'] , true));
-        error_log(print_r('TEST' , true));
-
-        error_log(print_r($attrs['email'][0] , true));
-        error_log(print_r($attrs['FirstName'][0] , true));
-        error_log(print_r($attrs['LastName'][0] , true));
-
-
+    function ronik_mo_abr_filter_login( $attrs, $nameId = '', $sessionIndex = '') {
         $attributes = [
             "email" => isset($attrs['email'][0]) ? [$attrs['email'][0]] : [''],
             "Email" => isset($attrs['email'][0]) ? [$attrs['email'][0]] : [''], // Alternative casing
@@ -36,23 +22,12 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
             "jobtitle" => [''], // Static value
             "telephonenumber" => [''], // Static value
         ]; 
-        
-        
         $mo_helper = new RonikMoHelper();
         // Assume $mo_helper is an object and userFlowProcessor() is a method that processes the user flow
         $post_login_redirect = $mo_helper->userFlowProcessor($attributes);
         sleep(1);
-        error_log( '$post_login_redirect' );
-        error_log( $post_login_redirect );
-        error_log( 'eod $post_login_redirect' );
-
-
-
         // Check if the result is valid (non-empty, non-false) and redirect
         wp_redirect( !empty($post_login_redirect) ? $post_login_redirect : home_url() );
         exit(); // Always call exit() after wp_redirect() to stop further execution
-        
     }
 }
-
-

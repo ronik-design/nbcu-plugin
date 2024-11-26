@@ -1,12 +1,7 @@
 <?php 
-if( MO_DEMO !== 'valid' ) {
+if( $rk_bypasser_e_demo_mode == 'valid' && $rk_bypasser_which_environment !== 'live' ){
     return false;
 }
-
-// if (!wp_verify_nonce($_POST['nonce'], 'ajax-nonce')) {
-//     wp_send_json_error('Security check failed');
-//     wp_die();
-// }
 
 $attributes = [
     "email" => ["john2.doe@example.com"],
