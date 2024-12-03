@@ -112,7 +112,7 @@ class RonikMoHelperRedirect {
     
 
         // TEST
-        $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment);
+        $default_redirect = $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment);
     
         // If neither 'talent' nor 'r/wl-register' parameters are present, return the default redirect
         return $default_redirect;
