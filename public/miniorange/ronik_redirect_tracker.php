@@ -1,12 +1,14 @@
+
 <?php 
-// http://together.nbcudev.local/home/?option=saml_user_login_custom&r=%2Faccount&wpc=1
+
+// https://stage.together.nbcuni.com/home/?option=saml_user_login_custom&r=%2Faccount&wpc=1
 
 function ronik_redirect_tracker(){
-    $mo_helper_redirect = new RonikMoHelperRedirect();
-
     // Cancel log in request since user is logged in or no index found.
     if (is_user_logged_in()) {
-        error_log(print_r( 'ronik_redirect_tracker: USER IS LOGGED IN', true));
+        error_log(print_r( 'ronik_redirect_tracker', true));
+        error_log(print_r( $_SERVER['REQUEST_URI'], true));
+
         if (str_contains($_SERVER['REQUEST_URI'], '/login/')) {
             // Construct the base redirect URL
             $redirect_url = '/account';
@@ -16,12 +18,22 @@ function ronik_redirect_tracker(){
         }
         return false;
     }
+    $mo_helper_redirect = new RonikMoHelperRedirect();
+    $post_login_redirect = $mo_helper_redirect->handleUserPreLoginRedirect();
+    $login_overrid_redirect = $mo_helper_redirect->handleUserOverrideRedirect('/nbcuni-sso/login/', '?option=saml_user_login');
+}
+add_action('template_redirect', 'ronik_redirect_tracker', 1);
+
+
+
+function process_saml_get_data_wp_parse_request($wp) {
+    error_log(print_r( 'process_saml_get_data_wp_parse_request', true));
+    error_log(print_r( $_GET['option'], true));
+
+    $mo_helper_redirect = new RonikMoHelperRedirect();
 
     // Check if the request method is GET and if 'option=saml_user_login_custom' is in the URL
-    // http://together.nbcudev.local/home?option=saml_user_login_custom
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['option']) && $_GET['option'] === 'saml_user_login_custom') {
-        error_log(print_r( 'ronik_redirect_tracker: saml_user_login_custom', true));
-
         // Initialize an empty associative array to store sanitized GET data
         $get_data = array();
         // Check if 'talent' parameter exists in the URL and sanitize it
@@ -39,6 +51,9 @@ function ronik_redirect_tracker(){
         // Log the sanitized data for debugging
         error_log('Sanitized GET Data: ' . print_r($get_data, true));
         $post_login_redirect = $mo_helper_redirect->handleUserPreLoginRedirect();
+
+
+
         // Have to throttle the redirect
         sleep(5);
         // Construct the base redirect URL
@@ -46,16 +61,9 @@ function ronik_redirect_tracker(){
         // Perform the redirect with the query parameters
         wp_redirect( esc_url(home_url($redirect_url)) );
         exit; // Always call exit after a redirect to prevent further execution
-    } else {
-        // http://together.nbcudev.local/home?option=saml_user_login
-        error_log(print_r( 'ronik_redirect_tracker: NOT', true));
-
-        $post_login_redirect = $mo_helper_redirect->handleUserPreLoginRedirect();
-        $login_overrid_redirect = $mo_helper_redirect->handleUserOverrideRedirect('/nbcuni-sso/login/', '?option=saml_user_login');
-
-        // Have to throttle the redirect
-        sleep(5);
     }
 }
-add_action('template_redirect', 'ronik_redirect_tracker', 1);
+
+add_action('template_redirect', 'process_saml_get_data_wp_parse_request', 10, 1);
+
 

@@ -66,6 +66,9 @@ class RonikMoHelperRedirect {
 
         // Check redirect cookie or promotion-based redirects
         $custom_redirect = $mo_cookie_manager->getRedirectCookies($default_redirect);
+        error_log(print_r('handleUserPostLoginRedirect', true));
+        error_log(print_r($custom_redirect, true));
+
         if ($this->isTogetherBlog($blog_id_together)) {
             $promotion_redirect = $this->getPromotionRedirect($user_id);
             $custom_redirect = $promotion_redirect ?? $custom_redirect;
@@ -112,7 +115,7 @@ class RonikMoHelperRedirect {
     
 
         // TEST
-        $default_redirect = $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment);
+        $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment);
     
         // If neither 'talent' nor 'r/wl-register' parameters are present, return the default redirect
         return $default_redirect;

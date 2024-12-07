@@ -1,6 +1,16 @@
 <?php
 class RonikMoHelperGetPostManager {
     public function processSsoGet($user_id, $site_url, $site_mapping, $environment){
+        error_log(print_r('RonikMoHelperGetPostManager', true));
+
+        // $url_setA = setcookie('sso_pre_login_RONIKA', urlencode('AAAA'), time() + 3600, '/');
+        // $url_setB = setcookie('sso_pre_login_RONIKB', urlencode('BBBB'), time() + 3600, '/', '.nbcuni.com');
+        // $url_setC = setcookie('sso_pre_login_RONIKC', urlencode('CCCC'), time() + 3600, '/', '.nbcuni.com', true, true);
+        // $url_setD = setcookie('sso_pre_login_RONIKD', urlencode('DDDD'), time() + 3600, '/', 'stage.together.nbcuni.com', true, true);
+        // // Set cookie with SameSite=None for cross-site requests (important for cookies across subdomains)
+        // header('Set-Cookie: sso_pre_login_RONIKE=' . urlencode('EEEE') . '; path=/; domain=.nbcuni.com; max-age=3600; SameSite=None; Secure; HttpOnly');
+
+
         $mo_helper = new RonikMoHelper();
         $mo_cookie_manager = new RonikMoHelperCookieManager();
         $mo_helper_cipher = new RonikMoHelperCipher();
@@ -20,7 +30,11 @@ class RonikMoHelperGetPostManager {
             } else {
 
             }
-        } elseif (!empty($_GET['r']) || !empty($_GET['wl-register'])) {
+        } elseif (!empty($_GET['r']) || !empty($_GET['wl-register']) || !empty($_GET['option'])) {
+
+            // error_log(print_r($_SERVER, true));
+            // error_log(print_r($_GET, true));
+    
             // For Together site redirection
             // Get the 'r' or 'wl-register' parameter for redirection
             $redirect = $this->removeLeadingSlash($_GET['r'] ?? $_GET['wl-register']);
@@ -29,6 +43,7 @@ class RonikMoHelperGetPostManager {
             return $site_url . $redirect;
         }
     }
+
 
     // This is more for demo debuging purposes. Or if client wants to not depend on cookies. Proof of concept!
     public function processSsoPostConvertParams() {
