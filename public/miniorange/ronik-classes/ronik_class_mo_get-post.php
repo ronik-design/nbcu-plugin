@@ -19,9 +19,8 @@ class RonikMoHelperGetPostManager {
             // Check if the 'talent' parameter exists in the URL query string
             if (!empty($_GET['talent'])) {
                 if($time_frame == 'pre'){
-
                     $mo_cookie_manager->setRedirectCookies('talent', "talent-room_$environment");
-                } elseif($time_frame == ''){
+                } elseif($time_frame == 'post'){
                     if($user_id){
                         // For Talent Room redirection
                         // Create the login URL for Talent Room, encrypting the login request
