@@ -8,18 +8,25 @@ class RonikMoHelperCookieManager {
         // Log the inputs to ensure they're correct
         error_log('Setting cookies - URL: ' . $url . ', Origin: ' . $origin);
         // Set the first cookie for the redirect URL
-        if ($url) {
+        if ($url == 'talent') {
+            // $url_set = setcookie('sso_post_login_redirect', urlencode($url), time() + 3600, '/');
+            // Log success or failure of setting the cookie
+            $url_set = setcookie('sso_pre_login', urlencode('talentroom'), time() + 3600, '/', '.nbcuni.com');
+
+            $url_set = setcookie('sso_pre_login', urlencode('talentroom'), time() + 3600, '/', 'stage.together.nbcuni.com', true, true);
+            // Set cookie with SameSite=None for cross-site requests (important for cookies across subdomains)
+            header('Set-Cookie: sso_pre_login=' . urlencode('talentroom') . '; path=/; domain=.nbcuni.com; max-age=3600; SameSite=None; Secure; HttpOnly');
+
+            error_log('sso_post_login_redirect set: ' . ($url_set ? 'Success' : 'Failure'));
+        } else {
             // $url_set = setcookie('sso_post_login_redirect', urlencode($url), time() + 3600, '/');
             // Log success or failure of setting the cookie
             $url_set = setcookie('sso_pre_login', urlencode($url), time() + 3600, '/', '.nbcuni.com');
-
             $url_set = setcookie('sso_pre_login', urlencode($url), time() + 3600, '/', 'stage.together.nbcuni.com', true, true);
             // Set cookie with SameSite=None for cross-site requests (important for cookies across subdomains)
             header('Set-Cookie: sso_pre_login=' . urlencode($url) . '; path=/; domain=.nbcuni.com; max-age=3600; SameSite=None; Secure; HttpOnly');
-
-        
             error_log('sso_post_login_redirect set: ' . ($url_set ? 'Success' : 'Failure'));
-        }    
+        }
         // Set the second cookie for the origin
         // if ($origin) {
         //     $origin_set = setcookie('sso_pre_origin', $origin, time() + 3600, '/');
