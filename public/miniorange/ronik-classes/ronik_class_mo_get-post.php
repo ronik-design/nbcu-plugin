@@ -16,7 +16,7 @@ class RonikMoHelperGetPostManager {
         $mo_helper_cipher = new RonikMoHelperCipher();
 
         // Check if the 'talent' parameter exists in the URL query string
-        if (!empty($_GET['talent'])) {
+        if (!empty($_GET['talent']) || !empty($_GET['option'])) {
             if($user_id){
                 // For Talent Room redirection
                 // Create the login URL for Talent Room, encrypting the login request
