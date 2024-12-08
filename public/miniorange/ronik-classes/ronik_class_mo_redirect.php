@@ -19,7 +19,10 @@ class RonikMoHelperRedirect {
             $site_local_together, 
             $blog_id_together, 
             $blog_id_talent, 
-            $blog_id_request
+            $blog_id_request,
+            $site_production_route_domain, 
+            $site_staging_route_domain, 
+            $site_local_route_domain
         ] = $mo_helper->siteAssigner();
 
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
@@ -59,7 +62,10 @@ class RonikMoHelperRedirect {
             $site_local_together, 
             $blog_id_together, 
             $blog_id_talent, 
-            $blog_id_request
+            $blog_id_request,
+            $site_production_route_domain, 
+            $site_staging_route_domain, 
+            $site_local_route_domain
         ] = $mo_helper->siteAssigner();
 
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);

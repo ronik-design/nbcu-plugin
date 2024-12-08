@@ -20,7 +20,11 @@ class RonikMoHelper{
         $blog_id_together = 3;
         $blog_id_talent = 7;
         $blog_id_request = 6;
-        return [ $site_production_talentroom , $site_staging_talentroom, $site_local_talentroom , $site_production_together, $site_staging_together, $site_local_together, $blog_id_together , $blog_id_talent , $blog_id_request ]; // Return multiple variables as an array
+        // Route Domain for each site.
+        $site_production_route_domain = ".nbcuni.com";
+        $site_staging_route_domain = ".nbcuni.com";
+        $site_local_route_domain = ".nbcudev.local";
+        return [ $site_production_talentroom , $site_staging_talentroom, $site_local_talentroom , $site_production_together, $site_staging_together, $site_local_together, $blog_id_together , $blog_id_talent , $blog_id_request , $site_production_route_domain , $site_staging_route_domain , $site_local_route_domain ]; // Return multiple variables as an array
     }
 
     public function getEnvironment($server_name) {

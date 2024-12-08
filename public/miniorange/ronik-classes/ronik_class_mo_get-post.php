@@ -15,11 +15,11 @@ class RonikMoHelperGetPostManager {
         $mo_cookie_manager = new RonikMoHelperCookieManager();
         $mo_helper_cipher = new RonikMoHelperCipher();
 
-        if(!empty($_GET['option'])){
+        if(!empty($_GET['option']) || !empty($_GET['talent']) || !empty($_GET['r']) || !empty($_GET['wl-register'])){
             // Check if the 'talent' parameter exists in the URL query string
             if (!empty($_GET['talent'])) {
                 if($time_frame == 'pre'){
-                    $mo_cookie_manager->setRedirectCookies('talent', "talent-room_$environment");
+                    $mo_cookie_manager->setRedirectCookies('talent', $environment);
                 } elseif($time_frame == 'post'){
                     if($user_id){
                         // For Talent Room redirection
@@ -28,20 +28,16 @@ class RonikMoHelperGetPostManager {
                         // $login_url = $mo_helper_cipher->encryptLoginRequest('1nA5Nk9iXTh6IY4cMJyuTRzC+NmHGzhatAnynng4UIw=', $talent_site_url . "wp-admin/admin-ajax.php?action=ronikdesign_miniorange_ajax&sso-rk-log=", $user_id);
                         $login_url = $mo_helper_cipher->encryptLoginRequest('1nA5Nk9iXTh6IY4cMJyuTRzC+NmHGzhatAnynng4UIw=', $talent_site_url . "?sso-rk-log=", $user_id);
                         // Set the redirect cookies and return the login URL
-                        $mo_cookie_manager->setRedirectCookies($login_url, "talent-room_$environment");
+                        $mo_cookie_manager->setRedirectCookies($login_url, $environment);
                         return $login_url;
                     }
                 }
-            } elseif (!empty($_GET['r']) || !empty($_GET['wl-register'])) {
-    
-                // error_log(print_r($_SERVER, true));
-                // error_log(print_r($_GET, true));
-        
+            } elseif (!empty($_GET['r']) || !empty($_GET['wl-register'])) {        
                 // For Together site redirection
                 // Get the 'r' or 'wl-register' parameter for redirection
                 $redirect = $this->removeLeadingSlash($_GET['r'] ?? $_GET['wl-register']);
                 // Set the redirect cookies and return the together URL with the redirect path
-                $mo_cookie_manager->setRedirectCookies($site_url . $redirect, "together_$environment");
+                $mo_cookie_manager->setRedirectCookies($site_url . $redirect, $environment);
                 return $site_url . $redirect;
             }
         }
