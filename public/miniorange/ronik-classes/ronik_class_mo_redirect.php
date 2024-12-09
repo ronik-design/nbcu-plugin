@@ -28,8 +28,6 @@ class RonikMoHelperRedirect {
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
         // Process SSO GET params
         $mo_get_post_manager->processSsoPostConvertParams();
-
-
         // Handle environment and redirection
         return $this->handleRedirect($default_redirect, false, [
             'production' => ['talentroom' => $site_production_talentroom, 'together' => $site_production_together],
@@ -47,7 +45,6 @@ class RonikMoHelperRedirect {
             exit();
         }
     }
-
     
     public function handleUserPostLoginRedirect($user_id) {
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
@@ -67,22 +64,17 @@ class RonikMoHelperRedirect {
             $site_staging_route_domain, 
             $site_local_route_domain
         ] = $mo_helper->siteAssigner();
-
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
-
         // Check redirect cookie or promotion-based redirects
-        $custom_redirect = $mo_cookie_manager->getRedirectCookies($default_redirect);
-        error_log(print_r('handleUserPostLoginRedirect', true));
-        error_log(print_r($custom_redirect, true));
-
+        $custom_redirect = $mo_cookie_manager->getRedirectCookies($default_redirect , 'post');
+        // error_log(print_r('handleUserPostLoginRedirect', true));
+        // error_log(print_r($custom_redirect, true));
         if ($this->isTogetherBlog($blog_id_together)) {
             $promotion_redirect = $this->getPromotionRedirect($user_id);
             $custom_redirect = $promotion_redirect ?? $custom_redirect;
         }
-
         // Process SSO GET params
         $mo_get_post_manager->processSsoPostConvertParams();
-
         // Handle environment and redirection
         return $this->handleRedirect($custom_redirect, $user_id, [
             'production' => ['talentroom' => $site_production_talentroom, 'together' => $site_production_together],
@@ -108,25 +100,21 @@ class RonikMoHelperRedirect {
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
         $mo_cookie_manager = new RonikMoHelperCookieManager();
         $mo_helper_cipher = new RonikMoHelperCipher();
-
         // Get the environment (local, staging, production) based on server name
         $environment = $mo_helper->getEnvironment($_SERVER['SERVER_NAME']);
-
         // Determine the current site based on the URL ('together' or 'talentroom')
         $current_site = str_contains(get_bloginfo('url'), 'together') ? 'together' : 'talentroom';
-    
         // Get the URL for the current site based on the environment
         $site_url = $site_mapping[$environment][$current_site];
         $redirect = '';
-    
-
         // TEST
         $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment, $time_frame);
-    
+        if($default_redirect == 'talentroom'){
+            return $current_site;
+        }
         // If neither 'talent' nor 'r/wl-register' parameters are present, return the default redirect
         return $default_redirect;
     }
-    
 
     private function getPromotionRedirect($user_id) {
         $promotion_details = flag_promotion_success($user_id);

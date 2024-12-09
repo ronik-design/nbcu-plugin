@@ -24,39 +24,30 @@ class RonikMoHelperCipher {
         if ($password_decrypted === false) {
             return false;
         }
-
         $piecesArray = json_decode($password_decrypted, true);
         if (!isset($piecesArray['ui'], $piecesArray['time'])) {
             return false;
         }
-
         $user_id = $piecesArray['ui'];
         $timestamp = $piecesArray['time'];
         $dif = time() - $timestamp;
-
         if ($dif > 60) {
             return false;
         }
-
         $previous_dynamic_user_login_url = get_user_meta($user_id, 'dynamic_user_login_url', true);
         $previous_dynamic_user_login_url_array = explode(",", $previous_dynamic_user_login_url);
-
         if (in_array($password_encrypted, $previous_dynamic_user_login_url_array)) {
             return false;
         }
-
         $updated_dynamic_user_login_url = empty($previous_dynamic_user_login_url) 
             ? $password_encrypted 
             : rtrim($previous_dynamic_user_login_url, ',') . ',' . $password_encrypted;
-
         update_user_meta($user_id, 'dynamic_user_login_url', $updated_dynamic_user_login_url);
-
         $author_obj = get_user_by('id', $user_id);
         if ($author_obj) {
             wp_set_current_user($user_id, $author_obj->user_login);
             wp_set_auth_cookie($user_id);
             do_action('wp_login', $author_obj->user_login, $author_obj);
-            
             return $site_mapping[$environment]['talentroom'].'/talent';
         }
     }

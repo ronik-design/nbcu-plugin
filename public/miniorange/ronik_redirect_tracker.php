@@ -6,9 +6,14 @@
 function ronik_redirect_tracker(){
     // Cancel log in request since user is logged in or no index found.
     if (is_user_logged_in()) {
-        error_log(print_r( 'ronik_redirect_tracker', true));
-        error_log(print_r( $_SERVER['REQUEST_URI'], true));
-
+        if (!str_contains($_SERVER['REQUEST_URI'], 'sso-rk-log') && !str_contains($_SERVER['REQUEST_URI'], '/talent')) {  
+            if( isset($_COOKIE['sso_post_login']) && $_COOKIE['sso_post_login']){
+                $custom_redirect = urldecode($_COOKIE['sso_post_login']);
+                // Perform the redirect with the query parameters
+                wp_redirect( esc_url($custom_redirect) );
+                exit; // Always call exit after a redirect to prevent further execution
+            }
+        }
         if (str_contains($_SERVER['REQUEST_URI'], '/login/')) {
             // Construct the base redirect URL
             $redirect_url = '/account';
@@ -27,11 +32,7 @@ add_action('template_redirect', 'ronik_redirect_tracker', 1);
 
 
 function process_saml_get_data_wp_parse_request($wp) {
-    error_log(print_r( 'process_saml_get_data_wp_parse_request', true));
-    error_log(print_r( $_GET['option'], true));
-
     $mo_helper_redirect = new RonikMoHelperRedirect();
-
     // Check if the request method is GET and if 'option=saml_user_login_custom' is in the URL
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['option']) && $_GET['option'] === 'saml_user_login_custom') {
         // Initialize an empty associative array to store sanitized GET data
@@ -49,11 +50,8 @@ function process_saml_get_data_wp_parse_request($wp) {
             $get_data['wl-register'] = sanitize_text_field($_GET['wl-register']);
         }
         // Log the sanitized data for debugging
-        error_log('Sanitized GET Data: ' . print_r($get_data, true));
+        // error_log('Sanitized GET Data: ' . print_r($get_data, true));
         $post_login_redirect = $mo_helper_redirect->handleUserPreLoginRedirect();
-
-
-
         // Have to throttle the redirect
         sleep(5);
         // Construct the base redirect URL

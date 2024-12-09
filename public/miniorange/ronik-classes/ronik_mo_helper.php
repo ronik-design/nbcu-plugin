@@ -10,7 +10,7 @@ class RonikMoHelper{
     public function siteAssigner(){
         // Talentroom Site: Production && Staging
         $site_production_talentroom = 'https://talentroom.nbcuni.com/';
-        $site_staging_talentroom = 'https://stage.talent-room.nbcuni.com/';
+        $site_staging_talentroom = 'https://stage.talentroom.nbcuni.com/';
         $site_local_talentroom = 'https://talentroom.nbcudev.local/';
         // Together Site: Production && Staging
         $site_production_together = 'https://together.nbcuni.com/';
@@ -178,46 +178,36 @@ class RonikMoHelper{
     public function userFlowProcessor($attributes) {
         $mo_helper = new RonikMoHelper();
         $mo_helper_redirect = new RonikMoHelperRedirect();
-
         $user_manager = new UserManager();
         // Assign attributes
         list($user_data, $sso_id) = $mo_helper->attributesAssigner($attributes);
-        // error_log(print_r($user_data , true));
-        // error_log(print_r('User SSO: '.$sso_id , true));
-        // error_log(print_r('User Email: '.$user_data['email'] , true));
         // Check if user exists
         $user_exists = get_user_by("email", $user_data['email']);
         if ($user_exists) {
             $user_id = $user_exists->ID;
             $mo_helper->existingUserFlow($user_data, $sso_id);
-            error_log(print_r('user exists' , true));
+            // error_log(print_r('user exists' , true));
         } else {
             $user_id = $mo_helper->newUserFlow($user_data, $sso_id);
-            error_log(print_r('new user' , true));
+            // error_log(print_r('new user' , true));
         }
-        error_log(print_r('User ID: '.$user_id , true));
-
+        // error_log(print_r('User ID: '.$user_id , true));
         // Handle post-login redirect
         $post_login_redirect = $mo_helper_redirect->handleUserPostLoginRedirect($user_id);
-        error_log(print_r('Post Login Redirect: '. $post_login_redirect , true));
-
+        // error_log(print_r('Post Login Redirect: '. $post_login_redirect , true));
         // Process whitelist
         $mo_helper->processWhitelist($user_id, $user_data);
-        error_log(print_r(' processWhitelist'  , true));
-
+        // error_log(print_r(' processWhitelist'  , true));
         // Confirm user and log in
         $user_manager->confirm_user($user_id);
-        error_log(print_r(' confirm_user'  , true));
-
+        // error_log(print_r(' confirm_user'  , true));
         $user_manager->login($user_id, true, 'nbcuni-sso-new');
-        error_log(print_r('login '  , true));
-        error_log(print_r($user_id  , true));
-
-
+        // error_log(print_r('login '  , true));
+        // error_log(print_r($user_id  , true));
         // Validate redirect URL before redirecting
         if (filter_var($post_login_redirect, FILTER_VALIDATE_URL) || 
         strpos($post_login_redirect, '/') === 0) {            
-            error_log(print_r( $post_login_redirect  , true));
+            // error_log(print_r( $post_login_redirect  , true));
             return $post_login_redirect;
         } else {
             return 'invalid-redirect';
