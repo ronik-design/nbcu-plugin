@@ -8,6 +8,10 @@ class RonikMoHelper{
      * @return array Returns the user data and SSO ID as an array.
      */
     public function siteAssigner(){
+        // Request Site: Production && Staging
+        $site_production_request = 'https://requests.together.nbcuni.com/';
+        $site_staging_request = 'https://stage.requests.together.nbcuni.com/';
+        $site_local_request = 'https://requests.together.nbcudev.local/';
         // Talentroom Site: Production && Staging
         $site_production_talentroom = 'https://talentroom.nbcuni.com/';
         $site_staging_talentroom = 'https://stage.talentroom.nbcuni.com/';
@@ -24,7 +28,7 @@ class RonikMoHelper{
         $site_production_route_domain = ".nbcuni.com";
         $site_staging_route_domain = ".nbcuni.com";
         $site_local_route_domain = ".nbcudev.local";
-        return [ $site_production_talentroom , $site_staging_talentroom, $site_local_talentroom , $site_production_together, $site_staging_together, $site_local_together, $blog_id_together , $blog_id_talent , $blog_id_request , $site_production_route_domain , $site_staging_route_domain , $site_local_route_domain ]; // Return multiple variables as an array
+        return [ $site_production_request, $site_staging_request, $site_local_request, $site_production_talentroom , $site_staging_talentroom, $site_local_talentroom , $site_production_together, $site_staging_together, $site_local_together, $blog_id_together , $blog_id_talent , $blog_id_request , $site_production_route_domain , $site_staging_route_domain , $site_local_route_domain ]; // Return multiple variables as an array
     }
 
     public function getEnvironment($server_name) {
@@ -194,7 +198,7 @@ class RonikMoHelper{
         // error_log(print_r('User ID: '.$user_id , true));
         // Handle post-login redirect
         $post_login_redirect = $mo_helper_redirect->handleUserPostLoginRedirect($user_id);
-        // error_log(print_r('Post Login Redirect: '. $post_login_redirect , true));
+        error_log(print_r('Post Login Redirect: '. $post_login_redirect , true));
         // Process whitelist
         $mo_helper->processWhitelist($user_id, $user_data);
         // error_log(print_r(' processWhitelist'  , true));
@@ -205,12 +209,18 @@ class RonikMoHelper{
         // error_log(print_r('login '  , true));
         // error_log(print_r($user_id  , true));
         // Validate redirect URL before redirecting
-        if (filter_var($post_login_redirect, FILTER_VALIDATE_URL) || 
-        strpos($post_login_redirect, '/') === 0) {            
+        if (filter_var($post_login_redirect, FILTER_VALIDATE_URL) || strpos($post_login_redirect, '/') === 0) {            
             // error_log(print_r( $post_login_redirect  , true));
             return $post_login_redirect;
-        } else {
-            return 'invalid-redirect';
+        } else { 
+            // Additional check and sanitization
+            if (is_string($post_login_redirect)) {
+                // Sanitize the string as plain text
+                $sanitized_redirect = htmlspecialchars($post_login_redirect, ENT_QUOTES, 'UTF-8');
+                return esc_url(home_url($sanitized_redirect)); // Return the sanitized text
+            }
+            
+            return 'invalid-redirect'; // If not a string, return 'invalid-redirect'
         }
     }
 }

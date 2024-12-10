@@ -3,8 +3,14 @@
 class RonikMoHelperCookieManager {
     // Set Redirect cookies
     public function setRedirectCookies($url, $origin = '' , $time_frame) {
+        error_log(print_r( 'setRedirectCookies' , true));
+        error_log(print_r( $time_frame , true));
+
         $mo_helper = new RonikMoHelper();
         [
+            $site_production_request, 
+            $site_staging_request, 
+            $site_local_request, 
             $site_production_talentroom, 
             $site_staging_talentroom, 
             $site_local_talentroom, 
@@ -47,17 +53,29 @@ class RonikMoHelperCookieManager {
         } else {
             $cookie_name = 'sso_post_login';
         }
+
+        error_log(print_r( $cookie_name , true));
+        error_log(print_r( $route_domain , true));
+        error_log(print_r( $sub_domain , true));
+
         // Set the first cookie for the redirect URL
         if ($url == 'talent') {
+            error_log(print_r( 'setRedirectCookies: talent' , true));
             $url_set = $this->cookieProcessor( $cookie_name , 'talentroom' , $route_domain, $sub_domain);
+        } elseif($url == 'request') {
+            error_log(print_r( 'setRedirectCookies: request' , true));
+
+            $url_set = $this->cookieProcessor( $cookie_name , 'request' , $route_domain, $sub_domain);
         } else {
-            $url_set = $this->cookieProcessor( $cookie_name , $url , $route_domain, $sub_domain);
+            error_log(print_r( 'setRedirectCookies: misc' , true));
+            if($time_frame == 'pre'){
+                $url_set = $this->cookieProcessor( $cookie_name , $url , $route_domain, $sub_domain);
+            }
         }
         return $url_set;
     }
     // Get Redirect Cookies
     public function getRedirectCookies($default_redirect, $time_frame) {
-        // error_log(print_r('getRedirectCookies', true));
         if($time_frame == 'pre'){
             $cookie_name = 'sso_pre_login';
         } else {
@@ -69,7 +87,7 @@ class RonikMoHelperCookieManager {
         } else {
             $custom_redirect = null;
         }        
-        if($custom_redirect == 'talentroom'){
+        if($custom_redirect == 'talentroom' || $custom_redirect == 'request'){
             return $custom_redirect;
         }
         return $default_redirect;

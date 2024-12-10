@@ -11,6 +11,9 @@ class RonikMoHelperRedirect {
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
         $mo_helper = new RonikMoHelper();
         [
+            $site_production_request, 
+            $site_staging_request, 
+            $site_local_request, 
             $site_production_talentroom, 
             $site_staging_talentroom, 
             $site_local_talentroom, 
@@ -30,9 +33,9 @@ class RonikMoHelperRedirect {
         $mo_get_post_manager->processSsoPostConvertParams();
         // Handle environment and redirection
         return $this->handleRedirect($default_redirect, false, [
-            'production' => ['talentroom' => $site_production_talentroom, 'together' => $site_production_together],
-            'stage' => ['talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
-            'local' => ['talentroom' => $site_local_talentroom, 'together' => $site_local_together]
+            'production' => ['request' => $site_production_request, 'talentroom' => $site_production_talentroom, 'together' => $site_production_together],
+            'stage' => ['request' => $site_staging_request, 'talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
+            'local' => ['request' => $site_local_request, 'talentroom' => $site_local_talentroom, 'together' => $site_local_together]
         ], 'pre');          
     }
 
@@ -51,6 +54,9 @@ class RonikMoHelperRedirect {
         $mo_cookie_manager = new RonikMoHelperCookieManager();
         $mo_helper = new RonikMoHelper();
         [
+            $site_production_request, 
+            $site_staging_request, 
+            $site_local_request, 
             $site_production_talentroom, 
             $site_staging_talentroom, 
             $site_local_talentroom, 
@@ -66,20 +72,27 @@ class RonikMoHelperRedirect {
         ] = $mo_helper->siteAssigner();
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
         // Check redirect cookie or promotion-based redirects
-        $custom_redirect = $mo_cookie_manager->getRedirectCookies($default_redirect , 'post');
+        error_log(print_r( 'WARNING EXP reverse Fetch name cookie !!!!!' , true));
+        $custom_redirect = $mo_cookie_manager->getRedirectCookies($default_redirect , 'pre');
+        error_log(print_r( $custom_redirect , true));
+
         // error_log(print_r('handleUserPostLoginRedirect', true));
-        // error_log(print_r($custom_redirect, true));
         if ($this->isTogetherBlog($blog_id_together)) {
             $promotion_redirect = $this->getPromotionRedirect($user_id);
             $custom_redirect = $promotion_redirect ?? $custom_redirect;
         }
+        error_log(print_r( 'WARNING END' , true));
+        error_log(print_r($custom_redirect, true));
         // Process SSO GET params
         $mo_get_post_manager->processSsoPostConvertParams();
+        error_log(print_r( 'WARNING END 2' , true));
+        error_log(print_r($custom_redirect, true));
+
         // Handle environment and redirection
         return $this->handleRedirect($custom_redirect, $user_id, [
-            'production' => ['talentroom' => $site_production_talentroom, 'together' => $site_production_together],
-            'stage' => ['talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
-            'local' => ['talentroom' => $site_local_talentroom, 'together' => $site_local_together]
+            'production' => ['request' => $site_production_request, 'talentroom' => $site_production_talentroom, 'together' => $site_production_together],
+            'stage' => ['request' => $site_staging_request, 'talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
+            'local' => ['request' => $site_local_request, 'talentroom' => $site_local_talentroom, 'together' => $site_local_together]
         ], 'post');
     }
 
@@ -96,6 +109,8 @@ class RonikMoHelperRedirect {
     }
 
     private function handleRedirect($default_redirect=false, $user_id=false, $site_mapping, $time_frame) {
+        error_log(print_r( 'handleRedirect' , true));
+
         $mo_helper = new RonikMoHelper();
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
         $mo_cookie_manager = new RonikMoHelperCookieManager();
@@ -104,12 +119,27 @@ class RonikMoHelperRedirect {
         $environment = $mo_helper->getEnvironment($_SERVER['SERVER_NAME']);
         // Determine the current site based on the URL ('together' or 'talentroom')
         $current_site = str_contains(get_bloginfo('url'), 'together') ? 'together' : 'talentroom';
+        if(isset($_GET['talent']) && $_GET['talent']){
+            $current_site = 'talent';
+        } else if( isset($_GET['request']) && $_GET['request']){
+            $current_site = 'request';
+        } 
+
+
         // Get the URL for the current site based on the environment
-        $site_url = $site_mapping[$environment][$current_site];
-        $redirect = '';
+        if($default_redirect){
+            $site_url = $site_mapping[$environment][$default_redirect];
+        } else {
+            $site_url = $site_mapping[$environment][$current_site];
+        }
+        error_log(print_r( 'handleRedirect default_redirect:' . $default_redirect   , true));
+        error_log(print_r( 'handleRedirect current_site:' . $current_site   , true));
+        error_log(print_r( 'handleRedirect site_url:' . $site_url   , true));
+
+
         // TEST
-        $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment, $time_frame);
-        if($default_redirect == 'talentroom'){
+        $mo_get_post_manager->processSsoGet($user_id, $site_url, $site_mapping, $environment, $time_frame, $default_redirect);
+        if($default_redirect == 'talentroom' || $default_redirect == 'request'){
             return $current_site;
         }
         // If neither 'talent' nor 'r/wl-register' parameters are present, return the default redirect
