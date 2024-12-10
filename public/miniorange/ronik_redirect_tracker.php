@@ -4,6 +4,7 @@
 // https://stage.together.nbcuni.com/home/?option=saml_user_login_custom&r=%2Faccount&wpc=1
 
 function ronik_redirect_tracker(){
+    $manager = new UserManager();
     // Cancel log in request since user is logged in or no index found.
     if (is_user_logged_in()) {
         if (!str_contains($_SERVER['REQUEST_URI'], 'sso-rk-log') && !str_contains($_SERVER['REQUEST_URI'], '/talent')) {  
@@ -15,11 +16,15 @@ function ronik_redirect_tracker(){
             }
         }
         if (str_contains($_SERVER['REQUEST_URI'], '/login/')) {
-            // Construct the base redirect URL
-            $redirect_url = '/account';
-            // Perform the redirect with the query parameters
-            wp_redirect( esc_url(home_url($redirect_url)) );
-            exit; // Always call exit after a redirect to prevent further execution
+            $_current_user = wp_get_current_user();
+            if($manager->has_access($_current_user->ID)){
+                error_log(print_r( $_current_user , true));
+                // Construct the base redirect URL
+                $redirect_url = '/account';
+                // Perform the redirect with the query parameters
+                wp_redirect( esc_url(home_url($redirect_url)) );
+                exit; // Always call exit after a redirect to prevent further execution
+            }
         }
         return false;
     }
