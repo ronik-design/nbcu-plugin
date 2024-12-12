@@ -64,9 +64,11 @@ class RonikMoHelperSiteProcessor {
         return $data_array; // Return multiple variables as an array
     }
 
-    public function urlSsoGenerator($queryParameters){
-        $siteTarget = 'together';
-        $mo_helper_site_processor_data = $this->siteMapping($siteTarget);
+    public function urlSsoGenerator($siteTarget=false, $queryParameters){
+        $mo_helper_site_processor_data = $this->siteMapping('together');
+        if(!$siteTarget){
+            $siteTarget = 'together';
+        }
         $site_together_sso_login = $mo_helper_site_processor_data['site_url'].'saml_user_login_custom?'.$siteTarget.'=1';
         if (isset($queryParameters['r']) && $queryParameters['r']) {
             $site_together_sso_login .= '&' . http_build_query(['r' => $queryParameters['r']]); 
