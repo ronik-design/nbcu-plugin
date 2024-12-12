@@ -185,6 +185,9 @@ class Ronikdesign_Public
 		foreach (glob(dirname(__FILE__) . '/miniorange/ronik-classes/*.php') as $file) {
 			include_once $file;
 		}
+		foreach (glob(dirname(__FILE__) . '/miniorange/ronik-mo-classes/*.php') as $file) {
+			include_once $file;
+		}
 	}
 	public function ronikdesign_miniorange_ajax(){
         [

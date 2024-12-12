@@ -99,7 +99,6 @@ class RonikMoHelperCookieManager {
         $url_set = setcookie($name, urlencode($data), time() + 3600, '/', $sub_domain, true, true);
         // Set cookie with SameSite=None for cross-site requests (important for cookies across subdomains)
         header('Set-Cookie: '.$name.'=' . urlencode($data) . '; path=/; domain='.$route_domain.'; max-age=3600; SameSite=None; Secure; HttpOnly');
-        // error_log('sso_post_login_redirect set: ' . ($url_set ? 'Success' : 'Failure'));
         return $url_set;
     }
 }

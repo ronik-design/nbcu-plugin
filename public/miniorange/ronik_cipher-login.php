@@ -17,7 +17,7 @@ function ronik_decrypt_login_request(){
             exit; // Always call exit after a redirect to prevent further execution
         }
     } else {
-        error_log('sso_post_login cookie NOT found, fallback to url login');
+        // error_log('sso_post_login cookie NOT found, fallback to url login');
         if (!isset($_GET["sso-rk-log"])) {
             return false;
         } else {

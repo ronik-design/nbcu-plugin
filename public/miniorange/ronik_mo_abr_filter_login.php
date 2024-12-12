@@ -9,6 +9,9 @@ if ( !has_action( 'mo_abr_filter_login' ) ) {
 
     // Define the callback function that will run when the action is triggered
     function ronik_mo_abr_filter_login( $attrs, $nameId = '', $sessionIndex = '') {
+        error_log(print_r( 'ronik_mo_abr_filter_login' , true));
+        error_log(print_r( $sessionIndex , true));
+
         $attributes = [
             "email" => isset($attrs['email'][0]) ? [$attrs['email'][0]] : [''],
             "Email" => isset($attrs['email'][0]) ? [$attrs['email'][0]] : [''], // Alternative casing

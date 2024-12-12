@@ -7,47 +7,47 @@ class RonikMoHelperRedirect {
      * @return string The final redirect URL.
      */
 
-    public function handleUserPreLoginRedirect() {
-        $mo_get_post_manager = new RonikMoHelperGetPostManager();
-        $mo_helper = new RonikMoHelper();
-        [
-            $site_production_request, 
-            $site_staging_request, 
-            $site_local_request, 
-            $site_production_talentroom, 
-            $site_staging_talentroom, 
-            $site_local_talentroom, 
-            $site_production_together, 
-            $site_staging_together, 
-            $site_local_together, 
-            $blog_id_together, 
-            $blog_id_talent, 
-            $blog_id_request,
-            $site_production_route_domain, 
-            $site_staging_route_domain, 
-            $site_local_route_domain
-        ] = $mo_helper->siteAssigner();
+    // public function handleUserPreLoginRedirect() {
+    //     $mo_get_post_manager = new RonikMoHelperGetPostManager();
+    //     $mo_helper = new RonikMoHelper();
+    //     [
+    //         $site_production_request, 
+    //         $site_staging_request, 
+    //         $site_local_request, 
+    //         $site_production_talentroom, 
+    //         $site_staging_talentroom, 
+    //         $site_local_talentroom, 
+    //         $site_production_together, 
+    //         $site_staging_together, 
+    //         $site_local_together, 
+    //         $blog_id_together, 
+    //         $blog_id_talent, 
+    //         $blog_id_request,
+    //         $site_production_route_domain, 
+    //         $site_staging_route_domain, 
+    //         $site_local_route_domain
+    //     ] = $mo_helper->siteAssigner();
 
-        $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
-        // Process SSO GET params
-        $mo_get_post_manager->processSsoPostConvertParams();
-        // Handle environment and redirection
-        return $this->handleRedirect($default_redirect, false, [
-            'production' => ['request' => $site_production_request, 'talentroom' => $site_production_talentroom, 'together' => $site_production_together],
-            'stage' => ['request' => $site_staging_request, 'talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
-            'local' => ['request' => $site_local_request, 'talentroom' => $site_local_talentroom, 'together' => $site_local_together]
-        ], 'pre');          
-    }
+    //     $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
+    //     // // Process SSO GET params
+    //     // $mo_get_post_manager->processSsoPostConvertParams();
+    //     // Handle environment and redirection
+    //     return $this->handleRedirect($default_redirect, false, [
+    //         'production' => ['request' => $site_production_request, 'talentroom' => $site_production_talentroom, 'together' => $site_production_together],
+    //         'stage' => ['request' => $site_staging_request, 'talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
+    //         'local' => ['request' => $site_local_request, 'talentroom' => $site_local_talentroom, 'together' => $site_local_together]
+    //     ], 'pre');          
+    // }
 
-    public function handleUserOverrideRedirect($old, $new){
-        $current_url = $_SERVER['REQUEST_URI']; // Get current URL
-        if($current_url == '/nbcuni-sso/login/' || $current_url == '/nbcuni-sso/login.php'){
-            $new_url = str_replace($old, $new, $current_url); // Replace part of the URL
-            // Perform the redirect
-            wp_redirect( esc_url(home_url($new_url)) );
-            exit();
-        }
-    }
+    // public function handleUserOverrideRedirect($old, $new){
+    //     $current_url = $_SERVER['REQUEST_URI']; // Get current URL
+    //     if($current_url == '/nbcuni-sso/login/' || $current_url == '/nbcuni-sso/login.php'){
+    //         $new_url = str_replace($old, $new, $current_url); // Replace part of the URL
+    //         // Perform the redirect
+    //         wp_redirect( esc_url(home_url($new_url)) );
+    //         exit();
+    //     }
+    // }
     
     public function handleUserPostLoginRedirect($user_id) {
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
@@ -72,21 +72,14 @@ class RonikMoHelperRedirect {
         ] = $mo_helper->siteAssigner();
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
         // Check redirect cookie or promotion-based redirects
-        error_log(print_r( 'WARNING EXP reverse Fetch name cookie !!!!!' , true));
         $custom_redirect = $mo_cookie_manager->getRedirectCookies($default_redirect , 'pre');
-        error_log(print_r( $custom_redirect , true));
-
         // error_log(print_r('handleUserPostLoginRedirect', true));
         if ($this->isTogetherBlog($blog_id_together)) {
             $promotion_redirect = $this->getPromotionRedirect($user_id);
             $custom_redirect = $promotion_redirect ?? $custom_redirect;
         }
-        error_log(print_r( 'WARNING END' , true));
-        error_log(print_r($custom_redirect, true));
         // Process SSO GET params
-        $mo_get_post_manager->processSsoPostConvertParams();
-        error_log(print_r( 'WARNING END 2' , true));
-        error_log(print_r($custom_redirect, true));
+        // $mo_get_post_manager->processSsoPostConvertParams();
 
         // Handle environment and redirection
         return $this->handleRedirect($custom_redirect, $user_id, [
@@ -113,8 +106,6 @@ class RonikMoHelperRedirect {
 
         $mo_helper = new RonikMoHelper();
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
-        $mo_cookie_manager = new RonikMoHelperCookieManager();
-        $mo_helper_cipher = new RonikMoHelperCipher();
         // Get the environment (local, staging, production) based on server name
         $environment = $mo_helper->getEnvironment($_SERVER['SERVER_NAME']);
         // Determine the current site based on the URL ('together' or 'talentroom')
