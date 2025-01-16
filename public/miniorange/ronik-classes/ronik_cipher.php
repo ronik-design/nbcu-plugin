@@ -4,7 +4,7 @@ class RonikMoHelperCipher {
     public function decryptLoginRequest($data) {
         // Helper Guide
         $helper = new RonikHelper;
-        $user_id = $helper->ronik_decrypt_data($data);
+        $user_id = $helper->ronik_decrypt_data($data , 300);
 
         error_log(print_r('decryptLoginRequest', true));
         error_log(print_r($user_id, true));
