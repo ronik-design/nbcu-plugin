@@ -8,8 +8,15 @@ $f_csp_disallow_query = get_field('csp_disallow-query', 'option');
 $f_csp_enable = get_field('csp_enable', 'option');
 
 // Define CSP and security headers
-define('ALLOWABLE_FONTS', $csp_allow_fonts_scripts_santized);
-define('ALLOWABLE_SCRIPTS', $csp_allow_scripts_santized);
+define('ALLOWABLE_FONTS', '');
+define('ALLOWABLE_SCRIPTS', '');
+
+if($csp_allow_fonts_scripts_santized){
+    define('ALLOWABLE_FONTS', $csp_allow_fonts_scripts_santized);
+}
+if($csp_allow_scripts_santized){
+    define('ALLOWABLE_SCRIPTS', $csp_allow_scripts_santized);
+}
 
 
 if(!$f_csp_enable){
