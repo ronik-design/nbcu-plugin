@@ -11,14 +11,15 @@ $csp_allow_fonts_scripts_santized = get_field('csp_allow-fonts', 'option');
 $csp_allow_scripts_santized = get_field('csp_allow-scripts', 'option');
 
 // Define CSP and security headers
-define('ALLOWABLE_FONTS', '');
-define('ALLOWABLE_SCRIPTS', '');
-
 if($csp_allow_fonts_scripts_santized){
     define('ALLOWABLE_FONTS', $csp_allow_fonts_scripts_santized);
+} else {
+    define('ALLOWABLE_FONTS', '');
 }
 if($csp_allow_scripts_santized){
     define('ALLOWABLE_SCRIPTS', $csp_allow_scripts_santized);
+} else {
+    define('ALLOWABLE_SCRIPTS', '');
 }
 
 
