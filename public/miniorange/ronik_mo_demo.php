@@ -42,7 +42,7 @@ if (!str_contains($_SERVER['HTTP_HOST'], '.local')) {
 }
 
 // Function to sanitize all GET parameters dynamically
-function sanitize_all_get_params($filter = FILTER_SANITIZE_STRING) {
+function sanitize_all_get_params($filter = FILTER_SANITIZE_FULL_SPECIAL_CHARS) {
     $sanitized_params = [];
     foreach ($_GET as $key => $value) {
         $sanitized_params[$key] = filter_var($value, $filter);
