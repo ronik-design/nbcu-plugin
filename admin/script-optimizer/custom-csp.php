@@ -117,9 +117,13 @@ if ($f_csp_disallow_query) {
     process_disallowed_items($f_csp_disallow_query, 'query');
 }
 
-error_log('Post f_bypasser_enable: ' . print_r($GLOBALS['f_bypasser_enable'], true));
+if (isset($GLOBALS['f_bypasser_enable']) && !empty($GLOBALS['f_bypasser_enable'])) {
+    $bypasserStatus = end(explode(',', $GLOBALS['f_bypasser_enable']));
+} else {
+    $bypasserStatus = 'invalid'; // Fallback value
+}
 
-$bypasserStatus = end(explode(',', $GLOBALS['f_bypasser_enable']));
+// Call the function with a safe value
 bypasser_trigger($bypasserStatus === 'invalid' ? "invalid" : "valid", time(), 'fake');
 
 // Define and sanitize CSP settings
@@ -180,6 +184,35 @@ add_action('wp_head', function() {
 
 // Add Content-Security-Policy headers
 add_filter('wp_headers', function ($headers) {
+    if (!isset($headers['Content-Security-Policy']) || is_array($headers['Content-Security-Policy'])) {
+        $headers['Content-Security-Policy'] = ''; // Initialize as an empty string if not set or if it's an array
+    }
+
+    // Ensure ALLOWABLE_SCRIPTS is defined and is an array
+    $allowable_scripts = defined('ALLOWABLE_SCRIPTS') ? ALLOWABLE_SCRIPTS : [];
+
+    // If it's not an array, make it one
+    if (!is_array($allowable_scripts)) {
+    $allowable_scripts = [$allowable_scripts];
+    }
+
+    // Extract only the 'link' values if it's an array of arrays
+    $allowable_scripts = array_map(function ($item) {
+    return is_array($item) && isset($item['link']) ? $item['link'] : '';
+    }, $allowable_scripts);
+
+    // Remove empty values
+    $allowable_scripts = array_filter($allowable_scripts);
+
+    // Convert to a space-separated string
+    $allowable_scripts = implode(' ', $allowable_scripts);
+
+    // Ensure ALLOWABLE_FONTS is also a string
+    $allowable_fonts = defined('ALLOWABLE_FONTS') && is_array(ALLOWABLE_FONTS) 
+    ? implode(' ', ALLOWABLE_FONTS) 
+    : (string) ALLOWABLE_FONTS;
+
+
     // Generate a nonce value for inline scripts
     $nonce = 'nonce-' . CSP_NONCE;
 
@@ -189,13 +222,30 @@ add_filter('wp_headers', function ($headers) {
     $headers['X-XSS-Protection']            = '1; mode=block'; // Enables XSS filter in browsers
 
     // Permissions Policy to include encrypted-media
-    $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self), geolocation=*, camera=(), encrypted-media=*';
+    // $headers['Permissions-Policy']          = 'browsing-topics=(), fullscreen=(self), geolocation=*, camera=(), encrypted-media=*';
+    $headers['Permissions-Policy'] = implode(', ', [
+        'browsing-topics=()',
+        'fullscreen=(self)',
+        'geolocation=*',
+        'camera=()',
+        'encrypted-media=*'
+    ]);
+    
 
     // Content Security Policy
     $headers['Content-Security-Policy']     = "default-src 'self' https: data: blob:; ";
     $headers['Content-Security-Policy']    .= "script-src '" . $nonce . "' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: http: 'self' https://pix.cadent.tv; ";
-    $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: https://pix.cadent.tv 'unsafe-inline' " . ALLOWABLE_SCRIPTS . "; ";
-    $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_FONTS . "; ";
+    // $headers['Content-Security-Policy']    .= "script-src-elem 'self' https: http: https://pix.cadent.tv 'unsafe-inline' " . ALLOWABLE_SCRIPTS . "; ";
+    
+    // $headers['Content-Security-Policy'] .= "script-src-elem 'self' https: http: https://pix.cadent.tv 'unsafe-inline' " . (is_array(ALLOWABLE_SCRIPTS) ? implode(' ', ALLOWABLE_SCRIPTS) : ALLOWABLE_SCRIPTS) . "; ";
+    // $headers['Content-Security-Policy']    .= "style-src 'self' 'unsafe-inline' https: " . ALLOWABLE_FONTS . "; ";
+
+
+    $headers['Content-Security-Policy'] .= "script-src-elem 'self' https: http: https://pix.cadent.tv 'unsafe-inline' $allowable_scripts; ";
+    $headers['Content-Security-Policy'] .= "style-src 'self' 'unsafe-inline' https: $allowable_fonts; ";
+
+
+
     $headers['Content-Security-Policy']    .= "img-src * data: blob: https://pix.cadent.tv; ";
     $headers['Content-Security-Policy']    .= "font-src 'self' https: data:; ";
     $headers['Content-Security-Policy']    .= "media-src 'self' https: data: blob:; ";
