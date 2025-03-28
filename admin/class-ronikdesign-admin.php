@@ -186,6 +186,18 @@ class Ronikdesign_Admin
 		delete_transient('csp_allow_scripts_santized');
 	}
 
+
+	function ronikdesigns_visitor_auditor_functions()
+	{
+		// Include the visitor-auditor Functions.
+		foreach (glob(dirname(__FILE__) . '/visitor-auditor/*.php') as $file) {
+			include $file;
+		}
+	}
+
+
+
+
 	function ronikdesigns_acf_op_init_functions()
 	{
 		// Include the Wp Functions.
