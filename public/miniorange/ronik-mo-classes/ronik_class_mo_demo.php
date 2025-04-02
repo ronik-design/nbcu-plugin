@@ -28,13 +28,11 @@ class RonikMoHelperDemoProcessor {
         // Assume $mo_helper is an object and userFlowProcessor() is a method that processes the user flow
         $post_login_redirect = $mo_helper->userFlowProcessor($attributes);
 
-        error_log(print_r('dummyUserFlow: '. $post_login_redirect, true));
-
         sleep(1);
         // Check if the result is valid (non-empty, non-false) and redirect
         wp_redirect( !empty($post_login_redirect) ? $post_login_redirect : home_url() );
         exit(); // Always call exit() after wp_redirect() to stop further execution
     }
 
-            
+
 }

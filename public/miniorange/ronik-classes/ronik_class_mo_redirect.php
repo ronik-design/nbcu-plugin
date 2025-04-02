@@ -2,7 +2,7 @@
 class RonikMoHelperRedirect {
     /**
      * Handles user post-login redirection logic.
-     * 
+     *
      * @param int $user_id The user ID.
      * @return string The final redirect URL.
      */
@@ -11,20 +11,20 @@ class RonikMoHelperRedirect {
     //     $mo_get_post_manager = new RonikMoHelperGetPostManager();
     //     $mo_helper = new RonikMoHelper();
     //     [
-    //         $site_production_request, 
-    //         $site_staging_request, 
-    //         $site_local_request, 
-    //         $site_production_talentroom, 
-    //         $site_staging_talentroom, 
-    //         $site_local_talentroom, 
-    //         $site_production_together, 
-    //         $site_staging_together, 
-    //         $site_local_together, 
-    //         $blog_id_together, 
-    //         $blog_id_talent, 
+    //         $site_production_request,
+    //         $site_staging_request,
+    //         $site_local_request,
+    //         $site_production_talentroom,
+    //         $site_staging_talentroom,
+    //         $site_local_talentroom,
+    //         $site_production_together,
+    //         $site_staging_together,
+    //         $site_local_together,
+    //         $blog_id_together,
+    //         $blog_id_talent,
     //         $blog_id_request,
-    //         $site_production_route_domain, 
-    //         $site_staging_route_domain, 
+    //         $site_production_route_domain,
+    //         $site_staging_route_domain,
     //         $site_local_route_domain
     //     ] = $mo_helper->siteAssigner();
 
@@ -36,7 +36,7 @@ class RonikMoHelperRedirect {
     //         'production' => ['request' => $site_production_request, 'talentroom' => $site_production_talentroom, 'together' => $site_production_together],
     //         'stage' => ['request' => $site_staging_request, 'talentroom' => $site_staging_talentroom, 'together' => $site_staging_together],
     //         'local' => ['request' => $site_local_request, 'talentroom' => $site_local_talentroom, 'together' => $site_local_together]
-    //     ], 'pre');          
+    //     ], 'pre');
     // }
 
     // public function handleUserOverrideRedirect($old, $new){
@@ -48,26 +48,26 @@ class RonikMoHelperRedirect {
     //         exit();
     //     }
     // }
-    
+
     public function handleUserPostLoginRedirect($user_id) {
         $mo_get_post_manager = new RonikMoHelperGetPostManager();
         $mo_cookie_manager = new RonikMoHelperCookieManager();
         $mo_helper = new RonikMoHelper();
         [
-            $site_production_request, 
-            $site_staging_request, 
-            $site_local_request, 
-            $site_production_talentroom, 
-            $site_staging_talentroom, 
-            $site_local_talentroom, 
-            $site_production_together, 
-            $site_staging_together, 
-            $site_local_together, 
-            $blog_id_together, 
-            $blog_id_talent, 
+            $site_production_request,
+            $site_staging_request,
+            $site_local_request,
+            $site_production_talentroom,
+            $site_staging_talentroom,
+            $site_local_talentroom,
+            $site_production_together,
+            $site_staging_together,
+            $site_local_together,
+            $blog_id_together,
+            $blog_id_talent,
             $blog_id_request,
-            $site_production_route_domain, 
-            $site_staging_route_domain, 
+            $site_production_route_domain,
+            $site_staging_route_domain,
             $site_local_route_domain
         ] = $mo_helper->siteAssigner();
         $default_redirect = $this->getDefaultRedirectUrl($blog_id_together, $blog_id_talent, $blog_id_request);
@@ -114,7 +114,7 @@ class RonikMoHelperRedirect {
             $current_site = 'talent';
         } else if( isset($_GET['request']) && $_GET['request']){
             $current_site = 'request';
-        } 
+        }
 
 
         // Get the URL for the current site based on the environment

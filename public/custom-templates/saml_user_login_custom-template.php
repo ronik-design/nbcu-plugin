@@ -20,14 +20,19 @@ if (is_user_logged_in()) {
 // https://stage.together.nbcuni.com/saml_user_login_custom?talent=1&r=%2Faccount%2F&wpc=1
 // https://stage.together.nbcuni.com/saml_user_login_custom?talent=1&r=%2Ftalent
 
+$mo_helper = new RonikMoHelper();
 $mo_helper_site_processor = new RonikMoHelperSiteProcessor();
 $mo_helper_cookie_processor = new RonikMoHelperCookieProcessor();
 $mo_helper_demo_processor = new RonikMoHelperDemoProcessor();
 $mo_helper_site_processor_is_local = $mo_helper_site_processor->siteMapping('together')['environment'];
-$sso_post_login_redirect_site_origin = null; 
-$sso_post_login_redirect_cookie = null; 
+$sso_post_login_redirect_site_origin = null;
+$sso_post_login_redirect_cookie = null;
 
 $siteTarget = 'together';
+$mo_helper_site_processor_data = $mo_helper_site_processor->siteMapping($siteTarget);
+$sso_post_login_redirect_site_origin = $mo_helper_site_processor_data['site_url'];
+$route_domain = $mo_helper_site_processor_data['site_url_route_domain'];
+
 if($_GET){
     if(isset($_GET['talent']) && $_GET['talent']){
         $siteTarget = 'talentroom';
@@ -37,14 +42,35 @@ if($_GET){
     }
     if(isset($_GET['r']) && $_GET['r']){
         $sso_post_login_redirect_cookie = $_GET['r'];
+        // Remove the 'http://' or 'https://' from the beginning of the URL
+        $sso_post_login_redirect_cookie = preg_replace('#^https?://#', '', $sso_post_login_redirect_cookie);
+        // Now $sso_post_login_redirect_cookie will contain only the path part of the URL
+        error_log($sso_post_login_redirect_cookie); // For debugging
     }
     if(isset($_GET['wl-register']) && $_GET['wl-register']){
-        $sso_post_login_redirect_cookie = $_GET['wl-register'];
+        // $sso_post_login_redirect_cookie = $_GET['wl-register'];
+        // error_log(print_r('wl-register COOKIE SET', true));
+        // error_log(print_r($sso_post_login_redirect_cookie, true));
+        // error_log(print_r($route_domain, true));
+        // error_log(print_r(str_replace('/', '', $_COOKIE["wl-register"]), true));
+
+        setcookie(
+            'wl-register',
+            str_replace('/', '', $_GET['wl-register']),
+            time() + 3600, // Set the cookie to expire in 1 hour
+            '/', // Path where the cookie is available
+            '.nbcudev.local', // Domain for the cookie
+            true, // Secure flag (set to true if using HTTPS)
+            true  // HttpOnly flag (set to true to make cookie inaccessible via JavaScript)
+        );
+
     }
 }
-$mo_helper_site_processor_data = $mo_helper_site_processor->siteMapping($siteTarget);
-$sso_post_login_redirect_site_origin = $mo_helper_site_processor_data['site_url'];
-$route_domain = $mo_helper_site_processor_data['site_url_route_domain'];
+
+// error_log(print_r( '$sso_post_login_redirect_cookie', true));
+// error_log(print_r( $sso_post_login_redirect_cookie, true));
+// error_log(print_r( 'ssss', true));
+
 
 $cookie_processor_progress = $mo_helper_cookie_processor->cookieSsoGenerator( $sso_post_login_redirect_site_origin , $sso_post_login_redirect_cookie, $route_domain , $mo_helper_site_processor_is_local);
 

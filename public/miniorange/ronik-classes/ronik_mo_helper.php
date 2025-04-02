@@ -1,4 +1,4 @@
-<?php 
+<?php
 class RonikMoHelper{
 
     /**
@@ -19,7 +19,7 @@ class RonikMoHelper{
         // Together Site: Production && Staging
         $site_production_together = 'https://together.nbcuni.com/';
         $site_staging_together = 'https://stage.together.nbcuni.com/';
-        $site_local_together = 'http://together.nbcudev.local/';
+        $site_local_together = 'https://together.nbcudev.local/';
         // Blog ID for each site.
         $blog_id_together = 3;
         $blog_id_talent = 7;
@@ -69,7 +69,7 @@ class RonikMoHelper{
         ];
         return [ $user_data, $sso_id ]; // Return multiple variables as an array
     }
-    
+
     /**
      * Manages existing users' login process and updates their information.
      *
@@ -118,7 +118,7 @@ class RonikMoHelper{
             update_user_meta($user_id, 'nbcu_sso_id', $sso_id);
         }
     }
-    
+
 
     public function newUserFlow($user_data, $sso_id){
         $user_manager = new UserManager();
@@ -134,30 +134,30 @@ class RonikMoHelper{
 
 
     public function processWhitelist($user_id, $user_data) {
-        // Check if the whitelist cookie is set
-        if (isset($_COOKIE["wl-register"])) {
-            $whitelist = $_COOKIE["wl-register"];
-            $user_manager = new UserManager();
-            $whitelist_props = $user_manager->get_restricted_whitelist_props('id', $whitelist);
-            // Process whitelist properties if they exist
-            if (!empty($whitelist_props)) {
-                // Save restricted whitelist to user meta
-                $existing_restricted_whitelists = get_user_meta($user_id, "restricted_whitelist", true);
-                if (empty($existing_restricted_whitelists) || is_string($existing_restricted_whitelists)) {
-                    $existing_restricted_whitelists = [];
-                }
-                $existing_restricted_whitelists[] = $whitelist_props['unique_id'];
-                update_user_meta($user_id, 'restricted_whitelist', $existing_restricted_whitelists);
-                // Send approved email
-                if (!empty($whitelist_props['approved_email_template'])) {
-                    $alt_email = $user_manager->build_alternate_email_path($whitelist_props['approved_email_template']);
-                    update_user_meta($user_id, 'registration_sent_email', $alt_email);
-                }
-                $custom_subject = !empty($whitelist_props['approved_email_subject']) ? $whitelist_props['approved_email_subject'] : false;
-                $user_manager->log($user_id, "Together approval email sent");
-                // Save email to exclusive whitelist
-                if (!empty($whitelist_props['exclusive_whitelist'])) {
-                    $user_manager->add_email_to_exclusive_whitelist($whitelist_props['exclusive_whitelist'], $user_data['email']);
+            // Check if the whitelist cookie is set
+            if (isset($_COOKIE["wl-register"])) {
+                $whitelist = $_COOKIE["wl-register"];
+                $user_manager = new UserManager();
+                $whitelist_props = $user_manager->get_restricted_whitelist_props('id', $whitelist);
+                // Process whitelist properties if they exist
+                if (!empty($whitelist_props)) {
+                    // Save restricted whitelist to user meta
+                    $existing_restricted_whitelists = get_user_meta($user_id, "restricted_whitelist", true);
+                    if (empty($existing_restricted_whitelists) || is_string($existing_restricted_whitelists)) {
+                        $existing_restricted_whitelists = [];
+                    }
+                    $existing_restricted_whitelists[] = $whitelist_props['unique_id'];
+                    update_user_meta($user_id, 'restricted_whitelist', $existing_restricted_whitelists);
+                    // Send approved email
+                    if (!empty($whitelist_props['approved_email_template'])) {
+                        $alt_email = $user_manager->build_alternate_email_path($whitelist_props['approved_email_template']);
+                        update_user_meta($user_id, 'registration_sent_email', $alt_email);
+                    }
+                    $custom_subject = !empty($whitelist_props['approved_email_subject']) ? $whitelist_props['approved_email_subject'] : false;
+                    $user_manager->log($user_id, "Together approval email sent");
+                    // Save email to exclusive whitelist
+                    if (!empty($whitelist_props['exclusive_whitelist'])) {
+                        $user_manager->add_email_to_exclusive_whitelist($whitelist_props['exclusive_whitelist'], $user_data['email']);
                 }
             }
         }
@@ -177,14 +177,14 @@ class RonikMoHelper{
         // Ensure the script execution stops
         exit;
     }
-    
+
 
     public function userFlowProcessor($attributes) {
         $mo_helper = new RonikMoHelper();
         $mo_helper_redirect = new RonikMoHelperRedirect();
         $user_manager = new UserManager();
 
-        error_log(print_r($attributes, true));
+        // error_log(print_r($attributes, true));
 
         // Assign attributes
         list($user_data, $sso_id) = $mo_helper->attributesAssigner($attributes);
@@ -214,17 +214,17 @@ class RonikMoHelper{
         // error_log(print_r('login '  , true));
         // error_log(print_r($user_id  , true));
         // Validate redirect URL before redirecting
-        if (filter_var($post_login_redirect, FILTER_VALIDATE_URL) || strpos($post_login_redirect, '/') === 0) {            
+        if (filter_var($post_login_redirect, FILTER_VALIDATE_URL) || strpos($post_login_redirect, '/') === 0) {
             // error_log(print_r( $post_login_redirect  , true));
             return $post_login_redirect;
-        } else { 
+        } else {
             // Additional check and sanitization
             if (is_string($post_login_redirect)) {
                 // Sanitize the string as plain text
                 $sanitized_redirect = htmlspecialchars($post_login_redirect, ENT_QUOTES, 'UTF-8');
                 return esc_url(home_url($sanitized_redirect)); // Return the sanitized text
             }
-            
+
             return 'invalid-redirect'; // If not a string, return 'invalid-redirect'
         }
     }
@@ -234,13 +234,14 @@ class RonikMoHelper{
     public function loginDetection($user_id){
         // Helper Guide
         $helper = new RonikHelper;
-        $mo_helper_cookie_processor = new RonikMoHelperCookieProcessor();    
+        $mo_helper_cookie_processor = new RonikMoHelperCookieProcessor();
 
         if($user_id){
             $res_sso_post_login_redirect_data = $mo_helper_cookie_processor->cookieSsoFetcher('sso_post_login_redirect_data');
-            error_log(print_r('loginDetection $_COOKIE ' , true));
-            error_log(print_r($_COOKIE , true));
-            error_log(print_r($res_sso_post_login_redirect_data, true));
+            // error_log(print_r('loginDetection $_COOKIE ' , true));
+            // error_log(print_r($_COOKIE , true));
+            // error_log(print_r('res_sso_post_login_redirect_data', true));
+            // error_log(print_r($res_sso_post_login_redirect_data, true));
 
 
 
@@ -249,7 +250,7 @@ class RonikMoHelper{
             //     // Construct the base redirect URL
             //     if (!empty($res_sso_post_login_redirect_data['site_origin'])) {
             //         $redirect_url = esc_url_raw(
-            //             $res_sso_post_login_redirect_data['site_origin'] . 
+            //             $res_sso_post_login_redirect_data['site_origin'] .
             //             ($this->removeLeadingSlash($res_sso_post_login_redirect_data['redirect_url']) ?? '') // Append redirect_url if it exists
             //         );
             //         $login_url = $redirect_url . "?sso-rk-log=". $helper->ronik_encrypt_data_meta($user_id);
@@ -266,7 +267,7 @@ class RonikMoHelper{
                 if (!empty($res_sso_post_login_redirect_data['site_origin'])) {
                     // Get the redirect URL from the data
                     $redirect_url = esc_url_raw(
-                        $res_sso_post_login_redirect_data['site_origin'] . 
+                        $res_sso_post_login_redirect_data['site_origin'] .
                         ($this->removeLeadingSlash($res_sso_post_login_redirect_data['redirect_url']) ?? '') // Append redirect_url if it exists
                     );
                     // Check if the redirect_url already contains a query string
@@ -276,8 +277,10 @@ class RonikMoHelper{
                     error_log(print_r('processSsoGet time_frame POST', true));
                     return $login_url;
                 }
+            } else {
+
             }
-            
+
 
 
 
