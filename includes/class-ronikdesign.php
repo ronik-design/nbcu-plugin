@@ -179,7 +179,8 @@ class Ronikdesign
 		$this->loader->add_action('acf/init', $plugin_admin, 'ronikdesigns_acf_op_init_functions', 99);
 
 		$this->loader->add_action('init', $plugin_admin, 'ronikdesigns_visitor_auditor_functions', 99);
-		
+		$this->loader->add_action('init', $plugin_admin, 'ronikdesigns_sync_user_functions', 99);
+
 		$this->loader->add_action('update option', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
 		$this->loader->add_action('save_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
 		$this->loader->add_action('delete_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');

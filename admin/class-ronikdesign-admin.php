@@ -56,6 +56,9 @@ class Ronikdesign_Admin
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
+		        // Include UserSyncHandler early to ensure it's available for admin_init
+				require_once dirname(__FILE__) . '/sync-user/query-handler.php';
 	}
 
 	/**
@@ -185,6 +188,42 @@ class Ronikdesign_Admin
 		delete_transient('csp_allow_fonts_scripts_santized');
 		delete_transient('csp_allow_scripts_santized');
 	}
+
+
+
+	    /**
+     * Handle CSV export early in the WordPress lifecycle.
+     *
+     * @since    1.0.0
+     */
+    public function ronikdesigns_handle_csv_export() {
+        // Check for export condition early in the WordPress lifecycle
+        if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && !empty($_POST['export'])) {
+            // Check user permissions
+            if (!current_user_can('manage_options')) {
+                wp_die('Unauthorized access.');
+            }
+
+            $handler = new UserSyncHandler();
+            $handler->process_sync($_POST);
+            // The export_csv method will handle the output and exit
+            exit;
+        }
+    }
+
+    /**
+     * Include sync-user functions.
+     *
+     * @since    1.0.0
+     */
+    public function ronikdesigns_sync_user_functions() {
+        // Include the sync-user files, excluding query-handler.php since it's already included
+        foreach (glob(dirname(__FILE__) . '/sync-user/*.php') as $file) {
+            if (basename($file) !== 'query-handler.php') {
+                include_once $file;
+            }
+        }
+    }
 
 
 	function ronikdesigns_visitor_auditor_functions()

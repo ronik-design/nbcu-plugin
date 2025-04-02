@@ -57,6 +57,7 @@ function ronik_sso_init() {
         'aj.php',
         '/robots.txt',
         '/nbcuni-sso/',
+        '/saml_user_login_custom',
         '/wp-json/',
         '/wp-signup.php',
         'wp-login.php',

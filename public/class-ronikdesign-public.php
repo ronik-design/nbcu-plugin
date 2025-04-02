@@ -711,10 +711,10 @@ class Ronikdesign_Public
 		if (isset($userclick_actions['url'])) {
 			$r = '?r=' . urldecode($userclick_actions['url']);
 		}
-		wp_redirect(home_url('/nbcuni-sso/login/' . $r . ''));
+		wp_redirect(home_url('/saml_user_login_custom' . $r . ''));
 		exit;
 	}
-
+	// https://together.nbcuni.com/saml_user_login_custom?together=1&r=%2Faccount%2F
 	/**
 	 * Handles the redirects after user validates auth
 	 */
