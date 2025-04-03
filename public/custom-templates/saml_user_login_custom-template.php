@@ -53,17 +53,29 @@ if($_GET){
         // error_log(print_r($route_domain, true));
         // error_log(print_r(str_replace('/', '', $_COOKIE["wl-register"]), true));
 
+        $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
+        $current_host = $_SERVER['HTTP_HOST'];
+        $is_local = str_contains($current_host, 'localhost') || str_contains($current_host, 'nbcudev.local');
+        
+        // Dynamically determine domain and secure flags
+        $cookie_domain = $is_local ? '' : $route_domai; // Or pull from $route_domain if available
+        $secure_flag = !$is_local; // Only true in staging/prod
+        $httponly_flag = true;     // This can stay true
+        
         setcookie(
             'wl-register',
             str_replace('/', '', $_GET['wl-register']),
-            time() + 3600, // Set the cookie to expire in 1 hour
-            '/', // Path where the cookie is available
-            '.nbcudev.local', // Domain for the cookie
-            true, // Secure flag (set to true if using HTTPS)
-            true  // HttpOnly flag (set to true to make cookie inaccessible via JavaScript)
+            time() + 3600,
+            '/',
+            $cookie_domain,
+            $secure_flag,
+            $httponly_flag
         );
+        
 
     }
+
+    error_log(print_r($_GET , true));
 }
 
 $cookie_processor_progress = $mo_helper_cookie_processor->cookieSsoGenerator( $sso_post_login_redirect_site_origin , $sso_post_login_redirect_cookie, $route_domain , $mo_helper_site_processor_is_local);

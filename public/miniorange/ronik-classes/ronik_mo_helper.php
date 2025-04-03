@@ -136,6 +136,9 @@ class RonikMoHelper{
     public function processWhitelist($user_id, $user_data) {
             // Check if the whitelist cookie is set
             if (isset($_COOKIE["wl-register"])) {
+
+                error_log(print_r( 'processWhitelist', true ));
+                
                 $whitelist = $_COOKIE["wl-register"];
                 $user_manager = new UserManager();
                 $whitelist_props = $user_manager->get_restricted_whitelist_props('id', $whitelist);
