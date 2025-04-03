@@ -1,12 +1,12 @@
-<?php 
+<?php
 class RonikAuthProcessor{
     // Check for the Authorization pages if provided URL is a Authorization page.
     public function urlCheckNoAuthPage($urlTarget) {
         // Lets check for the auth pages..
-        if (!str_contains($urlTarget, 'ronikdesigns_admin_logout') 
-            && !str_contains($urlTarget, '/sw.js') 
-            && !str_contains($urlTarget, '/mfa') 
-            && !str_contains($urlTarget, '/2fa') 
+        if (!str_contains($urlTarget, 'ronikdesigns_admin_logout')
+            && !str_contains($urlTarget, '/sw.js')
+            && !str_contains($urlTarget, '/mfa')
+            && !str_contains($urlTarget, '/2fa')
             && !str_contains($urlTarget, '/auth')
         ) {
             return true;
@@ -29,7 +29,7 @@ class RonikAuthProcessor{
             if( count($f_slug_array) !== 0  ){
                 foreach($f_slug_array as $f_slug){
                     // Loose check...
-                    if (str_contains($f_slug, trim( $urlTarget, "/" ) )) {                        
+                    if (str_contains($f_slug, trim( $urlTarget, "/" ) )) {
                         // return true;
                         $f_validation[] = 'valid';
                     } else {
@@ -102,7 +102,7 @@ class RonikAuthProcessor{
         if( $customUrlArray ){
             $f_redirect_wp_slugs = array_merge($f_redirect_wp_slugs, $customUrlArray);;
         }
-        foreach($f_redirect_wp_slugs as $wp_slugs){ 
+        foreach($f_redirect_wp_slugs as $wp_slugs){
             if(str_contains( $urlTarget, $wp_slugs )){
                 return true;
             }
@@ -207,17 +207,29 @@ class RonikAuthProcessor{
                         // The magic part we check if any id are within the
                         // Lets check the id both ids dont match we kill the redirect.
                         if( $post && property_exists($post, 'ID') ){
+
                             if( !in_array($post->ID, $f_id_array) ){
+
+
                                 $get_current_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
                                 if(empty($get_current_auth_status) || $get_current_auth_status == 'none'){
                                     // By adding the looperdooper we basically invoke the loop to the auth page.
                                     $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
                                 }
+                                $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
+                                if( $get_auth_status == 'auth_select_sms-missing' ){
+                                    $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+                                } elseif( $get_auth_status == 'auth_select_mfa'){
+                                    $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
+                                    if( !$mfa_validation || ($mfa_validation == 'not_registered' )  ){
+                                        $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+                                    }
+                                }
                                 return false;
                             } else {
                                 // This checks if the user is inside wp-admin
                                 if( !$authProcessor->urlCheckNoWpPage($_SERVER['REQUEST_URI']) ){
-                                    return false;   
+                                    return false;
                                 }
                                 // if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin') && !str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
                                 //     return false;
@@ -226,7 +238,7 @@ class RonikAuthProcessor{
                         } else {
                             // This checks if the user is inside wp-admin
                             if( !$authProcessor->urlCheckNoWpPage($_SERVER['REQUEST_URI']) ){
-                                return false;   
+                                return false;
                             }
                             // if (str_contains($_SERVER['REQUEST_URI'], 'wp-admin') && !str_contains( $_SERVER['REQUEST_URI']  , '/wp-admin/admin-ajax.php')) {
                             //     return false;
@@ -248,7 +260,7 @@ class RonikAuthProcessor{
                             $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
                         } else{
                             // Checks for the wpDashboard if so we redirect!!!!!
-                            if( $authProcessor->urlCheckWpDashboard($_SERVER['REQUEST_URI']) ){                    
+                            if( $authProcessor->urlCheckWpDashboard($_SERVER['REQUEST_URI']) ){
                                 if( $authProcessor->urlCheckNoAuthPage($_SERVER['REQUEST_URI']) ){
                                     // PHP User Click Actions
                                     $user_id = get_current_user_id();
@@ -261,7 +273,7 @@ class RonikAuthProcessor{
                                 $helper->ronikdesigns_write_log_devmode( 'THIS IS A WP-ADMIN DASHBOARD' , 'low', 'auth');
                                 wp_redirect( esc_url(home_url($dataUrl['reDest'])) );
                                 exit();
-                            } 
+                            }
                         }
                         return false;
                     }
@@ -321,21 +333,21 @@ class RonikAuthProcessor{
         // Helper Guide
         $helper = new RonikHelper;
         $authProcessor = new RonikAuthProcessor;
-    
+
         $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
         $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
         $f_mfa_settings = get_field('mfa_settings', 'options');
-    
+
         $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
         if(!$get_phone_number){
             update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
-            $f_value['auth-select'] = "2fa";    
+            $f_value['auth-select'] = "2fa";
             // Redirect Magic, custom function to prevent an infinite loop.
             $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/?auth-select=2fa');
             $dataUrl['reDest'] = '/auth/?auth-select=2fa';
             $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
         }
-    
+
         if( isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time'] ){
             $f_auth_expiration_time = $f_mfa_settings['auth_expiration_time'];
         } else {
@@ -344,7 +356,7 @@ class RonikAuthProcessor{
         // Redirect Magic, custom function to prevent an infinite loop.
         $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/');
         $dataUrl['reDest'] = '/2fa/';
-    
+
         // We check the current page id and also the page title of the 2fa.
         if (!str_contains($_SERVER['REQUEST_URI'], '2fa') && !str_contains($_SERVER['REQUEST_URI'], 'mfa')) {
             // Check if user has sms_2fa_status if not add secret.
@@ -403,7 +415,7 @@ class RonikAuthProcessor{
 
         $mfa_status = get_user_meta(get_current_user_id(), $key = 'mfa_status', true);
         $mfa_validation = get_user_meta(get_current_user_id(),'mfa_validation', true);
-    
+
         $f_mfa_settings = get_field('mfa_settings', 'options');
         if( isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time'] ){
             $f_auth_expiration_time = $f_mfa_settings['auth_expiration_time'];
@@ -413,13 +425,13 @@ class RonikAuthProcessor{
         // Redirect Magic, custom function to prevent an infinite loop.
         $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/', '/mfa/');
         $dataUrl['reDest'] = '/mfa/';
-    
+
         if(ronikdesigns_get_page_by_title('mfa')){
             // Check if user has mfa_status if not add secret.
             if (!$mfa_status) {
                 // add_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
                 update_user_meta(get_current_user_id(), 'mfa_status', 'mfa_unverified');
-    
+
             }
             // Check if mfa_status is not equal to unverified.
             if (($mfa_status !== 'mfa_unverified')) {
@@ -437,7 +449,7 @@ class RonikAuthProcessor{
                         // Lets block the user from accessing the 2fa if already authenticated.
                         $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/', '/mfa/');
                         $dataUrl['reDest'] = '/';
-    
+
                         if($mfa_validation !== 'valid' ){
                             $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
                         }

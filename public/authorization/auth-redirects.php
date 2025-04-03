@@ -290,12 +290,16 @@ function ronikdesigns_redirect_registered_auth() {
                 return;
             }
         }
-        // SMS SELECTED * is missing phone number
-        if($get_auth_status == 'auth_select_sms-missing'){
-            $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
-            $dataUrl['reDest'] = '/auth/';
-            $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
-            return;
+        $get_current_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
+        if($get_current_auth_status == 'auth_select_sms' || $get_current_auth_status == 'auth_select_sms-missing'){
+            $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+            if(!$get_phone_number){
+                update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
+                // Redirect Magic, custom function to prevent an infinite loop.
+                $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
+                $dataUrl['reDest'] = '/auth/';
+                // $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+            }
         }
         // NONE SELECTED * check if the current user status is none or not yet set.
         if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
