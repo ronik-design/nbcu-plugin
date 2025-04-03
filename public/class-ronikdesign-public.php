@@ -1055,6 +1055,7 @@ class Ronikdesign_Public
 			'reset-entire-auth',
 			'reset-lockout',
 			're-auth',
+			're-auth-js',
 			'auth-select',
 			'auth-phone_number',
 			'send-sms',
@@ -1232,9 +1233,17 @@ class Ronikdesign_Public
 				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
 
 				update_user_meta($f_user_id, 'auth_status', 'none');
+				
 				// We build a query and redirect back to auth route.
 				$f_value['auth-select'] = "reset";
 				$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+
+				// Handle AJAX redirect
+				if (isset($_POST['re-auth-js']) && $_POST['re-auth-js'] == 'RESET') {
+					// Return the redirect URL in the AJAX response
+					wp_send_json_success(array('redirect_url' => esc_url(home_url($r_redirect))));
+				}
+				// For regular form submissions, use wp_redirect
 				wp_redirect(esc_url(home_url($r_redirect)));
 				exit;
 			}

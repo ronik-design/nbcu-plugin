@@ -1,14 +1,15 @@
 <?php
+
 use PragmaRX\Google2FA\Google2FA;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Twilio\Rest\Client;
 
-add_action('auth_user-lockout', function ($args) { 
+add_action('auth_user-lockout', function ($args) {
     if (class_exists('RonikAuthHelper')) {
         $authHelper = new RonikAuthHelper;
         $authHelper->auth_admin_messages();
-    }    
+    }
 ?>
     <div class="mfa-content">
         <h2>Authentication failed too many times.</h2>
@@ -22,24 +23,57 @@ add_action('auth_user-lockout', function ($args) {
             </div>
         </div>
     </div>
-<?php 
+    <?php
 });
 
 add_action('auth-rest', function ($args) {
     $f_auth = get_field('mfa_settings', 'options');
-    if( ( isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings'] ) && ( isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'] ) ){ ?>
-        <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+    if ((isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings']) && (isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'])) { ?>
+
+    <?php if (isset($args['form_type']) && $args['form_type'] == 'formless') { ?>
+        <a href="#"
+        class="<?= $args['class']; ?>"
+        style="<?= $args['style']; ?>"
+        data-action="ronikdesigns_admin_auth_verification"
+        data-nonce="<?php echo wp_create_nonce('ajax-nonce'); ?>"
+        data-re_auth="RESET"
+        data-re_auth_js="RESET"
+        aria-label="Change Authentication Selection."
+        onclick="submitForm(); return false;">
+            Change Authentication Selection.
+        </a>
+
+        <script>
+            function submitForm() {
+                var data = {
+                    action: document.querySelector('[data-action]').dataset.action,
+                    nonce: document.querySelector('[data-nonce]').dataset.nonce,
+                    're-auth': document.querySelector('[data-re_auth]').dataset.re_auth,
+                    're-auth-js': document.querySelector('[data-re_auth_js]').dataset.re_auth_js
+                };
+                jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', data, function(response) {
+                    // handle the response from the server
+                    if (response.success && response.data.redirect_url) {
+                        window.location.href = response.data.redirect_url; // Redirect to the new URL
+                    }
+                });
+            }
+        </script>
+    <?php } else { ?>
+        <form class="registeration-mfa-reset <?= $args['class']; ?>" style="<?= $args['style']; ?>" action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
             <h2>MFA Registration Reset</h2>
             <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-            <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-            <input type="hidden" type="text" name="re-auth" value="RESET">
+            <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+            <input type="hidden" name="re-auth" value="RESET">
             <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
         </form>
+    <?php } ?>
+
     <?php }
 });
 
 add_action('auth-registration-page', function () {
-    $get_auth_status = get_user_meta(get_current_user_id(),'auth_status', true);
+    $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
 
     if (class_exists('RonikAuthHelper')) {
         $authHelper = new RonikAuthHelper;
@@ -53,7 +87,7 @@ add_action('auth-registration-page', function () {
         $valid = false;
     }
     // Check if auth_status is auth_select_sms-missing.
-    if( $get_auth_status == 'auth_select_sms-missing' ){
+    if ($get_auth_status == 'auth_select_sms-missing') {
         $valid = false;
     }
     // If Valid we redirect
@@ -61,29 +95,29 @@ add_action('auth-registration-page', function () {
         $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
         $f_success = isset($_GET['auth-phone_number']) ? $_GET['auth-phone_number'] : false;
         // Authorization Saved!
-            // Success message
-            if($f_success){
-                // This is mostly for messaging purposes..
-                wp_redirect( esc_url(home_url('/2fa?sms-valid=saved')) );
-                exit;
-            }
-            if($get_auth_status == 'auth_select_sms'){
-                // This is mostly for messaging purposes..
-                wp_redirect( esc_url(home_url('/2fa?sms-valid=saved')) );
-                exit;
-            }
-            if($get_auth_status == 'auth_select_mfa'){
-                // This is mostly for messaging purposes..
-                wp_redirect( esc_url(home_url('/mfa?mfaredirect=saved')) );
-                exit;
-            }
+        // Success message
+        if ($f_success) {
+            // This is mostly for messaging purposes..
+            wp_redirect(esc_url(home_url('/2fa?sms-valid=saved')));
+            exit;
+        }
+        if ($get_auth_status == 'auth_select_sms') {
+            // This is mostly for messaging purposes..
+            wp_redirect(esc_url(home_url('/2fa?sms-valid=saved')));
+            exit;
+        }
+        if ($get_auth_status == 'auth_select_mfa') {
+            // This is mostly for messaging purposes..
+            wp_redirect(esc_url(home_url('/mfa?mfaredirect=saved')));
+            exit;
+        }
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
         <script>
             var timeleft = 5;
-            var downloadTimer = setInterval(function(){
-                if(timeleft <= 0){
+            var downloadTimer = setInterval(function() {
+                if (timeleft <= 0) {
                     clearInterval(downloadTimer);
                     document.getElementById("countdown").innerHTML = "Reloading";
                     setTimeout(() => {
@@ -98,61 +132,75 @@ add_action('auth-registration-page', function () {
         <?php
     } else {
         // Check the $get_auth_status if sms-missing is set.
-        if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+        if ($get_auth_status == 'auth_select_sms-missing') { ?>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
             <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
             <div class="auth-content-bottom auth-content-bottom--sms">
-                <form class="auth-content-bottom__submit" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post"  onkeyup="process(event)">
+                <form class="auth-content-bottom__submit" action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post" onkeyup="process(event)">
                     <div class="auth-content-bottom__submit-contents">
                         <input type="tel" id="auth-phone_number" name="auth-phone_number" required>
                         <small>Format: 234-567-8901</small>
                         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
                     </div>
                     <button disabled class="btn-disabled" id="submit-tel" type="submit" value="Send SMS Code">Submit</button>
                 </form>
                 <div class="alert alert-info" style="display: none;"></div>
+
+
+                <div class="auth-content-bottom__helper">
+                    <p>If you encounter any issue, please reach out to the <a href="mailto:together@nbcuni.com?subject=MFA Registration Issue">together@nbcuni.com</a> for support. </p>
+                    <a style="display:inline-block; padding-top: 10px;" href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>  |
+                    <?php
+					$args = array (
+						'class'  => '',
+						'style' => 'flex: 0 0 100%; max-width: 100%; padding-left: 0px;',
+                        'form_type' => 'formless'
+					);
+					do_action('auth-rest', $args);
+				    ?>
+                </div>
             </div>
             <script>
                 const phoneInputField = document.querySelector("#auth-phone_number");
                 const phoneInput = window.intlTelInput(phoneInputField, {
-                    utilsScript:
-                    "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
                 });
                 const info = document.querySelector(".alert-info");
+
                 function process(event) {
                     const inputTarget = $(event.currentTarget).find("#auth-phone_number");
                     const countryData = phoneInput.getSelectedCountryData();
                     const isValid = phoneInput.isValidNumber();
-                    if(isValid){
+                    if (isValid) {
                         $("#submit-tel").removeClass('btn-disabled');
                         $("#submit-tel").prop('disabled', false);
                     } else {
                         $("#submit-tel").addClass('btn-disabled');
                         $("#submit-tel").prop('disabled', true);
                     }
-                    if( countryData.iso2 == 'us' ){
+                    if (countryData.iso2 == 'us') {
                         var phone = inputTarget.val();
                         phone = phone.replace(/^1/, '');
                         phone = phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
                         inputTarget.val(phone);
                     }
                 }
-                $('.auth-content-bottom__submit').on('submit',function(event){
+                $('.auth-content-bottom__submit').on('submit', function(event) {
                     // block form submit event
                     event.preventDefault();
                     // Assign country code value to input field val
                     const phoneNumber = phoneInput.getNumber();
                     $("#auth-phone_number").val(phoneNumber);
                     // Micro pause just incase...
-                    setTimeout(function(){
+                    setTimeout(function() {
                         // Continue the form submit
                         event.currentTarget.submit();
                     }, 50);
                 });
             </script>
         <?php } else { ?>
-            <form action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+            <form action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
                 <p>Please select the type of authentication:</p>
                 <span>
                     <input type="radio" id="mfa" name="auth-select" value="mfa" checked="checked">
@@ -163,12 +211,12 @@ add_action('auth-registration-page', function () {
                     <label for="2fa">Authenticate with a code received to SMS</label>
                 </span>
                 <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
+                <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
                 <span class="button-wrapper">
                     <button type="submit" value="Submit">Submit</button>
-                    <a href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
+                    <a href="<?= admin_url('admin-ajax.php') . '?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
                 </span>
             </form>
-        <?php }
+<?php }
     }
 });
