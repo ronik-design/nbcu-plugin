@@ -1232,8 +1232,14 @@ class Ronikdesign_Public
 				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest', 'low', 'auth');
 				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
 
-				update_user_meta($f_user_id, 'auth_status', 'none');
-				
+				// update_user_meta($f_user_id, 'auth_status', 'none');
+				delete_user_meta($f_user_id, 'auth_status');
+				delete_user_meta($f_user_id, 'google2fa_secret');
+				delete_user_meta($f_user_id, 'sms_2fa_status');
+				delete_user_meta($f_user_id, 'sms_2fa_secret');
+				delete_user_meta($f_user_id, 'sms_user_phone');
+				delete_user_meta($f_user_id, 'mfa_status');
+				delete_user_meta($f_user_id, 'mfa_validation');
 				// We build a query and redirect back to auth route.
 				$f_value['auth-select'] = "reset";
 				$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
