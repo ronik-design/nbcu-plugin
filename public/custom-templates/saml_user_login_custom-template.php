@@ -45,7 +45,6 @@ if($_GET){
         // Remove the 'http://' or 'https://' from the beginning of the URL
         $sso_post_login_redirect_cookie = preg_replace('#^https?://#', '', $sso_post_login_redirect_cookie);
         // Now $sso_post_login_redirect_cookie will contain only the path part of the URL
-        error_log($sso_post_login_redirect_cookie); // For debugging
     }
     if(isset($_GET['wl-register']) && $_GET['wl-register']){
         // $sso_post_login_redirect_cookie = $_GET['wl-register'];
@@ -67,33 +66,44 @@ if($_GET){
     }
 }
 
-// error_log(print_r( '$sso_post_login_redirect_cookie', true));
-// error_log(print_r( $sso_post_login_redirect_cookie, true));
-// error_log(print_r( 'ssss', true));
-
-
 $cookie_processor_progress = $mo_helper_cookie_processor->cookieSsoGenerator( $sso_post_login_redirect_site_origin , $sso_post_login_redirect_cookie, $route_domain , $mo_helper_site_processor_is_local);
 
-if($cookie_processor_progress == 'cookieSsoGenerator valid'){
-    error_log(print_r('Cookie processor progress: Valid', true));
-
-    // Have to throttle the redirect
-    sleep(5);
-
-    if($mo_helper_site_processor_is_local == 'local'){
-        error_log(print_r('local', true));
-        $mo_helper_demo_processor->dummyUserFlow();
-    }
-
-
-
-    // Construct the base redirect URL
-    $redirect_url = 'home?option=saml_user_login';
-    // Perform the redirect with the query parameters
-    wp_redirect( esc_url(home_url($redirect_url)) );
-    exit; // Always call exit after a redirect to prevent further execution
+if ($cookie_processor_progress == 'cookieSsoGenerator valid') {
+    error_log('Cookie processor progress: Valid');
+    // Give browser a redirect to ensure cookie is fully available
+    $bridge_url = home_url('sso_cookie_bridge');
+    wp_redirect($bridge_url);
+    exit;
 } else {
     error_log(print_r('Cookie processor progress: Invalid', true));
     echo 'Cookie processor progress: Invalid';
 }
+
+
+
+
+
+
+// if($cookie_processor_progress == 'cookieSsoGenerator valid'){
+//     error_log(print_r('Cookie processor progress: Valid', true));
+
+//     // Have to throttle the redirect
+//     sleep(3);
+
+//     if($mo_helper_site_processor_is_local == 'local'){
+//         error_log(print_r('local', true));
+//         $mo_helper_demo_processor->dummyUserFlow();
+//     }
+
+
+
+//     // Construct the base redirect URL
+//     $redirect_url = 'home?option=saml_user_login';
+//     // Perform the redirect with the query parameters
+//     wp_redirect( esc_url(home_url($redirect_url)) );
+//     exit; // Always call exit after a redirect to prevent further execution
+// } else {
+//     error_log(print_r('Cookie processor progress: Invalid', true));
+//     echo 'Cookie processor progress: Invalid';
+// }
 ?>

@@ -238,27 +238,9 @@ class RonikMoHelper{
 
         if($user_id){
             $res_sso_post_login_redirect_data = $mo_helper_cookie_processor->cookieSsoFetcher('sso_post_login_redirect_data');
-            // error_log(print_r('loginDetection $_COOKIE ' , true));
-            // error_log(print_r($_COOKIE , true));
-            // error_log(print_r('res_sso_post_login_redirect_data', true));
-            // error_log(print_r($res_sso_post_login_redirect_data, true));
 
-
-
-            // if($res_sso_post_login_redirect_data !== 'cookieSsoFetcher invalid'){
-            //     sleep(5);
-            //     // Construct the base redirect URL
-            //     if (!empty($res_sso_post_login_redirect_data['site_origin'])) {
-            //         $redirect_url = esc_url_raw(
-            //             $res_sso_post_login_redirect_data['site_origin'] .
-            //             ($this->removeLeadingSlash($res_sso_post_login_redirect_data['redirect_url']) ?? '') // Append redirect_url if it exists
-            //         );
-            //         $login_url = $redirect_url . "?sso-rk-log=". $helper->ronik_encrypt_data_meta($user_id);
-            //         error_log(print_r( 'processSsoGet time_frame POST' , true));
-            //         return $login_url;
-            //     }
-            // }
-
+            error_log(print_r('loginDetection', true));
+            error_log(print_r($res_sso_post_login_redirect_data, true));
 
 
             if ($res_sso_post_login_redirect_data !== 'cookieSsoFetcher invalid') {
@@ -277,15 +259,7 @@ class RonikMoHelper{
                     error_log(print_r('processSsoGet time_frame POST', true));
                     return $login_url;
                 }
-            } else {
-
             }
-
-
-
-
-
-
         }
     }
 
