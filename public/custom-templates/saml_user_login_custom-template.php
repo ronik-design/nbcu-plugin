@@ -71,8 +71,16 @@ if($_GET){
             $secure_flag,
             $httponly_flag
         );
-        
-
+    } else {
+        setcookie(
+            'wl-register',
+            'sso-temp-logger',
+            time() + 3600,
+            '/',
+            $cookie_domain,
+            $secure_flag,
+            $httponly_flag
+        );
     }
 
     error_log(print_r($_GET , true));
