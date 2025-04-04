@@ -138,7 +138,7 @@ class RonikMoHelper{
             if (isset($_COOKIE["wl-register"])) {
 
                 error_log(print_r( 'processWhitelist', true ));
-                
+
                 $whitelist = $_COOKIE["wl-register"];
                 $user_manager = new UserManager();
                 $whitelist_props = $user_manager->get_restricted_whitelist_props('id', $whitelist);
@@ -247,7 +247,7 @@ class RonikMoHelper{
 
 
             if ($res_sso_post_login_redirect_data !== 'cookieSsoFetcher invalid') {
-                sleep(5);
+                sleep(1);
                 // Construct the base redirect URL
                 if (!empty($res_sso_post_login_redirect_data['site_origin'])) {
                     // Get the redirect URL from the data
@@ -263,6 +263,8 @@ class RonikMoHelper{
                     return $login_url;
                 }
             }
+            return esc_url(home_url()); // Return the sanitized text
+
         }
     }
 

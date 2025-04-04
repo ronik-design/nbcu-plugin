@@ -18,7 +18,7 @@ class RonikMoHelperDemoProcessor {
         ];
         return $attributes;
     }
-    public function dummyUserFlow($attributes=false) {
+    public function dummyUserFlow($attributes=false , $send_json=false) {
         error_log(print_r('dummyUserFlow', true));
 
         if(!$attributes){
@@ -29,9 +29,24 @@ class RonikMoHelperDemoProcessor {
         $post_login_redirect = $mo_helper->userFlowProcessor($attributes);
 
         sleep(1);
-        // Check if the result is valid (non-empty, non-false) and redirect
-        wp_redirect( !empty($post_login_redirect) ? $post_login_redirect : home_url() );
-        exit(); // Always call exit() after wp_redirect() to stop further execution
+        if($send_json){
+            if( isset($_POST['auth-sso-login']) && $_POST['auth-sso-login'] == 'valid' ){
+                $post_login_redirect = $mo_helper->userFlowProcessor($attributes);
+            } elseif( isset($_POST['auth-sso-logout']) && $_POST['auth-sso-logout'] == 'valid' ){
+                $mo_helper->userFlowLogout('/');
+            }
+
+            if ($post_login_redirect !== 'invalid-redirect') {
+                wp_send_json_success(['redirect' => $post_login_redirect]);
+            } else {
+                wp_send_json_error("Invalid redirect URL. Please contact an administrator.");
+            }
+            wp_die(); // Important to end the AJAX request
+        } else {
+            // Check if the result is valid (non-empty, non-false) and redirect
+            wp_redirect( !empty($post_login_redirect) ? $post_login_redirect : home_url() );
+            exit(); // Always call exit() after wp_redirect() to stop further execution
+        }
     }
 
 

@@ -99,31 +99,4 @@ if ($cookie_processor_progress == 'cookieSsoGenerator valid') {
     echo 'Cookie processor progress: Invalid';
 }
 
-
-
-
-
-
-// if($cookie_processor_progress == 'cookieSsoGenerator valid'){
-//     error_log(print_r('Cookie processor progress: Valid', true));
-
-//     // Have to throttle the redirect
-//     sleep(3);
-
-//     if($mo_helper_site_processor_is_local == 'local'){
-//         error_log(print_r('local', true));
-//         $mo_helper_demo_processor->dummyUserFlow();
-//     }
-
-
-
-//     // Construct the base redirect URL
-//     $redirect_url = 'home?option=saml_user_login';
-//     // Perform the redirect with the query parameters
-//     wp_redirect( esc_url(home_url($redirect_url)) );
-//     exit; // Always call exit after a redirect to prevent further execution
-// } else {
-//     error_log(print_r('Cookie processor progress: Invalid', true));
-//     echo 'Cookie processor progress: Invalid';
-// }
 ?>
