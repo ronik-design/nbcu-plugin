@@ -35,17 +35,22 @@ add_action('2fa-registration-page', function () {
     if (($get_registration_status !== 'sms_2fa_unverified')) {
         $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
         // If past date is greater than current date. We reset to unverified & start the process all over again.
-        if($past_date > $sms_code_timestamp ){
-            $valid = false;
+        // If the timestamp is older than the valid window
+        if ($sms_code_timestamp > $past_date) {
+            $valid = false; // Too old, re-auth required
         } else {
-            $valid = true;
+            $valid = true; // Still valid
         }
     } else {
         $valid = false;
     }
     // If Valid we redirect
     if ($valid) {
+        error_log(print_r('TEST 5' , true ));
+
         $authProcessor->ronik_authorize_success_redirect_path();
+        exit;
+
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>

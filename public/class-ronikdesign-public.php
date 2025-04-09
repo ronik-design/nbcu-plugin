@@ -1450,7 +1450,7 @@ class Ronikdesign_Public
 				if ($get_auth_lockout_counter == 10) {
 					update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
 				} else {
-					update_user_meta(get_current_user_id(), 'auth_lockout_counter', $get_auth_lockout_counter + 1);
+					update_user_meta(get_current_user_id(), 'auth_lockout_counter', (int)$get_auth_lockout_counter + 1);
 					// update_user_meta(get_current_user_id(), 'auth_lockout_counter',intval($get_auth_lockout_counter)+1);
 				}
 

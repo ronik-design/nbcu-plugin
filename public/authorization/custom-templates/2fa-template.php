@@ -69,7 +69,7 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 				<?php
 				if( ($sms_2fa_secret !== 'invalid') && $sms_2fa_secret ){
 					$get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-					$get_phone_number = substr($get_phone_number, -4);	
+					$get_phone_number = substr($get_phone_number, -4);
 					if($f_mfa_settings['2fa_post_content_title']){ ?>
 						<?= $f_mfa_settings['2fa_post_content_title']; ?>
 					<?php } ?>

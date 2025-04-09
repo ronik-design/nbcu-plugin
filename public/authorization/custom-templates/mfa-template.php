@@ -65,7 +65,7 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 		<div class="auth-content">
 			<?php if( ($get_auth_lockout_counter) > 6){ ?>
 				<?php do_action('auth_user-lockout'); ?>
-			<?php } else { ?>		
+			<?php } else { ?>
 				<div class="mfa-content">
 					<?php if($f_content){ ?><?= $f_content(); ?><?php }
 					if($mfa_validation !== 'not_registered'){
@@ -97,7 +97,7 @@ $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_c
 					}
 					?>
 				</div>
-			<?php 
+			<?php
 				do_action('mfa-registration-page');
 			?>
 			<?php } ?>

@@ -4,7 +4,7 @@
  *
  */
 
-// Lets check if 2fa && MFA  is enabled. If not we kill it. 
+// Lets check if 2fa && MFA  is enabled. If not we kill it.
 $f_auth = get_field('mfa_settings', 'options');
 $authProcessor = new RonikAuthProcessor;
 
@@ -21,7 +21,7 @@ if($f_success){
 	$authProcessor->ronik_authorize_success_redirect_path();
 }
 
-get_header(); 
+get_header();
 
 $f_header = apply_filters( 'ronikdesign_auth_custom_header', false );
 $f_content = apply_filters( 'ronikdesign_auth_custom_content', false );
@@ -40,7 +40,7 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 			<?php if( $get_auth_status == 'auth_select_sms-missing' ){ ?>
 				<?php if($f_content){ ?>
 					<?= $f_content(); ?>
-				<?php } 
+				<?php }
 				if($f_mfa_settings['auth_missing-sms_content_title']){ ?>
 					<?= $f_mfa_settings['auth_missing-sms_content_title']; ?>
 				<?php } ?>
@@ -56,7 +56,7 @@ $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
 			<?php } else { ?>
 				<?php if($f_content){ ?>
 					<?= $f_content(); ?>
-				<?php } 
+				<?php }
 				if($f_mfa_settings['auth_content_title']){ ?>
 					<h2><?= $f_mfa_settings['auth_content_title']; ?></h2>
 				<?php } ?>
