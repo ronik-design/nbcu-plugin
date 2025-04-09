@@ -47,10 +47,6 @@ add_action('2fa-registration-page', function () {
     // If Valid we redirect
     if ($valid) {
         error_log(print_r('TEST 5' , true ));
-
-        $authProcessor->ronik_authorize_success_redirect_path();
-        exit;
-
     ?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
@@ -71,6 +67,11 @@ add_action('2fa-registration-page', function () {
         </script>
         <?php
         $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
+
+        if($f_success){
+            $authProcessor->ronik_authorize_success_redirect_path();
+            exit;
+        }
     } else { ?>
         <?php
         $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
