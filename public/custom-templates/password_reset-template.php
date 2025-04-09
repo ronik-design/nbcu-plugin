@@ -12,6 +12,8 @@ if(!is_user_logged_in()){
     wp_redirect( esc_url(home_url()) );
     exit;
 }
+$authProcessor = new RonikAuthProcessor;
+
 // Lets get the current user object.
 $f_userdata = wp_get_current_user();
 // Lets prevent users from accessing the password reset page if they are not expired.
@@ -22,12 +24,16 @@ $past_date = strtotime((new DateTime())->modify('-'.$f_password_reset['pr_days']
 $current_user_reset_time_stamp = get_user_meta( $f_userdata->ID, 'wp_user-settings-time-password-reset', true);
 // Let redirect if true.
 if( $current_user_reset_time_stamp > $past_date ){
+    $authProcessor->ronik_authorize_success_redirect_path();
+//     exit;
+
     wp_redirect( esc_url(home_url()) );
     exit;
 }
 $f_success = isset($_GET['pr-success']) ? $_GET['pr-success'] : false;
 // Success message
 if($f_success){
+    error_log( print_r( 'f_success', true) );
     // Lets Check for the password reset url cookie.
     $cookie_name = "ronik-password-reset-redirect";
     if(isset($_COOKIE[$cookie_name])) {
@@ -74,7 +80,7 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
             <?php } ?>
             <?php if($f_error == 'pastused'){ ?>
                 <div class="pass-reset-message__missing">This password has already been used! Please choose a different password!</div>
-            <?php } 
+            <?php }
             ?>
             <?php if($f_error == 'no-special-characters'){ ?>
                 <div class="pass-reset-message__missing">Sorry your input does not contain a special character!</div>
@@ -86,7 +92,7 @@ $f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
         <br></br>
         <?php if($f_instructions){ ?><?= $f_instructions(); ?><?php } ?>
         <br></br>
-		<?php if($f_userdata){ 
+		<?php if($f_userdata){
             $ajaxUrl = esc_url( admin_url('admin-ajax.php') );
         ?>
             <form action="<?php echo $ajaxUrl; ?>" method="post">

@@ -113,6 +113,11 @@ class RonikAuthProcessor{
 
 
     public function userTrackerActions($urlTarget){
+        // Critical We do not want to log password-reset otherwise loop error will occur,
+        if (strpos($urlTarget, '/password-reset') !== false) {
+            return;
+        }
+
         // PHP User Click Actions
         $user_id = get_current_user_id();
         $meta_key = 'user_tracker_actions';
