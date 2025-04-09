@@ -45,7 +45,7 @@ add_action('2fa-registration-page', function () {
         if ($sms_code_timestamp < $past_date) {
             $valid = false; // Too old, re-auth required
             update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-
+            update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
             update_user_meta(get_current_user_id(), 'sms_code_timestamp', 0);
 
             // sms_2fa_status
