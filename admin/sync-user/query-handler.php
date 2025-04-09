@@ -473,7 +473,7 @@ class UserSyncHandler {
         }
 
         // Write CSV headers
-        fputcsv($out, ['ID', 'Email', 'Username', 'Registered', 'Reason']);
+        fputcsv($out, ['ID', 'Email', 'Username', 'Registered', 'Reason', 'User Whitelisted', 'Account Status']);
         
         // Write each user row
         foreach ($results as $entry) {
@@ -483,7 +483,9 @@ class UserSyncHandler {
                 $user->user_email,
                 $user->user_login,
                 $user->user_registered,
-                $entry['reason']
+                $entry['reason'],
+                'Whitelisted: '. $user->user_whitelisted . ' wp_3_access: '. $user->wp_3_access,
+                ($user->account_status) ? ($user->account_status) : ('Active')
             ]);
         }
 
@@ -496,7 +498,7 @@ class UserSyncHandler {
         $output = "<strong>Found $total matching users</strong><br><br>";
         if (!empty($results)) {
             $output .= "<table class='widefat fixed striped'><thead><tr>";
-            $output .= "<th>ID</th><th>Email</th><th>Username</th><th>Registered</th><th>Reason</th></tr></thead><tbody>";
+            $output .= "<th>ID</th><th>Email</th><th>Username</th><th>Registered</th><th>Reason</th><th>User Whitelisted</th><th>Account Status </th></tr></thead><tbody>";
             foreach ($results as $entry) {
                 $user = $entry['user'];
                 $reason_html = "<span style='color:red;font-weight:bold;'>" . esc_html($entry['reason']) . "</span>";
@@ -506,6 +508,9 @@ class UserSyncHandler {
                 $output .= "<td>" . esc_html($user->user_login) . "</td>";
                 $output .= "<td>" . esc_html($user->user_registered) . "</td>";
                 $output .= "<td>$reason_html</td>";
+                $output .= "<td>" . esc_html('Whitelisted: '. $user->user_whitelisted . '
+                    wp_3_access: '. $user->wp_3_access) . "</td>";
+                $output .= "<td>" . esc_html(($user->account_status) ? ($user->account_status) : ('Active')) . "</td>";
                 $output .= "</tr>";
             }
             $output .= "</tbody></table>";
