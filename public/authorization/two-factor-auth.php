@@ -1,30 +1,30 @@
 <?php
-use PragmaRX\Google2FA\Google2FA;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
-use Twilio\Rest\Client;
-
 add_action('2fa-registration-page', function () {
-    // Helper Guide
+    // ✅ Initialize helper and auth processor classes
     $helper = new RonikHelper;
     $authProcessor = new RonikAuthProcessor;
 
-    // We put this in the header for fast redirect..
+    // ✅ Pull GET params to show errors/success messages
     $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
     $f_error = isset($_GET['sms-error']) ? $_GET['sms-error'] : false;
     $f_expired = '';
-    if($f_error == 'nomatch'){
+
+    // ✅ Display human-readable error message
+    if ($f_error == 'nomatch') {
         $f_error = 'Sorry, the verification code entered is invalid.';
     }
-    $get_registration_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-    $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
-    $f_mfa_settings = get_field('mfa_settings', 'options');
 
-    $sms_2fa_status = get_user_meta(get_current_user_id(),'sms_2fa_status', true);
-    $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+    // ✅ Grab user 2FA data from user_meta
+    $get_registration_status = get_user_meta(get_current_user_id(), 'sms_2fa_status', true);
+    $sms_code_timestamp = get_user_meta(get_current_user_id(), 'sms_code_timestamp', true);
+    $f_mfa_settings = get_field('mfa_settings', 'options');
+    $sms_2fa_status = get_user_meta(get_current_user_id(), 'sms_2fa_status', true);
+    $sms_2fa_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
     $get_auth_lockout_counter = get_user_meta(get_current_user_id(), 'auth_lockout_counter', true);
     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
 
+    // ✅ Use custom expiration time from settings or default to 30 minutes
+    $f_sms_expiration_time = isset($f_mfa_settings['sms_expiration_time']) ? $f_mfa_settings['sms_expiration_time'] : 30;
 
     if( isset($f_mfa_settings['sms_expiration_time']) || $f_mfa_settings['sms_expiration_time'] ){
         $f_sms_expiration_time = $f_mfa_settings['sms_expiration_time'];
@@ -33,42 +33,36 @@ add_action('2fa-registration-page', function () {
     }
     // Check if sms_2fa_status is not equal to verified.
     if (($get_registration_status !== 'sms_2fa_unverified')) {
-        $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-        
-        error_log(print_r($sms_2fa_status , true ));
-        error_log(print_r($sms_code_timestamp , true ));
-        error_log(print_r($past_date , true ));
+        $past_date = strtotime((new DateTime())->modify('-' . $f_sms_expiration_time . ' minutes')->format('d-m-Y H:i:s'));
 
-        
-        // If past date is greater than current date. We reset to unverified & start the process all over again.
-        // If the timestamp is older than the valid window
+        // 🧠 Debug logs
+        error_log(print_r($sms_2fa_status, true));
+        error_log(print_r($sms_code_timestamp, true));
+        error_log(print_r($past_date, true));
+
+        // ✅ Expired? Reset 2FA values and restart the flow
         if ($sms_code_timestamp < $past_date) {
-            $valid = false; // Too old, re-auth required
+            $valid = false;
             update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
             update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
             update_user_meta(get_current_user_id(), 'sms_code_timestamp', 0);
-
-            // sms_2fa_status
-
         } else {
-            $valid = true; // Still valid
+            $valid = true;
         }
     } else {
         $valid = false;
     }
-    // If Valid we redirect
-    if ($valid) {
-        // $authProcessor->ronik_authorize_success_redirect_path();
-        // exit;
 
-        error_log(print_r('TEST 5' , true ));
-    ?>
+    // ✅ If validation passed, show success + reload page to complete auth
+    if ($valid) {
+?>
         <div class="">Authorization Saved!</div>
         <div id="countdown"></div>
         <script>
+            // ✅ Countdown before redirecting back to 2FA complete route
             var timeleft = 5;
-            var downloadTimer = setInterval(function(){
-                if(timeleft <= 0){
+            var downloadTimer = setInterval(function() {
+                if (timeleft <= 0) {
                     clearInterval(downloadTimer);
                     document.getElementById("countdown").innerHTML = "Reloading";
                     setTimeout(() => {
@@ -81,78 +75,76 @@ add_action('2fa-registration-page', function () {
             }, 1000);
         </script>
         <?php
-        $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
-
-        if($f_success){
+        // ✅ If success param is set, complete redirect now
+        if ($f_success) {
             $authProcessor->ronik_authorize_success_redirect_path();
             exit;
         }
+        // ❌ Not valid — either SMS secret is invalid or expired, or never sent
     } else { ?>
         <?php
-        $sms_2fa_secret = get_user_meta(get_current_user_id(),'sms_2fa_secret', true);
+        // ✅ Load the current SMS secret (may be 'invalid' or active)
+        $sms_2fa_secret = get_user_meta(get_current_user_id(), 'sms_2fa_secret', true);
 
+        // ✅ Optional helper class for showing admin messages (e.g., lockout info)
         if (class_exists('RonikAuthHelper')) {
             $authHelper = new RonikAuthHelper;
             $authHelper->auth_admin_messages();
         }
 
-        // Based on the session conditions we check if valid if not we default back to the send SMS button.
-        if(  isset($sms_2fa_secret) && $sms_2fa_secret  && ($sms_2fa_secret !== 'invalid')  ){
-                $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
-                $get_phone_number = substr($get_phone_number, -4);
-                // Update the status with timestamp.
-                // Keep in mind all timestamp are within the UTC timezone. For constant all around.
-                // https://www.timestamp-converter.com/
-                // Get the current time.
-                $current_date = strtotime((new DateTime())->format( 'd-m-Y H:i:s' ));
-                $f_mfa_settings = get_field('mfa_settings', 'options');
-                $f_expiration_time = $f_mfa_settings['sms_expiration_time'];
-                if($f_expiration_time){
-                    $f_sms_expiration_time = $f_expiration_time;
-                } else{
-                    $f_sms_expiration_time = 10;
-                }
-                $past_date = strtotime((new DateTime())->modify('-'.$f_sms_expiration_time.' minutes')->format( 'd-m-Y H:i:s' ));
-                // Lets store the sms code timestamp in user meta.
-                $sms_code_timestamp = get_user_meta(get_current_user_id(),'sms_code_timestamp', true);
-                if (!$sms_code_timestamp) {
-                    // add_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
-                    update_user_meta(get_current_user_id(), 'sms_code_timestamp', $current_date);
-                }
-                if( $past_date > $sms_code_timestamp ){
-                    $helper->ronikdesigns_write_log_devmode( 'SMS Expired' , 'low', 'auth_2fa');
-                }
-            ?>
+        // ✅ Show form only if secret exists and isn't marked as invalid
+        if ($sms_2fa_secret && $sms_2fa_secret !== 'invalid') {
+            $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+            $get_phone_number = substr($get_phone_number, -4); // Last 4 digits only
+
+            // ✅ Get current time and expiration config
+            $current_date = strtotime((new DateTime())->format('d-m-Y H:i:s'));
+            $f_mfa_settings = get_field('mfa_settings', 'options');
+            $f_expiration_time = $f_mfa_settings['sms_expiration_time'] ?? 10;
+            $f_sms_expiration_time = $f_expiration_time;
+
+            // ✅ Calculate expiration window
+            $past_date = strtotime((new DateTime())->modify('-' . $f_sms_expiration_time . ' minutes')->format('d-m-Y H:i:s'));
+            $sms_code_timestamp = get_user_meta(get_current_user_id(), 'sms_code_timestamp', true);
+
+            // 🪵 Log SMS expiration event if needed
+            if ($past_date > $sms_code_timestamp) {
+                $helper->ronikdesigns_write_log_devmode('SMS Expired', 'low', 'auth_2fa');
+            }
+        ?>
+            <!-- ✅ 2FA Code Entry UI -->
             <div class="auth-content-bottom auth-content-bottom--sms">
-                <form class="auth-content-bottom__submit <?php if($f_error){ echo 'auth-content-bottom__submit_error'; } ?>" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+                <form class="auth-content-bottom__submit <?php if ($f_error) {
+                                                                echo 'auth-content-bottom__submit_error';
+                                                            } ?>" action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
                     <div class="auth-content-bottom__submit-contents">
-                    <div id="sms-expiration"></div>
+                        <div id="sms-expiration"></div>
                         <script>
+                            // 🔁 Real-time countdown and expiration checker
                             console.log('Init Timevalidation');
-                            smsExpiredChecker();
-                            document.addEventListener("visibilitychange", (event) => {
-                            if (document.visibilityState == "visible") {
-                                console.log("tab is active");
-                                // window.location.reload(true);
-                            } else {
-                                console.log("tab is inactive")
-                            }
+                            smsExpiredChecker(); // Initial call
+
+                            // ✅ Recheck when tab is focused again
+                            document.addEventListener("visibilitychange", () => {
+                                if (document.visibilityState == "visible") {
+                                    console.log("Tab reactivated");
+                                }
                             });
-                            var timeleft = <?= ($f_sms_expiration_time*60); ?>;                            
-                            var downloadTimer = setInterval(function(){
-                                if(timeleft <= 0){
+
+                            // 🕒 Countdown timer before SMS code expiration
+                            var timeleft = <?= ($f_sms_expiration_time * 60); ?>;
+                            var downloadTimer = setInterval(() => {
+                                if (timeleft <= 0) {
                                     clearInterval(downloadTimer);
-                                    // document.getElementById("sms-expiration").innerHTML = "SMS is Expired.";
                                     setTimeout(() => {
-                                        smsExpiredChecker();
-                                        // window.location = window.location.pathname + "?sms-success=success";
+                                        smsExpiredChecker(); // Revalidate via AJAX
                                     }, 1000);
-                                } else {
-                                    // document.getElementById("sms-expiration").innerHTML = "SMS Code will Expire in: " + timeleft + " seconds";
                                 }
                                 timeleft -= 1;
                             }, 1000);
-                            function smsExpiredChecker(){
+
+                            // ✅ SMS Expiration AJAX Check
+                            function smsExpiredChecker() {
                                 jQuery.ajax({
                                     type: 'post',
                                     url: wpVars.ajaxURL,
@@ -165,82 +157,74 @@ add_action('2fa-registration-page', function () {
                                     },
                                     dataType: 'json',
                                     success: data => {
-                                        if(data.success){
-                                            console.log('SMS Code Expired.');
-                                            console.log(data);
-                                            if(data.data !== 'noreload'){
+                                        if (data.success) {
+                                            if (data.data !== 'noreload') {
                                                 alert('The SMS Code Expired. Page will auto reload.');
                                                 setTimeout(() => {
                                                     let url = window.location.href;
-                                                    if (url.indexOf('?') > -1){
-                                                        url += '&sms-error=expired'
-                                                    } else {
-                                                        url += '?sms-error=expired'
-                                                    }
+                                                    url += (url.indexOf('?') > -1) ? '&sms-error=expired' : '?sms-error=expired';
                                                     window.location.href = url;
-                                                    // window.location.reload(true);
                                                 }, 500);
                                             }
-                                        } else{
-                                            console.log('error');
-                                            console.log(data);
-                                            alert('Whoops! Something went wrong! Please try again later!');
+                                        } else {
+                                            alert('Something went wrong! Please try again later!');
                                             setTimeout(() => {
-                                                // window.location.reload(true);
                                                 let url = window.location.href;
-                                                if (url.indexOf('?') > -1){
-                                                    url += '&sms-error=error'
-                                                } else {
-                                                    url += '?sms-error=error'
-                                                }
+                                                url += (url.indexOf('?') > -1) ? '&sms-error=error' : '?sms-error=error';
                                                 window.location.href = url;
                                             }, 500);
                                         }
                                     },
                                     error: err => {
                                         console.log(err);
-                                        alert('Whoops! Something went wrong! Please try again later!');
-                                        // Lets Reload.
+                                        alert('Something went wrong! Please try again later!');
                                         setTimeout(() => {
                                             let url = window.location.href;
-                                                if (url.indexOf('?') > -1){
-                                                    url += '&sms-error=error'
-                                                } else {
-                                                    url += '?sms-error=error'
-                                                }
-                                                window.location.href = url;
+                                            url += (url.indexOf('?') > -1) ? '&sms-error=error' : '?sms-error=error';
+                                            window.location.href = url;
                                         }, 500);
                                     }
                                 });
                             }
                         </script>
-                        <input style="padding-left: 12px;" type="text" id="validate-sms-code" name="validate-sms-code" type="number" minlength="6" maxlength="6" placeholder="6 Digit Code" autocomplete="off" required>
+
+                        <!-- 🔢 6-digit SMS input field -->
+                        <input style="padding-left: 12px;" type="text" id="validate-sms-code" name="validate-sms-code" minlength="6" maxlength="6" placeholder="6 Digit Code" autocomplete="off" required>
                         <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
-                        <?php if($f_error){ ?>
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+                        <?php if ($f_error) { ?>
                             <span class="message"><?= $f_error; ?></span>
                         <?php } ?>
                     </div>
                     <button type="submit" value="Reset Password">Submit SMS Code</button>
                 </form>
+
+                <!-- 🆘 Fallback instructions and SSO link -->
                 <div class="auth-content-bottom__helper">
-                    <p>If you don't receive a text message, please reach out to the  <a href="mailto:together@nbcuni.com?subject=2fa Registration Issue">together@nbcuni.com</a> for support. </p>
-                    <a style="display:inline-block; padding-top: 10px;" href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
+                    <p>If you don't receive a text message, please reach out to <a href="mailto:together@nbcuni.com?subject=2fa Registration Issue">together@nbcuni.com</a> for support.</p>
+                    <a style="display:inline-block; padding-top: 10px;" href="<?= admin_url('admin-ajax.php') . '?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
                 </div>
             </div>
-        <?php } else{ ?>
+        <?php } else { ?>
+            <!-- 📨 User has not yet triggered 2FA. Display "Send SMS Code" form. -->
             <div class="auth-content-bottom auth-content-bottom--sms">
-                <form class="auth-content-bottom__submit" action="<?php echo esc_url( admin_url('admin-ajax.php') ); ?>" method="post">
+                <form class="auth-content-bottom__submit" action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+                    <!-- Hidden fields to initiate the SMS send logic -->
                     <input type="hidden" name="send-sms" value="send-sms">
                     <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                    <?php wp_nonce_field( 'ajax-nonce', 'nonce' ); ?>
+                    <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
                     <span class="button-wrapper" style="margin-top: 0;">
+                        <!-- Trigger sending the SMS -->
                         <button type="submit" value="Send SMS Code">Send SMS Code</button>
-                        <a href="<?= admin_url('admin-ajax.php').'?action=ronikdesigns_admin_logout'; ?>"> Authenticate via NBCU SSO</a>
+
+                        <!-- 🆘 Allow alternate login via NBCU SSO -->
+                        <a href="<?= admin_url('admin-ajax.php') . '?action=ronikdesigns_admin_logout'; ?>">
+                            Authenticate via NBCU SSO
+                        </a>
                     </span>
                 </form>
             </div>
-        <?php }
+    <?php }
     } ?>
-    <?php
+<?php
 });
