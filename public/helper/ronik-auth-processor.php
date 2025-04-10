@@ -163,7 +163,8 @@ class RonikAuthProcessor
 
     // A custom function that will prevent infinite loops.
     // This is the brain of the entire application! Edit with care!
-    public function ronikRedirectLoopApproval($dataUrl, $cookieName)
+    public function ronikRedirectLoopApproval($dataUrl)
+
     {
         global $post;
         $f_auth = get_field('mfa_settings', 'options'); // ✅ Get ACF config for MFA/2FA
@@ -214,19 +215,22 @@ class RonikAuthProcessor
 
                             // 👤 If no auth has been selected, force redirect to auth page
                             if (empty($get_auth_status) || $get_auth_status === 'none') {
-                                $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+                                $authProcessor->ronikLooperDooper($dataUrl);
+
                             }
 
                             // 📱 If SMS was selected but is missing config, redirect
                             if ($get_auth_status === 'auth_select_sms-missing') {
-                                $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+                                $authProcessor->ronikLooperDooper($dataUrl);
+
                             }
 
                             // 🔐 If MFA is selected but unregistered, redirect
                             if ($get_auth_status === 'auth_select_mfa') {
                                 $mfa_validation = get_user_meta(get_current_user_id(), 'mfa_validation', true);
                                 if (!$mfa_validation || $mfa_validation === 'not_registered') {
-                                    $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+                                    $authProcessor->ronikLooperDooper($dataUrl);
+
                                 }
                             }
 
@@ -240,7 +244,8 @@ class RonikAuthProcessor
                     if ($authProcessor->urlCheckNoWpPage($_SERVER['REQUEST_URI'])) {
                         $get_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
                         if (empty($get_auth_status) || $get_auth_status === 'none') {
-                            $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+                            $authProcessor->ronikLooperDooper($dataUrl);
+
                         } else {
                             // 🧠 If dashboard access is blocked, force redirect to auth page
                             if ($authProcessor->urlCheckWpDashboard($_SERVER['REQUEST_URI'])) {
@@ -263,13 +268,14 @@ class RonikAuthProcessor
             }
 
             // 🌀 If no other condition matches, initiate redirect loop fallback
-            $authProcessor->ronikLooperDooper($dataUrl, $cookieName);
+            $authProcessor->ronikLooperDooper($dataUrl);
+
         }
     }
 
 
     // Pretty much a cool function that helps with redirect without causing the crazy redirect loops.
-    public function ronikLooperDooper($dataUrl, $cookieName)
+    public function ronikLooperDooper($dataUrl)
     {
         $authProcessor = new RonikAuthProcessor;
 
@@ -335,7 +341,7 @@ class RonikAuthProcessor
             // Redirect Magic, custom function to prevent an infinite loop.
             $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/?auth-select=2fa');
             $dataUrl['reDest'] = '/auth/?auth-select=2fa';
-            $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+            $authProcessor->ronikRedirectLoopApproval($dataUrl);
         }
 
         if (isset($f_mfa_settings['auth_expiration_time']) || $f_mfa_settings['auth_expiration_time']) {
@@ -362,41 +368,46 @@ class RonikAuthProcessor
                 if (!$get_registration_status) {
                     update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                 }
-                // Check if sms_2fa_status is not equal to unverified.
                 if (($get_registration_status !== 'sms_2fa_unverified')) {
                     $past_date = strtotime((new DateTime())->modify('-' . $f_auth_expiration_time . ' minutes')->format('d-m-Y H:i:s'));
-                    // If past date is greater than current date. We reset to unverified & start the process all over again.
+                
                     if ($past_date > $sms_code_timestamp) {
                         update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
                         update_user_meta(get_current_user_id(), 'sms_2fa_secret', 'invalid');
                         update_user_meta(get_current_user_id(), 'sms_code_timestamp', 0);
+                
                         $helper->ronikdesigns_write_log_devmode('Forcing user to restart 2fa due to expiration', 'low', 'auth_2fa');
+                
                         if (!str_contains($_SERVER['REQUEST_URI'], '/wp-admin/')) {
                             $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 1! KM might be fixed by ignoring the wp-admin request uri', 'low', 'auth_2fa');
-                            // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                            // Takes care of the redirection logic
-                            $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                
+                            // 👇 No cookie parameter
+                            $authProcessor->ronikRedirectLoopApproval($dataUrl);
                         }
                     } else {
                         if (str_contains($_SERVER['REQUEST_URI'], '/2fa/')) {
-                            // Lets block the user from accessing the 2fa if already authenticated.
                             $dataUrl['reUrl'] = array('/');
                             $dataUrl['reDest'] = '/';
                             $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX!', 'low', 'auth_2fa');
-                            $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                
+                            // 👇 No cookie parameter
+                            $authProcessor->ronikRedirectLoopApproval($dataUrl);
                         }
                     }
+                
                 } else {
                     $helper->ronikdesigns_write_log_devmode('RONIK NEXT FIX 2!', 'low', 'auth_2fa');
-                    // update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_unverified');
-                    // Takes care of the redirection logic
-                    $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                
+                    // 👇 No cookie parameter
+                    $authProcessor->ronikRedirectLoopApproval($dataUrl);
                 }
+                
             } else {
                 // Lets block the user from accessing the 2fa if already authenticated.
                 $dataUrl['reUrl'] = array('/');
                 $dataUrl['reDest'] = '/';
-                $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
             }
         } elseif ($is_on_2fa_page && $get_registration_status === 'sms_2fa_unverified') {
             // 🛑 STOP redirect if already on 2fa page and user is unverified
@@ -449,7 +460,8 @@ class RonikAuthProcessor
                         $dataUrl['reDest'] = '/';
 
                         if ($mfa_validation !== 'valid') {
-                            $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                            $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
                         }
                     }
                 }
@@ -459,7 +471,8 @@ class RonikAuthProcessor
                 // Redirect Magic, custom function to prevent an infinite loop.
                 $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/2fa/');
                 $dataUrl['reDest'] = '/mfa/';
-                $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
             }
         }
     }

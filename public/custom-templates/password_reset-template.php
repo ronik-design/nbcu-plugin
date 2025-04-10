@@ -1,117 +1,100 @@
 <?php
 /**
  * Template Name: Ronik Reset Password
- *
  */
 
-?>
-
-<?php
-// usernot logged in lets redirect to home page.
-if(!is_user_logged_in()){
-    wp_redirect( esc_url(home_url()) );
+if (!is_user_logged_in()) {
+    wp_redirect(home_url());
     exit;
 }
-$authProcessor = new RonikAuthProcessor;
 
-// Lets get the current user object.
-$f_userdata = wp_get_current_user();
-// Lets prevent users from accessing the password reset page if they are not expired.
-$f_password_reset = get_field('password_reset_settings', 'options');
-// Go back in time. Based on options settings.
-$past_date = strtotime((new DateTime())->modify('-'.$f_password_reset['pr_days'].' day')->format( 'd-m-Y' ));
-// Lets store the user meta for time comparison
-$current_user_reset_time_stamp = get_user_meta( $f_userdata->ID, 'wp_user-settings-time-password-reset', true);
-// Let redirect if true.
-if( $current_user_reset_time_stamp > $past_date ){
+$authProcessor = new RonikAuthProcessor();
+$currentUser   = wp_get_current_user();
+$settings      = get_field('password_reset_settings', 'options');
+$pastDate      = strtotime((new DateTime())->modify('-' . $settings['pr_days'] . ' day')->format('Y-m-d'));
+$lastReset     = get_user_meta($currentUser->ID, 'wp_user-settings-time-password-reset', true);
+
+if ($lastReset > $pastDate) {
     $authProcessor->ronik_authorize_success_redirect_path();
-//     exit;
-
-    wp_redirect( esc_url(home_url()) );
+    wp_redirect(home_url());
     exit;
 }
-$f_success = isset($_GET['pr-success']) ? $_GET['pr-success'] : false;
-// Success message
-if($f_success){
-    error_log( print_r( 'f_success', true) );
-    // Lets Check for the password reset url cookie.
-    $cookie_name = "ronik-password-reset-redirect";
-    if(isset($_COOKIE[$cookie_name])) {
-        wp_redirect( esc_url(home_url(urldecode($_COOKIE[$cookie_name]))) );
+
+$success = isset($_GET['pr-success']);
+$error   = $_GET['pr-error'] ?? false;
+
+if ($success) {
+    error_log('Password reset success');
+    if (isset($_COOKIE['ronik-password-reset-redirect'])) {
+        wp_redirect(home_url(urldecode($_COOKIE['ronik-password-reset-redirect'])));
         exit;
-    } else {
-        // We run our backup plan for redirecting back to previous page.
-        // The downside this wont account for pages that were clicked during the redirect. So it will get the page that was previously visited.
     }
 }
 
 get_header();
 
-$f_header = apply_filters( 'ronikdesign_passwordreset_custom_header', false );
-$f_content = apply_filters( 'ronikdesign_passwordreset_custom_content', false );
-$f_instructions = apply_filters( 'ronikdesign_passwordreset_custom_instructions', false );
-$f_footer = apply_filters( 'ronikdesign_passwordreset_custom_footer', false );
-$f_error = isset($_GET['pr-error']) ? $_GET['pr-error'] : false;
+$header       = apply_filters('ronikdesign_passwordreset_custom_header', false);
+$content      = apply_filters('ronikdesign_passwordreset_custom_content', false);
+$instructions = apply_filters('ronikdesign_passwordreset_custom_instructions', false);
+$footer       = apply_filters('ronikdesign_passwordreset_custom_footer', false);
 ?>
 
-<?php if($f_header){ ?><?= $f_header(); ?><?php } ?>
-	<div class="pass-reset-wrapper">
-        <div class="pass-reset-message">
-            <?php if($f_success){ ?>
-                <div class="pass-reset-message__success">Password Successfully Reset</div>
-            <?php } ?>
-            <?php if($f_error == 'alreadyexists'){ ?>
-                <div class="pass-reset-message__nomatch">Sorry your password is already used! Please choose a different password!</div>
-            <?php } ?>
-            <?php if($f_error == 'nomatch'){ ?>
-                <div class="pass-reset-message__nomatch">Sorry your password does not match!</div>
-            <?php } ?>
-            <?php if($f_error == 'weak'){ ?>
-                <div class="pass-reset-message__nomatch">Sorry you did not input a strong enough password!</div>
-            <?php } ?>
-            <?php if($f_error == 'missing'){ ?>
-                <div class="pass-reset-message__missing">Sorry you did not input a password!</div>
-            <?php } ?>
-            <?php if($f_error == 'no-uppercase'){ ?>
-                <div class="pass-reset-message__missing">Sorry your input does not contain a uppercase letter!</div>
-            <?php } ?>
-            <?php if($f_error == 'no-lowercase'){ ?>
-                <div class="pass-reset-message__missing">Sorry your input does not contain a lowercase letter!</div>
-            <?php } ?>
-            <?php if($f_error == 'pastused'){ ?>
-                <div class="pass-reset-message__missing">This password has already been used! Please choose a different password!</div>
-            <?php }
-            ?>
-            <?php if($f_error == 'no-special-characters'){ ?>
-                <div class="pass-reset-message__missing">Sorry your input does not contain a special character!</div>
-            <?php } ?>
+<?php if ($header) echo $header(); ?>
 
-        </div>
-        <br></br>
-        <?php if($f_content){ ?><?= $f_content(); ?><?php } ?>
-        <br></br>
-        <?php if($f_instructions){ ?><?= $f_instructions(); ?><?php } ?>
-        <br></br>
-		<?php if($f_userdata){
-            $ajaxUrl = esc_url( admin_url('admin-ajax.php') );
+<div class="pass-reset-wrapper">
+    <div class="pass-reset-message">
+        <?php if ($success): ?>
+            <div class="pass-reset-message__success">Password Successfully Reset</div>
+        <?php endif; ?>
+
+        <?php
+        $messages = [
+            'alreadyexists'         => 'Sorry your password is already used! Please choose a different password!',
+            'nomatch'               => 'Sorry your password does not match!',
+            'weak'                  => 'Sorry you did not input a strong enough password!',
+            'missing'               => 'Sorry you did not input a password!',
+            'no-uppercase'          => 'Sorry your input does not contain an uppercase letter!',
+            'no-lowercase'          => 'Sorry your input does not contain a lowercase letter!',
+            'pastused'              => 'This password has already been used! Please choose a different password!',
+            'no-special-characters' => 'Sorry your input does not contain a special character!',
+        ];
+
+        if ($error && isset($messages[$error])) {
+            echo '<div class="pass-reset-message__nomatch">' . esc_html($messages[$error]) . '</div>';
+        }
         ?>
-            <form action="<?php echo $ajaxUrl; ?>" method="post">
-                <!-- Need to add username input to silence the console warnings. -->
-                <input type="text" name="email" value="..." autocomplete="username email" style="display: none;" >
-                <label for="password">Password:</label>
-                <input autocomplete="new-password" type="password" class="adv-passwordchecker" id="password" name="password" value="" required >
-                <label for="password">Retype Password:</label>
-                <input autocomplete="new-password" type="password" class="adv-passwordchecker" id="retype_password" name="retype_password" value="" required>
-                <input type="hidden" name="action" value="ronikdesigns_admin_password_reset">
-                <input type="hidden" name="nonce" value="<?php echo wp_create_nonce('ajax-nonce-password'); ?>">
-                <button type="submit" class="ronik-password-disabled" value="Reset Password">Reset Password</button>
-            </form>
-		<?php } else { ?>
-            <?= "Whoops something went wrong!" ?>
-		<?php } ?>
-		<br><br>
-	</div>
-<?php if($f_footer){ ?><?= $f_footer(); ?><?php } ?>
+    </div>
 
-<?php get_footer();
-?>
+    <br>
+
+    <?php if ($content) echo $content(); ?>
+    <br>
+    <?php if ($instructions) echo $instructions(); ?>
+    <br>
+
+    <?php if ($currentUser): ?>
+        <form action="<?= esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+            <!-- Hidden input to prevent autofill warnings -->
+            <input type="text" name="email" value="..." autocomplete="username email" style="display: none;" >
+
+            <label for="password">Password:</label>
+            <input type="password" name="password" id="password" class="adv-passwordchecker" autocomplete="new-password" required>
+
+            <label for="retype_password">Retype Password:</label>
+            <input type="password" name="retype_password" id="retype_password" class="adv-passwordchecker" autocomplete="new-password" required>
+
+            <input type="hidden" name="action" value="ronikdesigns_admin_password_reset">
+            <input type="hidden" name="nonce" value="<?= esc_attr(wp_create_nonce('ajax-nonce-password')); ?>">
+
+            <button type="submit" class="ronik-password-disabled">Reset Password</button>
+        </form>
+    <?php else: ?>
+        <p>Whoops, something went wrong!</p>
+    <?php endif; ?>
+
+    <br><br>
+</div>
+
+<?php if ($footer) echo $footer(); ?>
+
+<?php get_footer(); ?>

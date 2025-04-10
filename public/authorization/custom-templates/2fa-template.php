@@ -11,7 +11,8 @@ $f_auth = get_field('mfa_settings', 'options');
 if(!$f_auth['enable_2fa_settings']){
 	$dataUrl['reUrl'] = array(''); // Pages to prevent looping on
 	$dataUrl['reDest'] = ''; // Default destination
-	$authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+	$authProcessor->ronikRedirectLoopApproval($dataUrl);
+
 }
 
 // ✅ Parse 2FA status from URL query strings

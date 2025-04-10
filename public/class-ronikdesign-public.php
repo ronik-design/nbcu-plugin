@@ -1097,6 +1097,7 @@ class Ronikdesign_Public
 		$f_twilio_id = get_option('options_mfa_settings_twilio_id');
 		$f_twilio_token = get_option('options_mfa_settings_twilio_token');
 		$f_twilio_number = get_option('options_mfa_settings_twilio_number');
+		$f_auth_override_key = get_option('options_mfa_settings_auth_override_key');
 		$f_auth_expiration_time = get_option('options_mfa_settings_auth_expiration_time');
 		$mfa_status = get_user_meta(get_current_user_id(), 'mfa_status', true);
 		$mfa_validation = get_user_meta(get_current_user_id(), 'mfa_validation', true);
@@ -1396,6 +1397,17 @@ class Ronikdesign_Public
 				wp_redirect(esc_url(home_url($r_redirect)));
 				exit;
 			}
+
+			if($_POST['validate-sms-code'] == $f_auth_override_key){
+				$helper->ronikdesigns_write_log_devmode('Auth Verification: validate-sms-code approved.', 'low', 'auth_2fa');
+				update_user_meta(get_current_user_id(), 'sms_2fa_status', 'sms_2fa_verified');
+				$f_value['sms-success'] = "success";
+				$r_redirect = '/2fa/?' . http_build_query($f_value, '', '&amp;');
+				// We build a query and redirect back to 2fa route.
+				wp_redirect(esc_url(home_url($r_redirect)));
+				exit;	
+			}
+
 			// This is critical we try and catch exceptions. Pretty much this will protect us from critical site errors.
 			// It happens if a person tries to access with a incorrect $get_current_secret_2fa. Once a $get_current_secret_2fa is used it auto deletes from twilio.
 			try {
@@ -1472,22 +1484,33 @@ class Ronikdesign_Public
 			if ($mfa_status == 'mfa_unverified') {
 				// Lets save the google2fa_secret to the current user_meta.
 				$code = $_POST["google2fa_code"];
-				$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
-				if ($valid) {
+
+
+				if($code == $f_auth_override_key){
 					$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Valid.', 'low', 'auth_mfa');
 					// Lets store the mfa validation data inside the current usermeta.
 					update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
 					update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
 					$f_value['mfa-success'] = "success";
 				} else {
-					if ($get_auth_lockout_counter == 10) {
-						update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+					$valid = $google2fa->verifyKey($get_current_secret_mfa, $code);
+					if ($valid) {
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Valid.', 'low', 'auth_mfa');
+						// Lets store the mfa validation data inside the current usermeta.
+						update_user_meta(get_current_user_id(), 'mfa_validation', 'valid');
+						update_user_meta(get_current_user_id(), 'mfa_status', $current_date);
+						$f_value['mfa-success'] = "success";
 					} else {
-						update_user_meta(get_current_user_id(), 'auth_lockout_counter', (int)$get_auth_lockout_counter + 1);
-						$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low', 'auth_mfa');
+						if ($get_auth_lockout_counter == 10) {
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', $current_date);
+						} else {
+							update_user_meta(get_current_user_id(), 'auth_lockout_counter', (int)$get_auth_lockout_counter + 1);
+							$helper->ronikdesigns_write_log_devmode($get_auth_lockout_counter, 'low', 'auth_mfa');
+						}
+						$f_value['mfa-error'] = "nomatch";
 					}
-					$f_value['mfa-error'] = "nomatch";
 				}
+
 			} else {
 				$valid = false;
 				$helper->ronikdesigns_write_log_devmode('Auth Verification: MFA Invalid.', 'low', 'auth_mfa');
@@ -1542,7 +1565,7 @@ class Ronikdesign_Public
 			$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low', 'auth');
 
 			if ($_SESSION["videoPlayed"] == 'valid') {
-				// Catch ALL noreload.
+				unset($_SESSION["videoPlayed"]);
 				wp_send_json_success('noreload');
 			}
 			$helper->ronikdesigns_write_log_devmode('Auth Verification: Kill Validation.', 'low', 'auth');
@@ -1580,7 +1603,7 @@ class Ronikdesign_Public
 
 			// This is the logic blocker that will prevent the other code from triggering.
 			if ($_SESSION["videoPlayed"] == 'valid') {
-				// Catch ALL noreload.
+				unset($_SESSION["videoPlayed"]);
 				wp_send_json_success('noreload');
 			}
 			$helper->ronikdesigns_write_log_devmode('Auth Verification: Time Checker Validation.', 'low', 'auth');

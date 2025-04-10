@@ -1060,6 +1060,30 @@ https://test.com/',
 				'layout' => 'block',
 				'sub_fields' => array(
 
+
+
+					array(
+						'key' => 'field_6372afa6da3f200cdaasaaaa_ronikdesign',
+						'label' => 'Auth Override Key',
+						'name' => 'auth_override_key',
+						'type' => 'number',
+						'instructions' => 'This will be a key to be used as a last resort..',
+						'required' => 1,
+						'conditional_logic' => 0,
+						'wrapper' => array(
+							'width' => '50',
+							'class' => '',
+							'id' => '',
+						),
+						'append' => 'Auth Passcode',
+						'default_value' => 202519,
+						'min' => 100000,
+						'max' => 999999,
+						'step' => 1, // or remove this line
+					),
+					
+
+
 					array(
 						'key' => 'field_6372afa6da3f200cdaasaasssss_ronikdesign',
 						'label' => 'User Override',

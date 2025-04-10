@@ -209,17 +209,24 @@ function ronikdesigns_redirect_registered_auth() {
     $f_admin_auth_select['2fa'] = false;
 
     // Kill the entire AUTH if both are not enabled!
+    // if((!$f_auth_mfa) && (!$f_auth_2fa)){
+    //     $helper->ronikdesigns_write_log_devmode('Auth is Killed', 'low', 'auth');
+    //     return;
+    // }
     if((!$f_auth_mfa) && (!$f_auth_2fa)){
-        $helper->ronikdesigns_write_log_devmode('Auth is Killed', 'low', 'auth');
+        update_user_meta(get_current_user_id(), 'auth_status', 'none');
+        $helper->ronikdesigns_write_log_devmode('Auth is Killed — resetting auth_status to none', 'low', 'auth');
         return;
     }
+    
     // Restricted Access only login users can proceed.
     if(!is_user_logged_in()){
         $helper->ronikdesigns_write_log_devmode('Auth is due to not logged in user.', 'low', 'auth');
         // Redirect Magic, custom function to prevent an infinite loop.
         $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/', '/2fa/', '/mfa/');
         $dataUrl['reDest'] = '';
-        $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+        $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
     }
     // If both AUTH are not enabled we auto bypass the auth-template. By including the auth files below.
         // Lets check if MFA is not enabled!
@@ -291,16 +298,31 @@ function ronikdesigns_redirect_registered_auth() {
             }
         }
         $get_current_auth_status = get_user_meta(get_current_user_id(), 'auth_status', true);
+        // if($get_current_auth_status == 'auth_select_sms' || $get_current_auth_status == 'auth_select_sms-missing'){
+        //     $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
+        //     if(!$get_phone_number){
+        //         update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
+        //         // Redirect Magic, custom function to prevent an infinite loop.
+        //         $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
+        //         $dataUrl['reDest'] = '/auth/';
+        //         // $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
+        //     }
+        // }
         if($get_current_auth_status == 'auth_select_sms' || $get_current_auth_status == 'auth_select_sms-missing'){
             $get_phone_number = get_user_meta(get_current_user_id(), 'sms_user_phone', true);
             if(!$get_phone_number){
-                update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
-                // Redirect Magic, custom function to prevent an infinite loop.
-                $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
-                $dataUrl['reDest'] = '/auth/';
-                // $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                // Prevent re-redirecting if already on /auth/
+                if (!str_contains($_SERVER['REQUEST_URI'], '/auth')) {
+                    update_user_meta(get_current_user_id(), 'auth_status', 'auth_select_sms-missing');
+                    $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
+                    $dataUrl['reDest'] = '/auth/';
+                    $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
+                }
             }
         }
+        
         // NONE SELECTED * check if the current user status is none or not yet set.
         if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
             $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_none', 'low', 'auth');
@@ -310,7 +332,8 @@ function ronikdesigns_redirect_registered_auth() {
                 // Redirect Magic, custom function to prevent an infinite loop.
                 $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
                 $dataUrl['reDest'] = '/auth/';
-                $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+                $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
                 return;
             // Next we check if the MFA is set but not the 2fa. If so we include just the mfa.
             } else if(($f_admin_auth_select['mfa']) && (!$f_admin_auth_select['2fa'])){
@@ -326,7 +349,8 @@ function ronikdesigns_redirect_registered_auth() {
         } else {
             $dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php', '/auth/');
             $dataUrl['reDest'] = '/auth/';
-            $authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+            $authProcessor->ronikRedirectLoopApproval($dataUrl);
+
             return;
         }
 }

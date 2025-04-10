@@ -12,7 +12,8 @@ if(!$f_auth['enable_mfa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
 	$dataUrl['reUrl'] = array('/wp-admin/admin-ajax.php');
 	$dataUrl['reDest'] = '';
-	$authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+	$authProcessor->ronikRedirectLoopApproval($dataUrl);
+
 }
 
 // We put this in the header for fast redirect..

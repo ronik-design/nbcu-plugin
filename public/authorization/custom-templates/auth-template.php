@@ -12,7 +12,8 @@ if(!$f_auth['enable_2fa_settings'] && !$f_auth['enable_mfa_settings']){
 	// Redirect Magic, custom function to prevent an infinite loop.
 	$dataUrl['reUrl'] = array('');
 	$dataUrl['reDest'] = '';
-	$authProcessor->ronikRedirectLoopApproval($dataUrl, "ronik-auth-reset-redirect");
+	$authProcessor->ronikRedirectLoopApproval($dataUrl);
+
 }
 // We put this in the header for fast redirect..
 $f_success = isset($_GET['sms-success']) ? $_GET['sms-success'] : false;
