@@ -259,6 +259,8 @@ class RonikMoHelper{
                     $separator = (strpos($redirect_url, '?') === false) ? '?' : '&';
                     // Construct the login URL with the sso-rk-log parameter
                     $login_url = $redirect_url . $separator . "sso-rk-log=" . $helper->ronik_encrypt_data_meta($user_id);
+
+                    
                     error_log(print_r('processSsoGet time_frame POST', true));
                     return $login_url;
                 }

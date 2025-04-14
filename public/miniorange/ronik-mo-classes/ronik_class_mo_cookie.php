@@ -7,15 +7,12 @@ class RonikMoHelperCookieProcessor {
         }
 
         
-        
+        error_log(print_r('cookieSsoGenerator', true));
+        error_log(print_r($sso_post_login_redirect_site_origin, true));
+        error_log(print_r($sso_post_login_redirect_cookie, true));
+        error_log(print_r($route_domain, true));
 
 
-
-
-
-
-
-        error_log('cookieSsoGenerator');
 
         $sso_post_login_redirect_data = [];
         // Log current site origin if set
