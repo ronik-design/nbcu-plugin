@@ -1046,6 +1046,7 @@ class Ronikdesign_Public
 		// This allows us to prevent outsiders from trying to access the application.
 		$predeterminedDataArray = array(
 			'user-id',
+			'bypass-auth-redirect',
 			'bypass-auth-verification',
 			'bypass-auth-list',
 			'bypass-auth-verification',
@@ -1054,6 +1055,9 @@ class Ronikdesign_Public
 			're-phone-number',
 			'reset-entire-auth',
 			'reset-lockout',
+			'auth-option',
+			're-auth-options',
+			'HELPER_RESET',
 			're-auth',
 			're-auth-js',
 			'auth-select',
@@ -1125,7 +1129,7 @@ class Ronikdesign_Public
 
 		// Change phone number.
 		if (isset($_POST['bypass-auth-verification']) && $_POST['bypass-auth-verification']) {
-			if ($_POST['bypass-auth-verification'] == 'RESET') {
+			if ($_POST['bypass-auth-verification'] == 'HELPER_RESET') {
 				$helper->ronikdesigns_write_log_devmode('Auth Verification: User added to bypass list.', 'low', 'auth');
 				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
 				$f_user_override = get_option('options_mfa_settings_user_override');
@@ -1170,32 +1174,53 @@ class Ronikdesign_Public
 
 				// Output or further processing of $f_user_override as needed
 				update_option('options_mfa_settings_user_override', $f_user_override);
-				// We build a query and redirect back to auth route.
-				$f_value['auth-select'] = "reset";
-				$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
-				wp_redirect(esc_url(home_url($r_redirect)));
-				exit;
+
+
+				if (isset($_POST['bypass-auth-redirect']) && $_POST['bypass-auth-redirect']) {
+					// $f_value['auth-select'] = "reset";
+					// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(home_url($_POST['bypass-auth-redirect']));
+					exit;
+
+				} else {
+					// We build a query and redirect back to auth route.
+					$f_value['auth-select'] = "reset";
+					$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(esc_url(home_url($r_redirect)));
+					exit;
+					
+				}
 			}
 		}
 
 		// Change phone number.
 		if (isset($_POST['re-phone-number']) && $_POST['re-phone-number']) {
-			if ($_POST['re-phone-number'] == 'RESET') {
+			if ($_POST['re-phone-number'] == 'HELPER_RESET') {
 				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest Phone Number', 'low', 'auth');
 				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
 
 				update_user_meta($f_user_id, 'sms_user_phone', $_POST['change-phone-number']);
-				// We build a query and redirect back to auth route.
-				$f_value['auth-select'] = "reset";
-				$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
-				wp_redirect(esc_url(home_url($r_redirect)));
-				exit;
+
+				error_log(print_r($_POST['bypass-auth-redirect'] , true));
+				
+				if (isset($_POST['bypass-auth-redirect']) && $_POST['bypass-auth-redirect']) {
+					// $f_value['auth-select'] = "reset";
+					// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(home_url($_POST['bypass-auth-redirect']));
+					exit;
+				} else {
+					// We build a query and redirect back to auth route.
+					$f_value['auth-select'] = "reset";
+					$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(esc_url(home_url($r_redirect)));
+					exit;
+				}
 			}
 		}
 
 		// Reset Entire Account Authentication Info
 		if (isset($_POST['reset-entire-auth']) && $_POST['reset-entire-auth']) {
-			if ($_POST['reset-entire-auth'] == 'RESET') {
+			if ($_POST['reset-entire-auth'] == 'HELPER_RESET') {
 				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest Lockout', 'low', 'auth');
 				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
 				delete_user_meta($f_user_id, 'auth_status');
@@ -1205,25 +1230,42 @@ class Ronikdesign_Public
 				delete_user_meta($f_user_id, 'sms_user_phone');
 				delete_user_meta($f_user_id, 'mfa_status');
 				delete_user_meta($f_user_id, 'mfa_validation');
-				// We build a query and redirect back to auth route.
-				$f_value['auth-select'] = "reset";
-				$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
-				wp_redirect(esc_url(home_url($r_redirect)));
-				exit;
+
+				if (isset($_POST['bypass-auth-redirect']) && $_POST['bypass-auth-redirect']) {
+					// $f_value['auth-select'] = "reset";
+					// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(home_url($_POST['bypass-auth-redirect']));
+					exit;
+				} else {
+					// We build a query and redirect back to auth route.
+					$f_value['auth-select'] = "reset";
+					$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(esc_url(home_url($r_redirect)));
+					exit;
+				}
 			}
 		}
 
 		// Reset Lockout Account Authentication Info
 		if (isset($_POST['reset-lockout']) && $_POST['reset-lockout']) {
-			if ($_POST['reset-lockout'] == 'RESET') {
+			if ($_POST['reset-lockout'] == 'HELPER_RESET') {
 				$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest Lockout', 'low', 'auth');
 				$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
 				update_user_meta($f_user_id, 'auth_lockout_counter', 0);
-				// We build a query and redirect back to auth route.
-				$f_value['auth-select'] = "reset";
-				$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
-				wp_redirect(esc_url(home_url($r_redirect)));
-				exit;
+
+				if (isset($_POST['bypass-auth-redirect']) && $_POST['bypass-auth-redirect']) {
+					// $f_value['auth-select'] = "reset";
+					// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(home_url($_POST['bypass-auth-redirect']));
+					exit;
+				} else {
+					// We build a query and redirect back to auth route.
+					$f_value['auth-select'] = "reset";
+					$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+					wp_redirect(esc_url(home_url($r_redirect)));
+					exit;
+				}
+
 			}
 		}
 
@@ -1255,6 +1297,46 @@ class Ronikdesign_Public
 				exit;
 			}
 		}
+
+
+
+
+
+
+				// Reset Account Authentication Selection.
+				if (isset($_POST['re-auth-options']) && $_POST['re-auth-options']) {
+					if ($_POST['re-auth-options'] == 'HELPER_RESET') {
+						$helper->ronikdesigns_write_log_devmode('Auth Verification: User Rest', 'low', 'auth');
+						$f_user_id = isset($_POST['user-id']) ? $_POST['user-id'] : get_current_user_id();
+						$f_auth_option = isset($_POST['auth-option']) ? $_POST['auth-option'] : 'none';
+						update_user_meta($f_user_id, 'auth_status', $f_auth_option);
+
+						if (isset($_POST['bypass-auth-redirect']) && $_POST['bypass-auth-redirect']) {
+							// $f_value['auth-select'] = "reset";
+							// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+							wp_redirect(home_url($_POST['bypass-auth-redirect']));
+							exit;
+						} else {	
+							// We build a query and redirect back to auth route.
+							$f_value['auth-select'] = "reset";
+							$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
+			
+							// Handle AJAX redirect
+							if (isset($_POST['re-auth-js']) && $_POST['re-auth-js'] == 'RESET') {
+								// Return the redirect URL in the AJAX response
+								wp_send_json_success(array('redirect_url' => esc_url(home_url($r_redirect))));
+							}
+							// For regular form submissions, use wp_redirect
+							wp_redirect(esc_url(home_url($r_redirect)));
+							exit;
+						}						
+					}
+				}
+		
+
+
+
+
 
 		// AUTH Section:
 		// First Check:

@@ -1,146 +1,212 @@
 <?php
 class RonikAuthHelper
 {
+
     /**
-     * This helps developers to debug on the fly and to make sure auth is working correctly!
+     * Shows MFA/2FA debug panel for super admins using GET params only
      */
     public function auth_admin_messages()
     {
-        // https://together.nbcudev.local/auth?ronik_debug=ronik_admin_auth
-        if (isset($_GET['ronik_debug']) && $_GET['ronik_debug'] == 'ronik_admin_auth') {
-            if (is_user_admin() || is_super_admin()) {
-                setcookie("RonikDebug", 'ronik_admin_auth_717', time() + 1500);  /* expire in 25 min */
-                // https://together.nbcudev.local/auth?ronik_debug=ronik_admin_auth&user_id=33
-                if (isset($_GET['user_id'])) {
-                    setcookie("RonikDebugUserID", $_GET['user_id'], time() + 1500);  /* expire in 25 min */
-                    setcookie("RonikDebugUserEmail", '', time() - 3600);  // Expire the cookie by setting it in the past
-                    // https://together.nbcudev.local/auth?ronik_debug=ronik_admin_auth&user_email=david@ronikdesign.com    
-                } elseif (isset($_GET['user_email'])) {
-                    setcookie("RonikDebugUserEmail", $_GET['user_email'], time() + 1500);  /* expire in 25 min */
-                    setcookie("RonikDebugUserID", '', time() - 3600);  // Expire the cookie by setting it in the past
-                } else {
-                    setcookie("RonikDebugUserID", get_current_user_id(), time() + 1500);  /* expire in 25 min */
-                    setcookie("RonikDebugUserEmail", '', time() - 3600);  // Expire the cookie by setting it in the past
-                }
-            }
-        }
 
-        // CRITICAL this prevents non super_admin from seeing the auth admin settings
-        if (!is_super_admin()) {
+        $current_user = wp_get_current_user();
+        if (
+            (!in_array('administrator', (array) $current_user->roles, true)) &&
+            !is_super_admin()
+        ) {
             return false;
         }
 
-        if ((isset($_COOKIE['RonikDebug']) && array_key_exists('RonikDebug', $_COOKIE) && $_COOKIE['RonikDebug'] == 'ronik_admin_auth_717') || str_contains($_SERVER['SERVER_NAME'], 'together.nbcudev.local-de')) {
-            $current_user = wp_get_current_user();
-
-            if (isset($_COOKIE['RonikDebugUserID']) && array_key_exists('RonikDebugUserID', $_COOKIE)) {
-                $f_user_id = is_numeric($_COOKIE['RonikDebugUserID']) ? $_COOKIE['RonikDebugUserID'] : $current_user->ID;
-            } elseif (isset($_COOKIE['RonikDebugUserEmail']) && array_key_exists('RonikDebugUserEmail', $_COOKIE)) {
-                $user = get_user_by('email', $_COOKIE['RonikDebugUserEmail']);
-                $f_user_id = ($user) ? $user->ID : $current_user->ID;
-            } else {
-                $f_user_id = $current_user->ID;
-            }
-
-            // All auth data for person.
-            $get_auth_status = get_user_meta($f_user_id, 'auth_status', true);
-            $get_current_secret = get_user_meta($f_user_id, 'google2fa_secret', true);
-            $sms_2fa_status = get_user_meta($f_user_id, 'sms_2fa_status', true);
-            $sms_2fa_secret = get_user_meta($f_user_id, 'sms_2fa_secret', true);
-            $get_auth_lockout_counter = get_user_meta($f_user_id, 'auth_lockout_counter', true) ? get_user_meta($f_user_id, 'auth_lockout_counter', true) : (int)0;
-            $get_phone_number = get_user_meta($f_user_id, 'sms_user_phone', true);
-            $mfa_status = get_user_meta($f_user_id, 'mfa_status', true);
-            $mfa_validation = get_user_meta($f_user_id, 'mfa_validation', true);
-
-            $user = get_user_by('id', $f_user_id);
-            $f_user_override = get_option('options_mfa_settings_user_override');
-
-            error_log(print_r('DEBUG ACTIVATED', true));
-            $f_auth = get_field('mfa_settings', 'options');
-?>
-            <div class="dev-notice">
-                <h4>Dev Message:</h4>
-                <p>
-                    Welcome to the Frontend Dev Reset Center. This is a powerful tool that can reset and change all AUTH information.
-                </p>
-                <br>
-                <hr>
-                <p>Current UserID: <?php echo $f_user_id; ?></p>
-                <p>Auth Status: <?php echo $get_auth_status; ?></p>
-                <br>
-                <p>MFA Current Secret: <?php echo $get_current_secret; ?></p>
-                <p>MFA Status: <?php echo $mfa_status; ?></p>
-                <p>MFA Validation: <?php echo $mfa_validation; ?></p>
-                <br>
-                <p>SMS Phone Number: <?php echo $get_phone_number; ?></p>
-                <p>SMS Secret: <?php echo $sms_2fa_secret; ?></p>
-                <p>SMS Status: <?php echo $sms_2fa_status; ?></p>
-                <p>Auth Lockout: <?php echo  $get_auth_lockout_counter; ?></p>
-                <?php if ((isset($f_auth['enable_2fa_settings']) && $f_auth['enable_2fa_settings']) && (isset($f_auth['enable_mfa_settings']) && $f_auth['enable_mfa_settings'])) { ?>
-
-
-                    <form action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
-                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
-                        <input type="hidden" type="text" name="user-id" value="<?= $f_user_id; ?>">
-                        <?php
-                        if (strpos($f_user_override, $user->data->user_email) !== false) {
-                        ?>
-                            <p style="padding-bottom: 0;">Current user is currently on Bypass Auth Verification</p>
-                        <?php
-                            $checkbox_status = 'checked';
-                        } else {
-                        ?>
-                            <p style="padding-bottom: 0;">Current user is currently not on Bypass Auth Verification</p>
-                        <?php
-                            $checkbox_status = 'notchecked';
-                        }
-                        ?>
-                        <input style="opacity: .5; pointer-events: none; height: 33px; width:100%; padding: 0; font-size: 1.5em; " type="text" name="bypass-auth-list" value="<?= $user->data->user_email; ?>">
-                        <br>
-                        <input type="hidden" type="text" name="bypass-auth-verification-status" value="<?= $checkbox_status; ?>">
-                        <input type="hidden" type="text" name="bypass-auth-verification" value="RESET">
-                        <button type="submit" name="submit" aria-label="Bypass Auth Verification" value="Bypass Auth Verification"><?= ($checkbox_status == 'checked') ? 'Remove from Bypass Auth Verification List' : 'Add to Bypass Auth Verification List' ?></button>
-                        <p style="padding-bottom: 0;">Warning this will auto bypass the user from future authorization with MFA/ 2FA.</p>
-                    </form>
-
-
-                    <form action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
-                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
-                        <input type="hidden" type="text" name="user-id" value="<?= $f_user_id; ?>">
-                        <input style=" height: 33px; padding: 0; font-size: 1.5em; " type="text" type="text" name="change-phone-number" value="<?= $get_phone_number; ?>">
-                        <input type="hidden" type="text" name="re-phone-number" value="RESET">
-                        <button type="submit" name="submit" aria-label="Change Phone Number." value="Change Phone Number.">Change Phone Number.</button>
-                        <p style="padding-bottom: 0;">+1 is necessary and please no dashes!</p>
-                    </form>
-
-                    <form action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
-                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
-                        <input type="hidden" type="text" name="user-id" value="<?= $f_user_id; ?>">
-                        <input type="hidden" type="text" name="re-auth" value="RESET">
-                        <button type="submit" name="submit" aria-label="Change Authentication Selection." value="Change Authentication Selection.">Change Authentication Selection.</button>
-                    </form>
-
-                    <form action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
-                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
-                        <input type="hidden" type="text" name="user-id" value="<?= $f_user_id; ?>">
-                        <input type="hidden" type="text" name="reset-lockout" value="RESET">
-                        <button type="submit" name="submit" aria-label="Reset Auth Lockout" value="Reset Auth Lockout">Reset Auth Lockout.</button>
-                    </form>
-
-                    <form action="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" method="post">
-                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
-                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
-                        <input type="hidden" type="text" name="user-id" value="<?= $f_user_id; ?>">
-                        <input type="hidden" type="text" name="reset-entire-auth" value="RESET">
-                        <button type="submit" name="submit" aria-label="Reset Entire Auth" value="Reset Entire Auth">Reset Entire Auth.</button>
-                    </form>
-                <?php } ?>
-            </div>
-<?php
+        // Check if debug mode is active via GET
+        if (!isset($_GET['ronik_debug']) || $_GET['ronik_debug'] !== 'ronik_admin_auth') {
+            return false;
         }
+
+        $current_user = wp_get_current_user();
+        $f_user_id = $current_user->ID;
+
+        // Support ?user_id=### or ?user_email=example@example.com
+        if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
+            $f_user_id = (int) $_GET['user_id'];
+        } elseif (isset($_GET['user_email'])) {
+            $user = get_user_by('email', sanitize_email($_GET['user_email']));
+            if ($user) {
+                $f_user_id = $user->ID;
+            }
+        }
+
+        $get_auth_status = get_user_meta($f_user_id, 'auth_status', true) ?: 'none';
+        $get_current_secret = get_user_meta($f_user_id, 'google2fa_secret', true);
+        $sms_2fa_status = get_user_meta($f_user_id, 'sms_2fa_status', true);
+        $sms_2fa_secret = get_user_meta($f_user_id, 'sms_2fa_secret', true);
+        $get_auth_lockout_counter = get_user_meta($f_user_id, 'auth_lockout_counter', true) ?: 0;
+        $get_phone_number = get_user_meta($f_user_id, 'sms_user_phone', true);
+        $mfa_status = get_user_meta($f_user_id, 'mfa_status', true);
+        $mfa_validation = get_user_meta($f_user_id, 'mfa_validation', true);
+
+        $user = get_user_by('id', $f_user_id);
+        $f_user_override = get_option('options_mfa_settings_user_override');
+        $f_auth = get_field('mfa_settings', 'options');
+
+        $f_redirect = $_SERVER['REQUEST_URI'] ?: '/auth_helper?ronik_debug=ronik_admin_auth';
+
+
+?>
+        <div class="dev-notice">
+            <h4>Dev Message:</h4>
+            <p>Welcome to the Frontend Dev Reset Center. This is a powerful tool that can reset and change all AUTH information.</p>
+
+
+            <div class="dev-notice__wrapper">
+                <div class="dev-notice__full dev-notice__center dev-notice__hr"></div>
+
+                <div class="dev-notice__full dev-notice__center">
+                    <h6>User Profile: Information</h6>
+                    <br>
+                </div>
+                <div class="dev-notice__half">
+                    <p>Current UserID: <?= esc_html($f_user_id); ?></p>
+                </div>
+                <div class="dev-notice__half">
+                    <p>Current User Email: <?= esc_html($user->user_email); ?></p>
+                </div>
+                <br>
+
+                <div class="dev-notice__full dev-notice__center dev-notice__hr"></div>
+
+                <div class="dev-notice__full dev-notice__center">
+                    <h6>Auth Status: <?= esc_html($get_auth_status); ?></h6>
+                    <br>
+                </div>
+
+                <div class="dev-notice__half">
+                    <p>MFA Current Secret: <?= esc_html($get_current_secret); ?></p>
+                    <p>MFA Status: <?= esc_html($mfa_status); ?></p>
+                    <p>MFA Validation: <?= esc_html($mfa_validation); ?></p>
+                </div>
+
+                <div class="dev-notice__half">
+                    <p>SMS Phone Number: <?= esc_html($get_phone_number); ?></p>
+                    <p>SMS Secret: <?= esc_html($sms_2fa_secret); ?></p>
+                    <p>SMS Status: <?= esc_html($sms_2fa_status); ?></p>
+                </div>
+
+                <div class="dev-notice__full">
+                    <p>Auth Lockout: <?= esc_html($get_auth_lockout_counter); ?></p>
+                </div>
+
+                <?php if (!empty($f_auth['enable_2fa_settings']) && !empty($f_auth['enable_mfa_settings'])) : ?>
+
+                    <form action="<?= esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+                        <input type="hidden" name="user-id" value="<?= esc_attr($f_user_id); ?>">
+                        <?php
+                        $checkbox_status = (strpos($f_user_override, $user->user_email) !== false) ? 'checked' : 'notchecked';
+                        ?>
+
+                        <div class="dev-notice__full dev-notice__center dev-notice__hr"></div>
+
+                        <div class="dev-notice__full dev-notice__center">
+                            <h6><?= $checkbox_status === 'checked' ? 'Current user is on Bypass Auth Verification' : 'Current user is not on Bypass Auth Verification'; ?></h6>
+                            <br>
+                        </div>
+
+                        <div class="dev-notice__half">
+                            <input style="opacity: .5; pointer-events: none; width:100%; font-size: 1.5em;" type="text" name="bypass-auth-list" value="<?= esc_attr($user->user_email); ?>">
+                        </div>
+
+                        <div class="dev-notice__half">
+                            <button type="submit"><?= $checkbox_status === 'checked' ? 'Remove from Bypass List' : 'Add to Bypass List'; ?></button>
+                        </div>
+
+                        <div class="dev-notice__full dev-notice__center">
+                            <br>
+                            <p>Warning: this will auto bypass the user from future MFA/2FA authorization.</p>
+                        </div>
+
+
+                        <input type="hidden" name="bypass-auth-redirect" value="<?= esc_attr($f_redirect); ?>">
+                        <input type="hidden" name="bypass-auth-verification" value="HELPER_RESET">
+                        <input type="hidden" name="bypass-auth-verification-status" value="<?= esc_attr($checkbox_status); ?>">
+                    </form>
+
+                    <form action="<?= esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+
+                        <div class="dev-notice__full dev-notice__center dev-notice__hr"></div>
+
+                        <div class="dev-notice__full dev-notice__center">
+                            <h6>Current User Phone Number: <?= esc_attr($get_phone_number); ?></h6>
+                            <br>
+                        </div>
+
+                        <div class="dev-notice__full dev-notice__center">
+                            <br>
+                        </div>
+                        <div class="dev-notice__half">
+                            <input style="height: 33px; font-size: 1.5em;" type="text" name="change-phone-number" value="<?= esc_attr($get_phone_number); ?>">
+                        </div>
+                        <div class="dev-notice__half">
+                            <button type="submit">Change Phone Number</button>
+                        </div>
+                        <div class="dev-notice__full dev-notice__center">
+                            <p>Note: +1 is necessary and please no dashes.</p>
+                        </div>
+
+                        <input type="hidden" name="bypass-auth-redirect" value="<?= esc_attr($f_redirect); ?>">
+                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+                        <input type="hidden" name="user-id" value="<?= esc_attr($f_user_id); ?>">
+                        <input type="hidden" name="re-phone-number" value="HELPER_RESET">
+                    </form>
+
+
+
+                    <form class="dev-notice__full" action="<?= esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+                        <input type="hidden" name="user-id" value="<?= esc_attr($f_user_id); ?>">
+                        <input type="hidden" name="re-auth-options" value="HELPER_RESET">
+                        <input type="hidden" name="bypass-auth-redirect" value="<?= esc_attr($f_redirect); ?>">
+
+                        <label for="auth-option">Select Option:</label>
+                        <select name="auth-option" id="auth-option">
+                            <?php if ($get_phone_number) { ?>
+                                <option value="auth_select_sms" <?= ($get_auth_status === 'auth_select_sms') ? 'selected' : ''; ?>>SMS</option>
+                            <?php } else { ?>
+                                <option value="auth_select_sms-missing" <?= ($get_auth_status === 'auth_select_sms-missing') ? 'selected' : ''; ?>>SMS Missing</option>
+                            <?php } ?>
+                            <option value="auth_select_mfa" <?= ($get_auth_status === 'auth_select_mfa') ? 'selected' : ''; ?>>MFA</option>
+                            <option value="none" <?= ($get_auth_status === 'none') ? 'selected' : ''; ?>>None</option>
+                        </select>
+
+                        <br>
+                        <button type="submit">Change Auth Selection</button>
+                    </form>
+
+                    <form class="dev-notice__third" action="<?= esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+                        <input type="hidden" name="user-id" value="<?= esc_attr($f_user_id); ?>">
+                        <input type="hidden" name="reset-lockout" value="HELPER_RESET">
+                        <input type="hidden" name="bypass-auth-redirect" value="<?= esc_attr($f_redirect); ?>">
+
+                        <button type="submit">Reset Auth Lockout</button>
+                    </form>
+
+                    <form class="dev-notice__third" action="<?= esc_url(admin_url('admin-ajax.php')); ?>" method="post">
+                        <input type="hidden" name="action" value="ronikdesigns_admin_auth_verification">
+                        <?php wp_nonce_field('ajax-nonce', 'nonce'); ?>
+                        <input type="hidden" name="user-id" value="<?= esc_attr($f_user_id); ?>">
+                        <input type="hidden" name="reset-entire-auth" value="HELPER_RESET">
+                        <input type="hidden" name="bypass-auth-redirect" value="<?= esc_attr($f_redirect); ?>">
+
+                        <button type="submit">Reset Entire Auth</button>
+                    </form>
+
+                <?php endif; ?>
+            </div>
+
+        </div>
+<?php
     }
 }
