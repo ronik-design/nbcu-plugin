@@ -33,7 +33,7 @@ class Ronikdesign_Assets {
 		$full_url  = $this->base_url . ltrim($relative_path, '/');
 		$version   = $this->get_file_version($full_path);
 
-		wp_enqueue_style($this->plugin_name . $handle_suffix, $full_url, $deps, $version, $media);
+		wp_enqueue_style($this->plugin_name . $handle_suffix, $full_url.'?cb='.CACHE_VERSION_BUMP , $deps, $version, $media);
 	}
 
 	public function enqueue_script($handle_suffix, $relative_path, $deps = [], $in_footer = true) {
@@ -41,6 +41,6 @@ class Ronikdesign_Assets {
 		$full_url  = $this->base_url . ltrim($relative_path, '/');
 		$version   = $this->get_file_version($full_path);
 
-		wp_enqueue_script($this->plugin_name . $handle_suffix, $full_url, $deps, $version, $in_footer);
+		wp_enqueue_script($this->plugin_name . $handle_suffix, $full_url.'?cb='.CACHE_VERSION_BUMP , $deps, $version, $in_footer);
 	}
 }
