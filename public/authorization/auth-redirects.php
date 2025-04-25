@@ -34,16 +34,18 @@ function timeValidationExcution(){
                                 mp_params['Video Name'] = $('.modal-media__title').text();
                             mixpanel.track('Video Play Started', mp_params);
                         }
+                        // alert('Video is playing');
                         timeValidationAjax('invalid', 'invalid', 'valid', true);
                     });
                     videoPlayer.on('pause', function() {
                         console.log('Video is paused');
+                        // alert('Video is paused');
                         timeValidationAjax('invalid', 'invalid', 'invalid', true);
                     });
                 }
                 // Pretty much we detect if the iframe is for vimeo if so we add the wrapper
-                $( "iframe.optanon-category-4-7" ).each(function( index ) {
-                   if($( this )){
+                $("iframe.optanon-category-4, iframe.optanon-category-4-7").each(function(index) {
+                    if($( this )){
                         if (typeof $( this ).attr('src') !== 'undefined') {
                             if( $( this ).attr('src').length > 0 && $( this ).attr('src').indexOf("vimeo") > -1 ){
                                 videoIframeValidation($( this ));
@@ -218,7 +220,7 @@ function ronikdesigns_redirect_registered_auth() {
         $helper->ronikdesigns_write_log_devmode('Auth is Killed — resetting auth_status to none', 'low', 'auth');
         return;
     }
-    
+
     // Restricted Access only login users can proceed.
     if(!is_user_logged_in()){
         $helper->ronikdesigns_write_log_devmode('Auth is due to not logged in user.', 'low', 'auth');
@@ -322,7 +324,7 @@ function ronikdesigns_redirect_registered_auth() {
                 }
             }
         }
-        
+
         // NONE SELECTED * check if the current user status is none or not yet set.
         if(($get_auth_status == 'none') || !isset($get_auth_status) || !$get_auth_status){
             $helper->ronikdesigns_write_log_devmode('roniknbcu_ronikdesign_none', 'low', 'auth');

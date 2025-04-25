@@ -91,8 +91,11 @@ class Ronikdesign_Public
 		 * class.
 		 */
 
-		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/ronikdesign-public.css', array(), $this->version, 'all');
-		wp_enqueue_style($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/main.min.css', array(), $this->version, 'all');
+		 $assets = new Ronikdesign_Assets($this->plugin_name, $this->version, 'public');
+		 $assets->enqueue_style('2', 'assets/dist/main.min.css');
+		 
+		// wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/ronikdesign-public.css', array(), $this->version, 'all');
+		// wp_enqueue_style($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/main.min.css', array(), $this->version, 'all');
 	}
 
 	/**
@@ -114,16 +117,37 @@ class Ronikdesign_Public
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-		if (! wp_script_is('jquery', 'enqueued')) {
-			wp_enqueue_script($this->plugin_name . 'jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js', array(), null, true);
+		// if (! wp_script_is('jquery', 'enqueued')) {
+		// 	wp_enqueue_script($this->plugin_name . 'jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js', array(), null, true);
+		// 	$scriptName = $this->plugin_name . 'jquery';
+		// 	wp_enqueue_script($this->plugin_name . '-vimeo', 'https://player.vimeo.com/api/player.js', array($scriptName), $this->version, false);
+		// 	wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ronikdesign-public.js', array($scriptName), $this->version, false);
+		// 	wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array($scriptName), $this->version, false);
+		// } else {
+		// 	wp_enqueue_script($this->plugin_name . '-vimeo', 'https://player.vimeo.com/api/player.js', array(), $this->version, false);
+		// 	wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ronikdesign-public.js', array(), $this->version, false);
+		// 	wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array(), $this->version, false);
+		// }
+
+
+
+		$assets = new Ronikdesign_Assets($this->plugin_name, $this->version,  'public');
+
+		$vimeo_js_url = 'https://player.vimeo.com/api/player.js';
+		$jquery_url   = 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js';
+
+		if (!wp_script_is('jquery', 'enqueued')) {
+			wp_enqueue_script($this->plugin_name . 'jquery', $jquery_url, [], null, true);
+
 			$scriptName = $this->plugin_name . 'jquery';
-			wp_enqueue_script($this->plugin_name . '-vimeo', 'https://player.vimeo.com/api/player.js', array($scriptName), $this->version, false);
-			wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ronikdesign-public.js', array($scriptName), $this->version, false);
-			wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array($scriptName), $this->version, false);
+
+			wp_enqueue_script($this->plugin_name . '-vimeo', $vimeo_js_url, [$scriptName], $this->version, false);
+			$assets->enqueue_script('', 'js/ronikdesign-public.js', [$scriptName], false);
+			$assets->enqueue_script('2', 'assets/dist/app.min.js', [$scriptName], false);
 		} else {
-			wp_enqueue_script($this->plugin_name . '-vimeo', 'https://player.vimeo.com/api/player.js', array(), $this->version, false);
-			wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ronikdesign-public.js', array(), $this->version, false);
-			wp_enqueue_script($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/app.min.js', array(), $this->version, false);
+			wp_enqueue_script($this->plugin_name . '-vimeo', $vimeo_js_url, [], $this->version, false);
+			$assets->enqueue_script('', 'js/ronikdesign-public.js', [], false);
+			$assets->enqueue_script('2', 'assets/dist/app.min.js', [], false);
 		}
 
 		/**
@@ -1647,7 +1671,7 @@ class Ronikdesign_Public
 			$helper->ronikdesigns_write_log_devmode($_SESSION["videoPlayed"], 'low', 'auth');
 
 			if ($_SESSION["videoPlayed"] == 'valid') {
-				unset($_SESSION["videoPlayed"]);
+				// unset($_SESSION["videoPlayed"]);
 				wp_send_json_success('noreload');
 			}
 			$helper->ronikdesigns_write_log_devmode('Auth Verification: Kill Validation.', 'low', 'auth');
@@ -1685,7 +1709,7 @@ class Ronikdesign_Public
 
 			// This is the logic blocker that will prevent the other code from triggering.
 			if ($_SESSION["videoPlayed"] == 'valid') {
-				unset($_SESSION["videoPlayed"]);
+				// unset($_SESSION["videoPlayed"]);
 				wp_send_json_success('noreload');
 			}
 			$helper->ronikdesigns_write_log_devmode('Auth Verification: Time Checker Validation.', 'low', 'auth');
