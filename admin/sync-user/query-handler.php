@@ -353,7 +353,7 @@ class UserSyncHandler {
         ];
     }
     
-    public function delete_users($results) {
+    public function delete_users($results, $offset = 0, $total_deleted = 0) {
         if (empty($results)) {
             return false;
         }
@@ -370,7 +370,8 @@ class UserSyncHandler {
         
         // Set limit for processing - higher limit when backup is disabled
         $processed_count = 0;
-        $max_users = $create_backup ? 2000 : 10000; // 2000 with backup, 10000 without
+        $max_users = $create_backup ? 2000 : 5000; // 2000 with backup, 5000 without
+        $batch_size = 100; // Process 100 users at a time
         
         // Define all possible meta keys
         $all_meta_keys = [
@@ -413,7 +414,10 @@ class UserSyncHandler {
             'wp_3_yoast_notifications'
         ];
         
-        foreach ($results as $entry) {
+        // Get the current batch of users
+        $current_batch = array_slice($results, $offset, $batch_size);
+        
+        foreach ($current_batch as $entry) {
             // Check if we've reached the limit
             if ($processed_count >= $max_users) {
                 error_log("Reached maximum limit of $max_users users. Please run the delete again to process more users.");
@@ -474,12 +478,6 @@ class UserSyncHandler {
                     }
                 }
 
-                // Instead of deleting, disable the user
-                // update_user_meta($user->ID, 'account_status', 'disabled');
-                // update_user_meta($user->ID, 'disabled_reason', $entry['reason']);
-                // update_user_meta($user->ID, 'disabled_date', $timestamp);
-                
-                // Original delete functionality (commented out)
                 if (wp_delete_user($user->ID)) {
                     $disabled_count++;
                     $processed_count++;
@@ -528,7 +526,20 @@ class UserSyncHandler {
             error_log("User backup saved to: " . $backup_file);
         }
 
-        return $disabled_count;
+        // Calculate new offset and total deleted
+        $new_offset = $offset + $batch_size;
+        $total_deleted += $disabled_count;
+
+        // If we have more users to process and haven't hit the max limit
+        if ($new_offset < count($results) && $processed_count < $max_users) {
+            // Add a cooldown period (5 seconds) before processing the next batch
+            sleep(5);
+            
+            // Recursively process the next batch
+            return $this->delete_users($results, $new_offset, $total_deleted);
+        }
+
+        return $total_deleted;
     }
     
     private function analyze_user($user, $bad_words, $whitelist_domains, $burner_domains, $spammy_patterns) {
