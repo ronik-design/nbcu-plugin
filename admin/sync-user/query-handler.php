@@ -362,12 +362,15 @@ class UserSyncHandler {
         $backup_sql = [];
         $timestamp = current_time('mysql');
         
+        // Check if backup is requested
+        $create_backup = isset($_POST['create_backup']) && $_POST['create_backup'] === 'true';
+        
         // Define bypass domains
         $bypass_domains = ['@ronikdesign.com', '@divisionof.com'];
         
-        // Set limit for processing
+        // Set limit for processing - higher limit when backup is disabled
         $processed_count = 0;
-        $max_users = 2000; // Limit to 2000 users per delete
+        $max_users = $create_backup ? 2000 : 10000; // 2000 with backup, 10000 without
         
         // Define all possible meta keys
         $all_meta_keys = [
@@ -442,31 +445,33 @@ class UserSyncHandler {
                     $entry['reason']
                 ));
 
-                // Create backup SQL for this user
-                $backup_sql[] = sprintf(
-                    "INSERT INTO wp_users_backup (user_id, user_login, user_email, user_registered, user_status, display_name, backup_date, reason) VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', '%s');",
-                    $user->ID,
-                    esc_sql($user->user_login),
-                    esc_sql($user->user_email),
-                    $user->user_registered,
-                    $user->user_status,
-                    esc_sql($user->display_name),
-                    $timestamp,
-                    esc_sql($entry['reason'])
-                );
-
-                // Get all user meta data
-                $user_meta = get_user_meta($user->ID);
-                
-                // Add user meta data to backup for all possible keys
-                foreach ($all_meta_keys as $meta_key) {
-                    $meta_value = isset($user_meta[$meta_key]) ? $user_meta[$meta_key][0] : '';
+                // Create backup SQL for this user if requested
+                if ($create_backup) {
                     $backup_sql[] = sprintf(
-                        "INSERT INTO wp_usermeta_backup (user_id, meta_key, meta_value) VALUES (%d, '%s', '%s');",
+                        "INSERT INTO wp_users_backup (user_id, user_login, user_email, user_registered, user_status, display_name, backup_date, reason) VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', '%s');",
                         $user->ID,
-                        esc_sql($meta_key),
-                        esc_sql($meta_value)
+                        esc_sql($user->user_login),
+                        esc_sql($user->user_email),
+                        $user->user_registered,
+                        $user->user_status,
+                        esc_sql($user->display_name),
+                        $timestamp,
+                        esc_sql($entry['reason'])
                     );
+
+                    // Get all user meta data
+                    $user_meta = get_user_meta($user->ID);
+                    
+                    // Add user meta data to backup for all possible keys
+                    foreach ($all_meta_keys as $meta_key) {
+                        $meta_value = isset($user_meta[$meta_key]) ? $user_meta[$meta_key][0] : '';
+                        $backup_sql[] = sprintf(
+                            "INSERT INTO wp_usermeta_backup (user_id, meta_key, meta_value) VALUES (%d, '%s', '%s');",
+                            $user->ID,
+                            esc_sql($meta_key),
+                            esc_sql($meta_value)
+                        );
+                    }
                 }
 
                 // Instead of deleting, disable the user
@@ -482,8 +487,8 @@ class UserSyncHandler {
             }
         }
 
-        // Save backup SQL to a file
-        if (!empty($backup_sql)) {
+        // Save backup SQL to a file if requested and we have SQL to save
+        if ($create_backup && !empty($backup_sql)) {
             $backup_dir = WP_CONTENT_DIR . '/user-backups';
             if (!file_exists($backup_dir)) {
                 wp_mkdir_p($backup_dir);

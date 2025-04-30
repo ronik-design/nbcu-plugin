@@ -117,6 +117,10 @@ function ronikdesigns_sync_user_admin_page() {
             </p>
 
             <p>
+                <label><input type="checkbox" name="create_backup" value="true" <?php checked(isset($_POST['create_backup']) && $_POST['create_backup'] === 'true', true); ?>> Create backup SQL before deletion</label>
+            </p>
+
+            <p>
                 <label><input type="checkbox" name="delete_results" value="true"> Delete results after display</label>
             </p>
 
