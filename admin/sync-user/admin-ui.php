@@ -22,7 +22,7 @@ function ronikdesigns_sync_user_admin_menu() {
 
 function ronikdesigns_handle_csv_export() {
     // Check for export condition early in the WordPress lifecycle
-    if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && !empty($_POST['export'])) {
+    if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && isset($_POST['export']) && $_POST['export'] === 'true') {
         // Check user permissions
         if (!current_user_can('manage_options')) {
             wp_die('Unauthorized access.');
@@ -40,8 +40,8 @@ function ronikdesigns_handle_csv_export() {
 function ronikdesigns_sync_user_admin_page() {
     // Normal page rendering (non-export case)
     $type = $_POST['type'] ?? 'option1';
-    $last_login = $_POST['last_login'] ?? '2018-03-01';
-    $user_registered = $_POST['user_registered'] ?? '2017-03-01';
+    $last_login = $_POST['last_login'] ?? '2022-03-27';
+    $user_registered = $_POST['user_registered'] ?? '2022-03-27';
     $export = $_POST['export'] ?? '';
     $whitelist_domains = $_POST['whitelist_domains'] ?? get_option('options_whitelist_domains', '');
     $paged = isset($_POST['paged']) ? max(1, (int) $_POST['paged']) : 1;
@@ -52,6 +52,22 @@ function ronikdesigns_sync_user_admin_page() {
 
     // Process the form submission for display (not export)
     if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && empty($_POST['export'])) {
+        // Handle deletion if checkbox was checked
+        if (isset($_POST['delete_results']) && $_POST['delete_results'] === 'true') {
+            // Get all results without pagination
+            $all_results = $handler->process_sync(array_merge($_POST, ['paged' => 1, 'per_page' => -1]));
+            $deleted_count = $handler->delete_users($all_results['results']);
+            if ($deleted_count !== false) {
+                echo '<div class="notice notice-success"><p>' . sprintf(
+                    _n('%d user was deleted.', '%d users were deleted.', $deleted_count, 'ronikdesigns'),
+                    $deleted_count
+                ) . '</p></div>';
+            }
+            // Don't run the query again after deletion
+            return;
+        }
+        
+        // Only run the query if we're not deleting
         $result = $handler->process_sync($_POST);
     }
 ?>
@@ -98,6 +114,10 @@ function ronikdesigns_sync_user_admin_page() {
 
             <p>
                 <label><input type="checkbox" name="export" value="true" <?php checked($export, 'true'); ?>> Export as CSV</label>
+            </p>
+
+            <p>
+                <label><input type="checkbox" name="delete_results" value="true"> Delete results after display</label>
             </p>
 
             <p class="submit">

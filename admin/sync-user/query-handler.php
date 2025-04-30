@@ -50,19 +50,20 @@ class UserSyncHandler {
             $type = sanitize_text_field($params['type'] ?? '');
             $paged = max(1, (int)($params['paged'] ?? 1));
             $export = filter_var($params['export'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $per_page = isset($params['per_page']) ? (int)$params['per_page'] : $this->per_page;
 
             error_log("process_sync called with params: " . print_r($params, true));
-            error_log("Type: $type, Paged: $paged, Export: " . ($export ? 'true' : 'false'));
+            error_log("Type: $type, Paged: $paged, Export: " . ($export ? 'true' : 'false') . ", Per Page: $per_page");
 
             switch ($type) {
                 case 'option1':
-                    return $this->handle_option1($paged, $export, $params);
+                    return $this->handle_option1($paged, $export, $params, $per_page);
                 case 'option2':
-                    return $this->handle_option2($paged, $export, $params);
+                    return $this->handle_option2($paged, $export, $params, $per_page);
                 case 'option3':
-                    return $this->handle_option3($paged, $export, $params);
+                    return $this->handle_option3($paged, $export, $params, $per_page);
                 case 'option4':
-                    return $this->handle_abnormal_emails($paged, $export, $params);
+                    return $this->handle_abnormal_emails($paged, $export, $params, $per_page);
                 default:
                     error_log("Invalid query type: $type");
                     return ['total' => 0, 'results' => [], 'output' => 'Invalid query type'];
@@ -73,7 +74,7 @@ class UserSyncHandler {
         }
     }
     
-    private function handle_option1($paged, $export, $params) {
+    private function handle_option1($paged, $export, $params, $per_page) {
         // Option 1: Inactive + Registered Before
         $last_login = sanitize_text_field($params['last_login'] ?? '');
         $user_registered = sanitize_text_field($params['user_registered'] ?? '');
@@ -145,10 +146,10 @@ class UserSyncHandler {
             set_transient($cache_key, $all_results, HOUR_IN_SECONDS * 6);
         }
         
-        return $this->process_results($all_results, $paged, $export);
+        return $this->process_results($all_results, $paged, $export, $per_page);
     }
     
-    private function handle_option2($paged, $export, $params) {
+    private function handle_option2($paged, $export, $params, $per_page) {
         // Option 2: Active + No WP3 Access
         $cache_key = 'sync_option2_' . md5(serialize($params));
         $cached = get_transient($cache_key);
@@ -199,10 +200,10 @@ class UserSyncHandler {
             set_transient($cache_key, $all_results, HOUR_IN_SECONDS * 6);
         }
         
-        return $this->process_results($all_results, $paged, $export);
+        return $this->process_results($all_results, $paged, $export, $per_page);
     }
     
-    private function handle_option3($paged, $export, $params) {
+    private function handle_option3($paged, $export, $params, $per_page) {
         // Option 3: Unconfirmed + Registered Before
         $user_registered = sanitize_text_field($params['user_registered'] ?? '');
         
@@ -258,10 +259,10 @@ class UserSyncHandler {
             set_transient($cache_key, $all_results, HOUR_IN_SECONDS * 6);
         }
         
-        return $this->process_results($all_results, $paged, $export);
+        return $this->process_results($all_results, $paged, $export, $per_page);
     }
     
-    private function handle_abnormal_emails($paged, $export, $params) {
+    private function handle_abnormal_emails($paged, $export, $params, $per_page) {
         $cache_key = 'sync_flagged_users_' . md5(serialize($params));
         $cached = get_transient($cache_key);
         
@@ -317,15 +318,15 @@ class UserSyncHandler {
             set_transient($cache_key, $all_flagged, HOUR_IN_SECONDS * 6);
         }
         
-        return $this->process_results($all_flagged, $paged, $export);
+        return $this->process_results($all_flagged, $paged, $export, $per_page);
     }
     
-    private function process_results($all_results, $paged, $export) {
+    private function process_results($all_results, $paged, $export, $per_page) {
         $total = count($all_results);
         
         // For export, process all results; for display, paginate
-        $offset = ($paged - 1) * $this->per_page;
-        $paged_results = $export ? $all_results : array_slice($all_results, $offset, $this->per_page);
+        $offset = ($paged - 1) * $per_page;
+        $paged_results = $export ? $all_results : array_slice($all_results, $offset, $per_page);
         error_log("Paged results for page $paged (offset $offset): " . count($paged_results));
         
         // Convert stored data back to user objects for rendering/exporting
@@ -350,6 +351,179 @@ class UserSyncHandler {
             'results' => $paged_results_with_users,
             'output' => $this->render_html($paged_results_with_users, $total, $paged)
         ];
+    }
+    
+    public function delete_users($results) {
+        if (empty($results)) {
+            return false;
+        }
+
+        $disabled_count = 0;
+        $backup_sql = [];
+        $timestamp = current_time('mysql');
+        
+        // Define bypass domains
+        $bypass_domains = ['@ronikdesign.com', '@divisionof.com'];
+        
+        // Set limit for processing
+        $processed_count = 0;
+        $max_users = 2000; // Limit to 2000 users per delete
+        
+        // Define all possible meta keys
+        $all_meta_keys = [
+            'nickname', 'rich_editing', 'syntax_highlighting', 'use_ssl', 'show_admin_bar_front',
+            'wp_3_capabilities', 'wp_3_user_level', '_yoast_wpseo_profile_updated', 'primary_blog',
+            'source_domain', 'user_whitelisted', 'user_hash', 'distinct_id', 'user_company',
+            'user_title', 'wp_2_access', 'wp_3_access', 'wp_3_registered', 'wp_2_capabilities',
+            'wp_2_user_level', 'user_account_updates', 'user_account_updated', 'pat_status',
+            'account_status', 'user_email', 'is_ae', 'wp_3_last_approval_sent', 'user_confirmed',
+            'user_log', 'resend-register-email-count', 'send-forgot-pass-email-count', 'last_login',
+            'lockout_until', 'login_attempts', 'login_history', 'session_tokens', 'remember_key',
+            'wpseo_ignore_tour', 'manageusers_page_nbcu-userscolumnshidden', 'wp_capabilities',
+            'wp_user_level', 'community-events-location', 'wp_3_ac_preferences_sorted_by',
+            'wp_3_ac_preferences_layout_table', 'wp_7_capabilities', 'wp_7_user_level',
+            'wp_7_dashboard_quick_press_last_post_id', 'wp_5_capabilities', 'wp_5_user_level',
+            'wp_6_capabilities', 'wp_6_user_level', 'user_phone', 'nbcu_sso_id', 'wp_3_ate_activated',
+            'wp_3_language_pairs', 'wpml_enabled_for_translation_via_ate', 'wp_3_ac_preferences_settings',
+            'ac_preferences_admin_screen_options', '_network', 'user_history', 'restricted_whitelist',
+            'wp_3_approval_email_path', 'registration_sent_email', 'register_history',
+            'closedpostboxes_page', 'metaboxhidden_page', 'nav_menu_recently_edited',
+            'managenav-menuscolumnshidden', 'metaboxhidden_nav-menus', 'user_company_group',
+            'user_twitter', 'last_modified', 'closedpostboxes_site-options_page_whitelist-option',
+            'metaboxhidden_site-options_page_whitelist-options', 'closedpostboxes_videos',
+            'metaboxhidden_videos', 'wp_3_user-settings', 'wp_3_user-settings-time',
+            'wp_3_media_library_mode', 'edit_acf-field-group_per_page', 'wp_6_user-settings',
+            'wp_6_user-settings-time', 'user_click_actions', 'wp_2_user-settings',
+            'wp_7_ac_preferences_layout_table', 'wp_7_ac_preferences_sorted_by', 'edit_talent_per_page',
+            'wp_7_user-settings', 'wp_7_user-settings-time', '_yoast_wpseo_introductions',
+            'user_tracker_actions', 'ae_beta_features', 'wp_6_dashboard_quick_press_last_post_id',
+            'last_viewed_notifications', 'user_password_tracker_actions', 'ronikdesign_initialization_vector',
+            'wp_approval_hash', 'ronik_history_registration', 'wp_user-settings-time-password-reset',
+            'sms_code_timestamp', 'auth_lockout_counter', 'ronik_password_history', 'pat_contact_id',
+            'wp_5_user-settings', 'wp_5_user-settings-time', 'meta-box-order_page', 'screen_layout_page',
+            'closedpostboxes_talent', 'metaboxhidden_talent', 'wp_7_ac_preferences_editability_state',
+            'manageedit-acf-ui-options-pagecolumnshidden', 'acf_user_settings',
+            'meta-box-order_site-options_page_whitelist-options',
+            'screen_layout_site-options_page_whitelist-options', 'dynamic_user_login_url',
+            'wp_7_ac_preferences_settings', 'wp_media_library_mode', 'ame_rui_first_login_done',
+            'network', 'auth_status', 'sms_user_phone', 'sms_2fa_status', 'sms_2fa_secret',
+            'wp_3_yoast_notifications'
+        ];
+        
+        foreach ($results as $entry) {
+            // Check if we've reached the limit
+            if ($processed_count >= $max_users) {
+                error_log("Reached maximum limit of $max_users users. Please run the delete again to process more users.");
+                break;
+            }
+
+            $user = $entry['user'];
+            if ($user) {
+                // Check if user email is in bypass domains
+                $should_bypass = false;
+                foreach ($bypass_domains as $domain) {
+                    if (strpos($user->user_email, $domain) !== false) {
+                        $should_bypass = true;
+                        error_log("Skipping user {$user->user_email} (bypass domain)");
+                        break;
+                    }
+                }
+                
+                if ($should_bypass) {
+                    continue;
+                }
+
+                // Log the user that would be deleted
+                error_log(sprintf(
+                    "Would delete user: ID=%d, Email=%s, Username=%s, Reason=%s",
+                    $user->ID,
+                    $user->user_email,
+                    $user->user_login,
+                    $entry['reason']
+                ));
+
+                // Create backup SQL for this user
+                $backup_sql[] = sprintf(
+                    "INSERT INTO wp_users_backup (user_id, user_login, user_email, user_registered, user_status, display_name, backup_date, reason) VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', '%s');",
+                    $user->ID,
+                    esc_sql($user->user_login),
+                    esc_sql($user->user_email),
+                    $user->user_registered,
+                    $user->user_status,
+                    esc_sql($user->display_name),
+                    $timestamp,
+                    esc_sql($entry['reason'])
+                );
+
+                // Get all user meta data
+                $user_meta = get_user_meta($user->ID);
+                
+                // Add user meta data to backup for all possible keys
+                foreach ($all_meta_keys as $meta_key) {
+                    $meta_value = isset($user_meta[$meta_key]) ? $user_meta[$meta_key][0] : '';
+                    $backup_sql[] = sprintf(
+                        "INSERT INTO wp_usermeta_backup (user_id, meta_key, meta_value) VALUES (%d, '%s', '%s');",
+                        $user->ID,
+                        esc_sql($meta_key),
+                        esc_sql($meta_value)
+                    );
+                }
+
+                // Instead of deleting, disable the user
+                // update_user_meta($user->ID, 'account_status', 'disabled');
+                // update_user_meta($user->ID, 'disabled_reason', $entry['reason']);
+                // update_user_meta($user->ID, 'disabled_date', $timestamp);
+                
+                // Original delete functionality (commented out)
+                if (wp_delete_user($user->ID)) {
+                    $disabled_count++;
+                    $processed_count++;
+                }
+            }
+        }
+
+        // Save backup SQL to a file
+        if (!empty($backup_sql)) {
+            $backup_dir = WP_CONTENT_DIR . '/user-backups';
+            if (!file_exists($backup_dir)) {
+                wp_mkdir_p($backup_dir);
+            }
+            
+            $backup_file = $backup_dir . '/user_backup_' . date('Y-m-d_H-i-s') . '.sql';
+            $backup_content = "-- User Backup SQL\n";
+            $backup_content .= "-- Generated on: " . $timestamp . "\n";
+            $backup_content .= "-- Total users: " . count($results) . "\n\n";
+            
+            // Add table creation if not exists
+            $backup_content .= "CREATE TABLE IF NOT EXISTS wp_users_backup (
+                user_id bigint(20) NOT NULL,
+                user_login varchar(60) NOT NULL,
+                user_email varchar(100) NOT NULL,
+                user_registered datetime NOT NULL,
+                user_status int(11) NOT NULL,
+                display_name varchar(250) NOT NULL,
+                backup_date datetime NOT NULL,
+                reason text NOT NULL,
+                PRIMARY KEY (user_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n";
+            
+            $backup_content .= "CREATE TABLE IF NOT EXISTS wp_usermeta_backup (
+                umeta_id bigint(20) NOT NULL AUTO_INCREMENT,
+                user_id bigint(20) NOT NULL,
+                meta_key varchar(255) NOT NULL,
+                meta_value longtext NOT NULL,
+                PRIMARY KEY (umeta_id),
+                KEY user_id (user_id),
+                KEY meta_key (meta_key)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n";
+            
+            $backup_content .= implode("\n", $backup_sql);
+            
+            file_put_contents($backup_file, $backup_content);
+            error_log("User backup saved to: " . $backup_file);
+        }
+
+        return $disabled_count;
     }
     
     private function analyze_user($user, $bad_words, $whitelist_domains, $burner_domains, $spammy_patterns) {
