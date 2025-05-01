@@ -200,6 +200,8 @@ class Ronikdesign
 
 		$this->loader->add_action('wp_ajax_nopriv_ronikdesigns_admin_user_email_swap', $plugin_admin, 'ronikdesigns_admin_user_email_swap');
 		$this->loader->add_action('wp_ajax_ronikdesigns_admin_user_email_swap', $plugin_admin, 'ronikdesigns_admin_user_email_swap');
+
+		$this->loader->add_action('wp_ajax_process_user_batch', $plugin_admin, 'ajax_process_user_batch');
 	}
 
 	/**

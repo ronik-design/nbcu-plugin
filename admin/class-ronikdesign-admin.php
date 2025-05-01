@@ -532,4 +532,14 @@ class Ronikdesign_Admin
 		wp_send_json_success('Done');
 	}
 
+	/**
+	 * Handle the AJAX request for processing user batches
+	 */
+	public function ajax_process_user_batch() {
+		// Include the UserSyncHandler class
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/sync-user/query-handler.php';
+		$handler = new UserSyncHandler();
+		$handler->ajax_process_user_batch();
+	}
+
 }

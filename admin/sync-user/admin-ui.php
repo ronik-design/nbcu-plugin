@@ -74,9 +74,24 @@ function ronikdesigns_sync_user_admin_page() {
     <div class="wrap">
         <h1>User Sync Tool</h1>
 
+        <script>
+            var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+        </script>
+
+        <div id="delete-progress" style="display: none; margin: 20px 0; padding: 20px; background: #f8f9fa; border: 1px solid #ddd;">
+            <h3>Deletion Progress</h3>
+            <div class="progress-bar" style="height: 20px; background: #eee; border-radius: 3px; margin: 10px 0;">
+                <div class="progress-fill" style="width: 0%; height: 100%; background: #2271b1; border-radius: 3px; transition: width 0.3s;"></div>
+            </div>
+            <p class="progress-status">Processing batch 0 of 0...</p>
+            <p class="progress-detail">Users deleted: <span class="deleted-count">0</span></p>
+        </div>
+
         <form method="post" action="" id="sync-form">
             <input type="hidden" name="page" value="ronikdesigns-sync-user">
             <input type="hidden" name="paged" value="<?php echo esc_attr($paged); ?>">
+            <input type="hidden" name="total_users" id="total-users" value="0">
+            <?php wp_nonce_field('process_user_batch', 'nonce'); ?>
 
             <p>
                 <label for="type">Query Type:</label>
@@ -115,15 +130,15 @@ function ronikdesigns_sync_user_admin_page() {
             <p>
                 <label><input type="checkbox" name="export" value="true" <?php checked($export, 'true'); ?>> Export as CSV</label>
             </p>
-
+  
             <p>
+                <label><input type="checkbox" name="delete_results" value="true" id="delete-results"> Delete results after display</label>
+            </p>
+            
+            <p id="backup-checkbox-container" style="display: none;">
                 <label><input type="checkbox" name="create_backup" value="true" <?php checked(isset($_POST['create_backup']) && $_POST['create_backup'] === 'true', true); ?>> Create backup SQL before deletion</label>
             </p>
-
-            <p>
-                <label><input type="checkbox" name="delete_results" value="true"> Delete results after display</label>
-            </p>
-
+            
             <p class="submit">
                 <input type="submit" name="submit" id="submit" class="button button-primary" value="Run Query">
             </p>
@@ -163,6 +178,14 @@ function ronikdesigns_sync_user_admin_page() {
             const dateFields = document.getElementById('date-fields');
             const lastLoginInput = document.getElementById('last_login');
             const registeredInput = document.getElementById('user_registered');
+            const deleteResultsCheckbox = document.getElementById('delete-results');
+            const backupCheckboxContainer = document.getElementById('backup-checkbox-container');
+            const progressDiv = document.getElementById('delete-progress');
+            const progressFill = document.querySelector('.progress-fill');
+            const progressStatus = document.querySelector('.progress-status');
+            const deletedCount = document.querySelector('.deleted-count');
+            const totalUsersInput = document.getElementById('total-users');
+            const nonceField = document.querySelector('input[name="nonce"]');
 
             function toggleDateFields() {
                 const selected = typeField.value;
@@ -187,7 +210,133 @@ function ronikdesigns_sync_user_admin_page() {
                     lastLoginInput.removeAttribute('name');
                     registeredInput.removeAttribute('name');
                 }
+
+                if (deleteResultsCheckbox.checked) {
+                    e.preventDefault();
+                    startDeleteProcess();
+                }
             });
+
+            function startDeleteProcess() {
+                // Show progress bar
+                progressDiv.style.display = 'block';
+                
+                // Get total users from the table
+                const totalUsers = document.querySelectorAll('.widefat tbody tr').length;
+                totalUsersInput.value = totalUsers;
+                
+                // Start the delete process
+                processBatch(0, 0);
+            }
+
+            function processBatch(offset, totalDeleted) {
+                const batchSize = 100;
+                const totalUsers = parseInt(totalUsersInput.value);
+                const progress = Math.min(100, (offset / totalUsers) * 100);
+                
+                // Update progress bar
+                progressFill.style.width = progress + '%';
+                progressStatus.textContent = `Processing batch ${Math.floor(offset / batchSize) + 1} of ${Math.ceil(totalUsers / batchSize)}...`;
+                deletedCount.textContent = totalDeleted;
+
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('action', 'process_user_batch');
+                formData.append('offset', offset);
+                formData.append('total_deleted', totalDeleted);
+                formData.append('type', form.querySelector('[name="type"]').value);
+                formData.append('last_login', form.querySelector('[name="last_login"]')?.value || '');
+                formData.append('user_registered', form.querySelector('[name="user_registered"]')?.value || '');
+                formData.append('whitelist_domains', form.querySelector('[name="whitelist_domains"]')?.value || '');
+                formData.append('create_backup', form.querySelector('[name="create_backup"]')?.checked ? 'true' : 'false');
+
+                // Log the form data for debugging
+                console.log('=== AJAX Request Debug ===');
+                console.log('URL:', ajaxurl);
+                console.log('Form Data:', {
+                    type: formData.get('type'),
+                    last_login: formData.get('last_login'),
+                    user_registered: formData.get('user_registered'),
+                    whitelist_domains: formData.get('whitelist_domains'),
+                    offset: offset,
+                    total_deleted: totalDeleted,
+                    create_backup: formData.get('create_backup')
+                });
+
+                // Send AJAX request
+                fetch(ajaxurl, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                    
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Error response body:', text);
+                            throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received response:', data);
+                    if (data.success) {
+                        const newTotalDeleted = data.data?.total_deleted || totalDeleted;
+                        
+                        if (data.data?.continue) {
+                            // Add a delay before processing the next batch
+                            const delay = 2000; // 2 seconds delay
+                            progressStatus.textContent = `Batch ${Math.floor(offset / batchSize) + 1} complete. Waiting ${delay/1000} seconds before next batch...`;
+                            
+                            setTimeout(() => {
+                                processBatch(data.data.next_offset, newTotalDeleted);
+                            }, delay);
+                        } else {
+                            // Process complete
+                            progressStatus.textContent = `Deletion complete! Total users deleted: ${newTotalDeleted}`;
+                            progressFill.style.width = '100%';
+                            deletedCount.textContent = newTotalDeleted;
+                            
+                            // Show success message and reload after 5 seconds
+                            const successMessage = document.createElement('div');
+                            successMessage.className = 'notice notice-success';
+                            successMessage.style.padding = '10px';
+                            successMessage.style.margin = '10px 0';
+                            successMessage.innerHTML = `<p>Successfully deleted ${newTotalDeleted} users. Page will reload in 5 seconds...</p>`;
+                            progressDiv.appendChild(successMessage);
+                            
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 5000);
+                        }
+                    } else {
+                        progressStatus.textContent = 'Error: ' + (data.message || 'Unknown error occurred');
+                        console.error('Error response:', data);
+                    }
+                })
+                .catch(error => {
+                    progressStatus.textContent = 'Error: ' + error.message;
+                    console.error('Fetch error:', error);
+                    // Retry after 5 seconds on error
+                    setTimeout(() => {
+                        processBatch(offset, totalDeleted);
+                    }, 5000);
+                });
+            }
+
+            // Add event listener for delete results checkbox
+            deleteResultsCheckbox.addEventListener('change', function() {
+                backupCheckboxContainer.style.display = this.checked ? 'block' : 'none';
+            });
+
+            // Initial state
+            backupCheckboxContainer.style.display = deleteResultsCheckbox.checked ? 'block' : 'none';
         })();
     </script>
 <?php

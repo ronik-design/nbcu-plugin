@@ -13,6 +13,8 @@ class UserSyncHandler {
         error_log("UserSyncHandler constructed.");
         // Enqueue styles to fix table overflow
         add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
+        // Add AJAX handlers
+        add_action('wp_ajax_process_user_batch', [$this, 'ajax_process_user_batch']);
     }
     
     public function enqueue_styles($hook) {
@@ -36,6 +38,178 @@ class UserSyncHandler {
                 margin-top: 10px;
             }
         ');
+    }
+    
+    /**
+     * Handle AJAX request for processing user batches
+     */
+    public function ajax_process_user_batch() {
+        // Verify user permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized access');
+            return;
+        }
+
+        // Get the offset and total deleted count from the request
+        $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+        $total_deleted = isset($_POST['total_deleted']) ? intval($_POST['total_deleted']) : 0;
+        $batch_size = 100;
+
+        // Log the request data
+        error_log('AJAX Processing - Offset: ' . $offset . ', Total Deleted: ' . $total_deleted);
+
+        // Get the form data
+        $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
+        $last_login = isset($_POST['last_login']) ? sanitize_text_field($_POST['last_login']) : '';
+        $user_registered = isset($_POST['user_registered']) ? sanitize_text_field($_POST['user_registered']) : '';
+        $whitelist_domains = isset($_POST['whitelist_domains']) ? sanitize_text_field($_POST['whitelist_domains']) : '';
+        $create_backup = isset($_POST['create_backup']) ? $_POST['create_backup'] === 'true' : false;
+
+        // Process the current batch based on type
+        $args = [
+            'number' => $batch_size,
+            'offset' => $offset,
+            'fields' => 'all_with_meta',
+        ];
+
+        // Add type-specific query conditions
+        switch ($type) {
+            case 'option1':
+                // Inactive + Registered Before
+                if (!empty($user_registered)) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $user_registered,
+                            'inclusive' => true,
+                        ],
+                    ];
+                }
+                if (!empty($last_login)) {
+                    $args['meta_query'] = [
+                        [
+                            'key' => 'last_login',
+                            'value' => $last_login,
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                    ];
+                } else {
+                    $args['meta_query'] = [
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ],
+                    ];
+                }
+                break;
+
+            case 'option2':
+                // Active + No WP3 Access
+                $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'last_login',
+                        'compare' => 'EXISTS',
+                    ],
+                    [
+                        'key' => 'wp3_access',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                ];
+                break;
+
+            case 'option3':
+                // Unconfirmed + Registered Before
+                $args['meta_query'] = [
+                    [
+                        'key' => 'email_verified',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                ];
+                if (!empty($user_registered)) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $user_registered,
+                            'inclusive' => true,
+                        ],
+                    ];
+                }
+                break;
+
+            case 'option4':
+                // Abnormal Email Patterns
+                $args['number'] = -1; // Get all users for pattern matching
+                break;
+
+            default:
+                wp_send_json_error('Invalid query type');
+                return;
+        }
+
+        // Get users for the current batch
+        $user_query = new WP_User_Query($args);
+        $users = $user_query->get_results();
+
+        if (empty($users)) {
+            wp_send_json_success([
+                'continue' => false,
+                'total_deleted' => $total_deleted,
+                'message' => 'All users processed'
+            ]);
+            return;
+        }
+
+        // Prepare batch for deletion
+        $batch = [];
+        foreach ($users as $user) {
+            $batch[] = [
+                'user_id' => $user->ID,
+                'reason' => $this->get_user_reason($user, $type, $last_login, $user_registered)
+            ];
+        }
+
+        // Process the batch
+        $deleted_count = $this->delete_users($batch, $create_backup);
+        if ($deleted_count === false) {
+            wp_send_json_error('Error processing batch');
+            return;
+        }
+
+        // Update total deleted count
+        $total_deleted += $deleted_count;
+
+        // Send response
+        wp_send_json_success([
+            'continue' => true,
+            'next_offset' => $offset + $batch_size,
+            'total_deleted' => $total_deleted,
+            'batch_size' => count($batch),
+            'message' => sprintf('Processed %d users in current batch', count($batch))
+        ]);
+    }
+
+    /**
+     * Get the reason for user deletion based on type
+     */
+    private function get_user_reason($user, $type, $last_login = '', $user_registered = '') {
+        switch ($type) {
+            case 'option1':
+                $last_login_date = get_user_meta($user->ID, 'last_login', true) ?: 'Never';
+                return "Inactive (Last login: $last_login_date), Registered: {$user->user_registered}";
+            
+            case 'option2':
+                $last_login_date = get_user_meta($user->ID, 'last_login', true) ?: 'Unknown';
+                return "Active (Last login: $last_login_date), No WP3 Access";
+            
+            case 'option3':
+                return "Unconfirmed, Registered: {$user->user_registered}";
+            
+            case 'option4':
+                return $this->analyze_user($user, $this->load_bad_words(), $this->get_whitelist_domains([]), $this->load_burner_domains(), ['asdf', 'qwerty', 'zxcvbn', 'abc123', 'password']);
+            
+            default:
+                return 'Unknown reason';
+        }
     }
     
     private function normalize_username($username) {
@@ -151,56 +325,67 @@ class UserSyncHandler {
     
     private function handle_option2($paged, $export, $params, $per_page) {
         // Option 2: Active + No WP3 Access
-        $cache_key = 'sync_option2_' . md5(serialize($params));
-        $cached = get_transient($cache_key);
-        
-        error_log("Checking cache with key: $cache_key");
-        if ($cached !== false) {
-            error_log("Cache hit. Cached results count: " . count($cached));
-            $all_results = $cached;
-        } else {
-            error_log("Cache miss or bypassed. Processing fresh data.");
-            
-            // Assuming 'last_login' exists for active users, and 'wp3_access' meta indicates WP3 access
-            $args = [
-                'number' => -1,
-                'fields' => 'all_with_meta',
-                'meta_query' => [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'last_login',
-                        'compare' => 'EXISTS',
-                    ],
-                    [
-                        'key' => 'wp3_access',
-                        'compare' => 'NOT EXISTS',
-                    ],
+        $args = [
+            'number' => -1,
+            'fields' => 'all_with_meta',
+            'meta_query' => [
+                'relation' => 'AND',
+                [
+                    'key' => 'last_login',
+                    'compare' => 'EXISTS',
                 ],
+                [
+                    'key' => 'wp3_access',
+                    'compare' => 'NOT EXISTS',
+                ],
+            ],
+        ];
+        
+        $user_query = new WP_User_Query($args);
+        $users = $user_query->get_results();
+        $total_users = $user_query->get_total();
+        error_log("Total users in database (option2): $total_users");
+        
+        $all_results = [];
+        foreach ($users as $user) {
+            $last_login_date = get_user_meta($user->ID, 'last_login', true) ?: 'Unknown';
+            $all_results[] = [
+                'user_id' => $user->ID,
+                'user_email' => $user->user_email,
+                'user_login' => $user->user_login,
+                'user_registered' => $user->user_registered,
+                'reason' => "Active (Last login: $last_login_date), No WP3 Access"
             ];
-            
-            $user_query = new WP_User_Query($args);
-            $users = $user_query->get_results();
-            $total_users = $user_query->get_total();
-            error_log("Total users in database (option2): $total_users");
-            
-            $all_results = [];
-            foreach ($users as $user) {
-                $last_login_date = get_user_meta($user->ID, 'last_login', true) ?: 'Unknown';
-                $all_results[$user->ID] = [
-                    'user_id' => $user->ID,
-                    'user_email' => $user->user_email,
-                    'user_login' => $user->user_login,
-                    'user_registered' => $user->user_registered,
-                    'reason' => "Active (Last login: $last_login_date), No WP3 Access"
-                ];
-            }
-            
-            $all_results = array_values($all_results);
-            error_log("Total results (option2): " . count($all_results));
-            set_transient($cache_key, $all_results, HOUR_IN_SECONDS * 6);
         }
         
-        return $this->process_results($all_results, $paged, $export, $per_page);
+        error_log("Total results (option2): " . count($all_results));
+        
+        // For display, paginate the results
+        $offset = ($paged - 1) * $per_page;
+        $paged_results = array_slice($all_results, $offset, $per_page);
+        
+        // Convert stored data back to user objects for rendering
+        $paged_results_with_users = [];
+        foreach ($paged_results as $result) {
+            $user = get_user_by('id', $result['user_id']);
+            if ($user) {
+                $paged_results_with_users[] = [
+                    'user' => $user,
+                    'reason' => $result['reason']
+                ];
+            }
+        }
+        
+        if ($export) {
+            $this->export_csv($paged_results_with_users);
+            // No return needed since export_csv will exit
+        }
+        
+        return [
+            'total' => count($all_results),
+            'results' => $paged_results_with_users,
+            'output' => $this->render_html($paged_results_with_users, count($all_results), $paged)
+        ];
     }
     
     private function handle_option3($paged, $export, $params, $per_page) {
@@ -353,7 +538,7 @@ class UserSyncHandler {
         ];
     }
     
-    public function delete_users($results, $offset = 0, $total_deleted = 0) {
+    public function delete_users($results, $create_backup = false) {
         if (empty($results)) {
             return false;
         }
@@ -362,11 +547,9 @@ class UserSyncHandler {
         $backup_sql = [];
         $timestamp = current_time('mysql');
         
-        // Check if backup is requested
-        $create_backup = isset($_POST['create_backup']) && $_POST['create_backup'] === 'true';
-        
-        // Define bypass domains
+        // Define bypass domains and roles
         $bypass_domains = ['@ronikdesign.com', '@divisionof.com'];
+        $bypass_roles = ['administrator', 'super_admin'];
         
         // Set limit for processing - higher limit when backup is disabled
         $processed_count = 0;
@@ -415,7 +598,7 @@ class UserSyncHandler {
         ];
         
         // Get the current batch of users
-        $current_batch = array_slice($results, $offset, $batch_size);
+        $current_batch = array_slice($results, 0, $batch_size);
         
         foreach ($current_batch as $entry) {
             // Check if we've reached the limit
@@ -424,8 +607,23 @@ class UserSyncHandler {
                 break;
             }
 
-            $user = $entry['user'];
+            $user = get_user_by('id', $entry['user_id']);
             if ($user) {
+                // Check if user is an admin or super admin
+                $user_roles = $user->roles ?? [];
+                $is_admin = false;
+                foreach ($user_roles as $role) {
+                    if (in_array($role, $bypass_roles)) {
+                        $is_admin = true;
+                        error_log("Skipping user {$user->user_email} (admin/super admin)");
+                        break;
+                    }
+                }
+                
+                if ($is_admin) {
+                    continue;
+                }
+
                 // Check if user email is in bypass domains
                 $should_bypass = false;
                 foreach ($bypass_domains as $domain) {
@@ -437,6 +635,20 @@ class UserSyncHandler {
                 }
                 
                 if ($should_bypass) {
+                    continue;
+                }
+
+                // Check for is_ae meta key with value 'Y'
+                $is_ae = get_user_meta($user->ID, 'is_ae', true);
+                if ($is_ae === 'Y') {
+                    error_log("Skipping user {$user->user_email} (is_ae = Y)");
+                    continue;
+                }
+
+                // Check for nbcu_sso_id meta key (any value)
+                $nbcu_sso_id = get_user_meta($user->ID, 'nbcu_sso_id', true);
+                if (!empty($nbcu_sso_id)) {
+                    error_log("Skipping user {$user->user_email} (has nbcu_sso_id)");
                     continue;
                 }
 
@@ -478,9 +690,13 @@ class UserSyncHandler {
                     }
                 }
 
-                if (wp_delete_user($user->ID)) {
+                // Delete user and reassign content to user ID 79304
+                if (wp_delete_user($user->ID, 79304)) {
                     $disabled_count++;
                     $processed_count++;
+                    error_log("Deleted user {$user->user_email} and reassigned content to user ID 79304");
+                } else {
+                    error_log("Failed to delete user {$user->user_email}");
                 }
             }
         }
@@ -526,20 +742,7 @@ class UserSyncHandler {
             error_log("User backup saved to: " . $backup_file);
         }
 
-        // Calculate new offset and total deleted
-        $new_offset = $offset + $batch_size;
-        $total_deleted += $disabled_count;
-
-        // If we have more users to process and haven't hit the max limit
-        if ($new_offset < count($results) && $processed_count < $max_users) {
-            // Add a cooldown period (5 seconds) before processing the next batch
-            sleep(5);
-            
-            // Recursively process the next batch
-            return $this->delete_users($results, $new_offset, $total_deleted);
-        }
-
-        return $total_deleted;
+        return $disabled_count;
     }
     
     private function analyze_user($user, $bad_words, $whitelist_domains, $burner_domains, $spammy_patterns) {
