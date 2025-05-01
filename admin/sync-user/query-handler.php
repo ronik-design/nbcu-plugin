@@ -143,6 +143,9 @@ class UserSyncHandler {
             case 'option4':
                 return $this->analyze_user($user, $this->load_bad_words(), $this->get_whitelist_domains([]), $this->load_burner_domains(), ['asdf', 'qwerty', 'zxcvbn', 'abc123', 'password']);
             
+            case 'option5':
+                return "Archived User";
+            
             default:
                 return 'Unknown reason';
         }
@@ -280,6 +283,31 @@ class UserSyncHandler {
             case 'option4':
                 // Abnormal Email Patterns
                 $args['number'] = -1;
+                break;
+
+            case 'option5':
+                // Target only Archived users
+                $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'account_status',
+                        'value' => 'archived',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'last_login',
+                            'value' => $params['last_login'],
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ]
+                    ]
+                ];
                 break;
         }
 

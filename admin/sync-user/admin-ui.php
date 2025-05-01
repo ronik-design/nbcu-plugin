@@ -100,6 +100,7 @@ function ronikdesigns_sync_user_admin_page() {
                     <option value="option2" <?php selected($type, 'option2'); ?>>Active + No WP3 Access</option>
                     <option value="option3" <?php selected($type, 'option3'); ?>>Unconfirmed + Registered Before</option>
                     <option value="option4" <?php selected($type, 'option4'); ?>>Abnormal Email Patterns</option>
+                    <option value="option5" <?php selected($type, 'option5'); ?>>Target Archived Users</option>
                 </select>
             </p>
 
@@ -156,7 +157,7 @@ function ronikdesigns_sync_user_admin_page() {
             ob_start();
             $output = $result['output'];
             $output = ob_get_clean() . $output;
-            echo '<div class="notice notice-info" style="padding:20px; border-left: 4px solid #2271b1; background: #f0f8ff;">';
+            echo '<div class="notice notice-info" style="padding:20px; border-left: 4px solid #2271b1; background: #f0f8ff;" data-total-users="' . esc_attr($result['total']) . '">';
             echo $output;
             echo '</div>';
 
@@ -204,8 +205,8 @@ function ronikdesigns_sync_user_admin_page() {
                     registeredInput.value = '';
                 } else {
                     dateFields.style.display = 'block';
-                    if (selected === 'option2') {
-                        // For option2, only show last_login field
+                    if (selected === 'option2' || selected === 'option5') {
+                        // For option2 and option5, only show last_login field
                         lastLoginInput.parentElement.style.display = 'block';
                         registeredInput.parentElement.style.display = 'none';
                     } else {
@@ -222,126 +223,163 @@ function ronikdesigns_sync_user_admin_page() {
             toggleDateFields();
 
             form.addEventListener('submit', function (e) {
+                // Handle type field visibility
                 if (typeField.value === 'option2' || typeField.value === 'option4') {
                     lastLoginInput.removeAttribute('name');
                     registeredInput.removeAttribute('name');
                 }
 
+                // Handle delete process
                 if (deleteResultsCheckbox.checked) {
                     e.preventDefault();
-                    startDeleteProcess();
+                    
+                    // First run the query to get results
+                    const formData = new FormData(form);
+                    formData.append('delete_results', 'false'); // Ensure we don't delete yet
+                    
+                    // Show progress bar immediately
+                    progressDiv.style.display = 'block';
+                    progressStatus.textContent = 'Running query to get total users...';
+                    
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        // Create a temporary div to parse the response
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        
+                        // Get the total users from the response
+                        const noticeElement = tempDiv.querySelector('.notice-info');
+                        if (noticeElement) {
+                            const totalUsers = parseInt(noticeElement.getAttribute('data-total-users')) || 0;
+                            if (totalUsers > 0) {
+                                totalUsersInput.value = totalUsers;
+                                console.log('Found total users:', totalUsers);
+                                processBatch(0, 0);
+                            } else {
+                                console.error('No users found to delete');
+                                progressStatus.textContent = 'Error: No users found to delete';
+                            }
+                        } else {
+                            console.error('Could not find results in response');
+                            progressStatus.textContent = 'Error: Could not find results in response';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error running query:', error);
+                        progressStatus.textContent = 'Error: ' + error.message;
+                    });
                 }
             });
 
-            function startDeleteProcess() {
-                // Show progress bar
-                progressDiv.style.display = 'block';
-                
-                // Get total users from the table
-                const totalUsers = document.querySelectorAll('.widefat tbody tr').length;
-                totalUsersInput.value = totalUsers;
-                
-                // Start the delete process
-                processBatch(0, 0);
-            }
-
-            function processBatch(offset, totalDeleted) {
-                const batchSize = 100;
+            function processBatch(offset, processed) {
                 const totalUsers = parseInt(totalUsersInput.value);
-                const progress = Math.min(100, (offset / totalUsers) * 100);
+                const batchSize = 100;
                 
-                // Update progress bar
-                progressFill.style.width = progress + '%';
-                progressStatus.textContent = `Processing batch ${Math.floor(offset / batchSize) + 1} of ${Math.ceil(totalUsers / batchSize)}...`;
-                deletedCount.textContent = totalDeleted;
+                if (processed >= totalUsers) {
+                    progressStatus.textContent = 'Deletion completed!';
+                    return;
+                }
 
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('action', 'process_user_batch');
+                const formData = new FormData(form);
+                formData.append('delete_results', 'true');
                 formData.append('offset', offset);
-                formData.append('total_deleted', totalDeleted);
-                formData.append('type', form.querySelector('[name="type"]').value);
-                formData.append('last_login', form.querySelector('[name="last_login"]')?.value || '');
-                formData.append('user_registered', form.querySelector('[name="user_registered"]')?.value || '');
-                formData.append('whitelist_domains', form.querySelector('[name="whitelist_domains"]')?.value || '');
-                formData.append('create_backup', form.querySelector('[name="create_backup"]')?.checked ? 'true' : 'false');
+                formData.append('batch_size', batchSize);
+                formData.append('action', 'process_user_batch');
+                formData.append('nonce', document.querySelector('input[name="nonce"]').value);
+                formData.append('type', typeField.value);
+                formData.append('last_login', lastLoginInput.value || '');
+                formData.append('user_registered', registeredInput.value || '');
+                formData.append('whitelist_domains', document.querySelector('[name="whitelist_domains"]')?.value || '');
+                formData.append('create_backup', document.querySelector('[name="create_backup"]')?.checked ? 'true' : 'false');
 
-                // Log the form data for debugging
-                console.log('=== AJAX Request Debug ===');
-                console.log('URL:', ajaxurl);
-                console.log('Form Data:', {
-                    type: formData.get('type'),
-                    last_login: formData.get('last_login'),
-                    user_registered: formData.get('user_registered'),
-                    whitelist_domains: formData.get('whitelist_domains'),
-                    offset: offset,
-                    total_deleted: totalDeleted,
-                    create_backup: formData.get('create_backup')
+                console.log('Processing batch:', {
+                    offset,
+                    processed,
+                    totalUsers,
+                    batchSize,
+                    formData: Object.fromEntries(formData.entries())
                 });
 
-                // Send AJAX request
                 fetch(ajaxurl, {
                     method: 'POST',
-                    body: formData,
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    body: formData
                 })
                 .then(response => {
                     console.log('Response status:', response.status);
                     console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-                    
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            console.error('Error response body:', text);
-                            throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
-                        });
-                    }
-                    return response.json();
+                    return response.text().then(text => {
+                        console.log('Raw response:', text);
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('Failed to parse JSON:', e);
+                            throw new Error('Invalid JSON response: ' + text);
+                        }
+                    });
                 })
                 .then(data => {
-                    console.log('Received response:', data);
-                    if (data.success) {
-                        const newTotalDeleted = data.data?.total_deleted || totalDeleted;
+                    console.log('Parsed response:', data);
+                    if (data.success) {                        
+                        // Get the total deleted from the response
+                        const totalDeleted = parseInt(data.data?.total_deleted || 0);
+                        const newProcessed = processed + totalDeleted;
+
+
+                        console.log('test');
+                        console.log(totalDeleted);
+                        console.log(newProcessed);
+
+
+                        // Calculate progress based on the total users that will be deleted
+                        const totalToDelete = parseInt(data.data?.batch_size || totalUsers);
+                        const progress = Math.min(100, Math.round((newProcessed / totalUsers) * 100));
+                        
+
+
+                        console.log(totalToDelete);
+
+
+
+
+                        console.log('Batch result:', {
+                            totalDeleted,
+                            newProcessed,
+                            progress,
+                            totalToDelete,
+                            response: data
+                        });
+
+                        // Update UI
+                        progressFill.style.width = `${progress}%`;
+                        progressStatus.textContent = `Processing... ${newProcessed} of ${totalToDelete} users deleted (${progress}%)`;
+                        deletedCount.textContent = newProcessed;
                         
                         if (data.data?.continue) {
-                            // Add a delay before processing the next batch
-                            const delay = 2000; // 2 seconds delay
-                            progressStatus.textContent = `Batch ${Math.floor(offset / batchSize) + 1} complete. Waiting ${delay/1000} seconds before next batch...`;
-                            
+                            // Add a small delay between batches
                             setTimeout(() => {
-                                processBatch(data.data.next_offset, newTotalDeleted);
-                            }, delay);
+                                processBatch(data.data.next_offset, newProcessed);
+                            }, 1000);
                         } else {
-                            // Process complete
-                            progressStatus.textContent = `Deletion complete! Total users deleted: ${newTotalDeleted}`;
-                            progressFill.style.width = '100%';
-                            deletedCount.textContent = newTotalDeleted;
-                            
-                            // Show success message and reload after 5 seconds
-                            const successMessage = document.createElement('div');
-                            successMessage.className = 'notice notice-success';
-                            successMessage.style.padding = '10px';
-                            successMessage.style.margin = '10px 0';
-                            successMessage.innerHTML = `<p>Successfully deleted ${newTotalDeleted} users. Page will reload in 5 seconds...</p>`;
-                            progressDiv.appendChild(successMessage);
-                            
+                            progressStatus.textContent = 'Deletion completed!';
                             setTimeout(() => {
                                 window.location.reload();
-                            }, 5000);
+                            }, 2000);
                         }
                     } else {
-                        progressStatus.textContent = 'Error: ' + (data.message || 'Unknown error occurred');
-                        console.error('Error response:', data);
+                        console.error('Error in batch:', data);
+                        progressStatus.textContent = 'Error: ' + (data.data?.message || data.message || 'Unknown error occurred');
                     }
                 })
                 .catch(error => {
+                    console.error('Error:', error);
                     progressStatus.textContent = 'Error: ' + error.message;
-                    console.error('Fetch error:', error);
                     // Retry after 5 seconds on error
                     setTimeout(() => {
-                        processBatch(offset, totalDeleted);
+                        processBatch(offset, processed);
                     }, 5000);
                 });
             }
