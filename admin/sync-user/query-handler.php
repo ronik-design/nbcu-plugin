@@ -118,7 +118,7 @@ class UserSyncHandler {
                         'compare' => 'EXISTS',
                     ],
                     [
-                        'key' => 'wp3_access',
+                        'key' => 'wp_3_access',
                         'value' => 'N',
                         'compare' => '='
                     ],
@@ -394,11 +394,11 @@ class UserSyncHandler {
                 [
                     'relation' => 'OR',
                     [
-                        'key' => 'wp3_access',
+                        'key' => 'wp_3_access',
                         'compare' => 'NOT EXISTS',
                     ],
                     [
-                        'key' => 'wp3_access',
+                        'key' => 'wp_3_access',
                         'value' => 'N',
                         'compare' => '='
                     ]
