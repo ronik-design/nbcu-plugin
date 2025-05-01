@@ -123,9 +123,24 @@ class UserSyncHandler {
                         'compare' => '='
                     ],
                     [
-                        'key' => 'account_status',
-                        'value' => 'active',
-                        'compare' => '='
+                        'relation' => 'OR',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'active',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'AND',
+                            [
+                                'key' => 'account_status',
+                                'compare' => 'EXISTS'
+                            ],
+                            [
+                                'key' => 'account_status',
+                                'value' => 'archived',
+                                'compare' => '!='
+                            ]
+                        ]
                     ]
                 ];
                 break;
