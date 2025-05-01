@@ -75,7 +75,7 @@ class UserSyncHandler {
         // Add type-specific query conditions
         switch ($type) {
             case 'option1':
-                // Inactive + Registered Before
+                // Option 1: Inactive + Registered Before
                 if (!empty($user_registered)) {
                     $args['date_query'] = [
                         [
@@ -84,9 +84,17 @@ class UserSyncHandler {
                         ],
                     ];
                 }
-                if (!empty($last_login)) {
-                    $args['meta_query'] = [
-                        'relation' => 'AND',
+
+                // Meta query for account_status and last_login conditions
+                $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'account_status',
+                        'value' => 'archived',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
                         [
                             'key' => 'last_login',
                             'value' => $last_login,
@@ -94,39 +102,11 @@ class UserSyncHandler {
                             'type' => 'DATE',
                         ],
                         [
-                            'relation' => 'OR',
-                            [
-                                'key' => 'account_status',
-                                'value' => 'archived',
-                                'compare' => '='
-                            ],
-                            [
-                                'key' => 'account_status',
-                                'compare' => 'EXISTS'
-                            ]
-                        ]
-                    ];
-                } else {
-                    $args['meta_query'] = [
-                        'relation' => 'AND',
-                        [
                             'key' => 'last_login',
                             'compare' => 'NOT EXISTS',
-                        ],
-                        [
-                            'relation' => 'OR',
-                            [
-                                'key' => 'account_status',
-                                'value' => 'archived',
-                                'compare' => '='
-                            ],
-                            [
-                                'key' => 'account_status',
-                                'compare' => 'EXISTS'
-                            ]
                         ]
-                    ];
-                }
+                    ]
+                ];
                 break;
 
             case 'option2':
@@ -150,16 +130,9 @@ class UserSyncHandler {
                         ]
                     ],
                     [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'account_status',
-                            'value' => 'active',
-                            'compare' => '='
-                        ],
-                        [
-                            'key' => 'account_status',
-                            'compare' => 'NOT EXISTS'
-                        ]
+                        'key' => 'account_status',
+                        'value' => 'active',
+                        'compare' => '='
                     ]
                 ];
                 break;
@@ -168,23 +141,27 @@ class UserSyncHandler {
                 // Unconfirmed + Registered Before
                 $args['meta_query'] = [
                     'relation' => 'OR',
-                    array(
+                    [
                         'key' => 'user_confirmed',
                         'compare' => 'NOT EXISTS'
-                    ),
-                    array(
+                    ],
+                    [
                         'key' => 'user_confirmed',
                         'value' => 'N',
                         'compare' => '='
-                    )
+                    ]
                 ];
-                $args['date_query'] = array(
-                    array(
-                        'before' => $user_registered,
-                        'inclusive' => true,
-                        'column' => 'user_registered'
-                    )
-                );
+
+                // Add date query for user registration
+                if (!empty($user_registered)) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $user_registered,
+                            'inclusive' => true,
+                            'column' => 'user_registered'
+                        ]
+                    ];
+                }
                 break;
 
             case 'option4':
@@ -424,16 +401,9 @@ class UserSyncHandler {
                     ]
                 ],
                 [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'account_status',
-                        'value' => 'active',
-                        'compare' => '='
-                    ],
-                    [
-                        'key' => 'account_status',
-                        'compare' => 'NOT EXISTS'
-                    ]
+                    'key' => 'account_status',
+                    'value' => 'active',
+                    'compare' => '='
                 ]
             ],
         ];
