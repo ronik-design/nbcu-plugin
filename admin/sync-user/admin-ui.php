@@ -112,19 +112,26 @@ function ronikdesigns_sync_user_admin_page() {
             <?php endif; ?>
 
             <div id="date-fields">
-                <p>
-                    <label for="last_login">Last Login Before:</label><br>
-                    <input type="date" name="last_login" id="last_login" value="<?php echo esc_attr($last_login); ?>">
-                </p>
+                <?php if ($type === 'option2') : ?>
+                    <p>
+                        <label for="last_login">Last Login Before:</label><br>
+                        <input type="date" name="last_login" id="last_login" value="<?php echo esc_attr($last_login); ?>">
+                    </p>
+                <?php else : ?>
+                    <p>
+                        <label for="last_login">Last Login Before:</label><br>
+                        <input type="date" name="last_login" id="last_login" value="<?php echo esc_attr($last_login); ?>">
+                    </p>
 
-                <p>
-                    <label for="user_registered">User Registered Before:</label><br>
-                    <input type="date" name="user_registered" id="user_registered" value="<?php echo esc_attr($user_registered); ?>">
-                </p>
+                    <p>
+                        <label for="user_registered">User Registered Before:</label><br>
+                        <input type="date" name="user_registered" id="user_registered" value="<?php echo esc_attr($user_registered); ?>">
+                    </p>
 
-                <small style="color: #666;">
-                    Example Query: <code>last_login < '2018-03-01'</code> and <code>user_registered < '2017-03-01'</code>
-                </small>
+                    <small style="color: #666;">
+                        Example Query: <code>last_login < '2018-03-01'</code> and <code>user_registered < '2017-03-01'</code>
+                    </small>
+                <?php endif; ?>
             </div>
 
             <p>
@@ -189,7 +196,7 @@ function ronikdesigns_sync_user_admin_page() {
 
             function toggleDateFields() {
                 const selected = typeField.value;
-                const hideDates = (selected === 'option2' || selected === 'option4');
+                const hideDates = (selected === 'option4');
 
                 if (hideDates) {
                     dateFields.style.display = 'none';
@@ -197,6 +204,15 @@ function ronikdesigns_sync_user_admin_page() {
                     registeredInput.value = '';
                 } else {
                     dateFields.style.display = 'block';
+                    if (selected === 'option2') {
+                        // For option2, only show last_login field
+                        lastLoginInput.parentElement.style.display = 'block';
+                        registeredInput.parentElement.style.display = 'none';
+                    } else {
+                        // For other options, show both fields
+                        lastLoginInput.parentElement.style.display = 'block';
+                        registeredInput.parentElement.style.display = 'block';
+                    }
                     lastLoginInput.value = '<?= $last_login; ?>';
                     registeredInput.value = '<?= $user_registered; ?>';
                 }

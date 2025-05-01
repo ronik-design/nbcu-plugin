@@ -72,110 +72,15 @@ class UserSyncHandler {
             'fields' => 'all_with_meta',
         ];
 
-        // Add type-specific query conditions
-        switch ($type) {
-            case 'option1':
-                // Option 1: Inactive + Registered Before
-                if (!empty($user_registered)) {
-                    $args['date_query'] = [
-                        [
-                            'before' => $user_registered,
-                            'inclusive' => true,
-                        ],
-                    ];
-                }
+        // Get the type-specific query arguments
+        $type_args = $this->get_query_args($type, [
+            'last_login' => $last_login,
+            'user_registered' => $user_registered,
+            'whitelist_domains' => $whitelist_domains
+        ]);
 
-                // Meta query for account_status and last_login conditions
-                $args['meta_query'] = [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'account_status',
-                        'value' => 'archived',
-                        'compare' => '='
-                    ],
-                    [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'last_login',
-                            'value' => $last_login,
-                            'compare' => '<',
-                            'type' => 'DATE',
-                        ],
-                        [
-                            'key' => 'last_login',
-                            'compare' => 'NOT EXISTS',
-                        ]
-                    ]
-                ];
-                break;
-
-            case 'option2':
-                // Active + No WP3 Access
-                $args['meta_query'] = [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'last_login',
-                        'compare' => 'EXISTS',
-                    ],
-                    [
-                        'key' => 'wp_3_access',
-                        'value' => 'N',
-                        'compare' => '='
-                    ],
-                    [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'account_status',
-                            'value' => 'active',
-                            'compare' => '='
-                        ],
-                        [
-                            'relation' => 'AND',
-                            [
-                                'key' => 'account_status',
-                                'compare' => 'EXISTS'
-                            ],
-                            [
-                                'key' => 'account_status',
-                                'value' => 'archived',
-                                'compare' => '!='
-                            ]
-                        ]
-                    ]
-                ];
-                break;
-
-            case 'option3':
-                // Unconfirmed + Registered Before
-                $args['meta_query'] = [
-                    [
-                        'key' => 'user_confirmed',
-                        'value' => 'N',
-                        'compare' => '='
-                    ]
-                ];
-
-                // Add date query for user registration
-                if (!empty($user_registered)) {
-                    $args['date_query'] = [
-                        [
-                            'before' => $user_registered,
-                            'inclusive' => true,
-                            'column' => 'user_registered'
-                        ]
-                    ];
-                }
-                break;
-
-            case 'option4':
-                // Abnormal Email Patterns
-                $args['number'] = -1; // Get all users for pattern matching
-                break;
-
-            default:
-                wp_send_json_error('Invalid query type');
-                return;
-        }
+        // Merge the batch-specific args with the type-specific args
+        $args = array_merge($args, $type_args);
 
         // Get users for the current batch
         $user_query = new WP_User_Query($args);
@@ -250,6 +155,131 @@ class UserSyncHandler {
         return strtr($username, $this->leet_map);
     }
     
+    /**
+     * Get query arguments based on type and parameters
+     */
+    private function get_query_args($type, $params) {
+        $args = [
+            'number' => -1,
+            'fields' => 'all_with_meta',
+        ];
+
+        switch ($type) {
+            case 'option1':
+                // Inactive + Registered Before
+                if (!empty($params['user_registered'])) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $params['user_registered'],
+                            'inclusive' => true,
+                            'column' => 'user_registered'
+                        ]
+                    ];
+                }
+
+                $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'account_status',
+                        'value' => 'archived',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'last_login',
+                            'value' => $params['last_login'],
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ]
+                    ]
+                ];
+                break;
+
+            case 'option2':
+                // Active + No WP3 Access
+                $meta_query = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'wp_3_access',
+                        'value' => 'N',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'active',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
+                ];
+
+                // Add last_login date condition if provided
+                if (!empty($params['last_login'])) {
+                    $meta_query[] = [
+                        'key' => 'last_login',
+                        'value' => $params['last_login'],
+                        'compare' => '<',
+                        'type' => 'DATE'
+                    ];
+                }
+
+                $args['meta_query'] = $meta_query;
+                break;
+
+            case 'option3':
+                // Unconfirmed + Registered Before
+                $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'user_confirmed',
+                        'value' => 'N',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'last_login',
+                            'value' => $params['last_login'],
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ]
+                    ]
+                ];
+
+                if (!empty($params['user_registered'])) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $params['user_registered'],
+                            'inclusive' => true,
+                            'column' => 'user_registered'
+                        ]
+                    ];
+                }
+                break;
+
+            case 'option4':
+                // Abnormal Email Patterns
+                $args['number'] = -1;
+                break;
+        }
+
+        return $args;
+    }
+
     public function process_sync($params) {
         try {
             $type = sanitize_text_field($params['type'] ?? '');
@@ -260,327 +290,37 @@ class UserSyncHandler {
             error_log("process_sync called with params: " . print_r($params, true));
             error_log("Type: $type, Paged: $paged, Export: " . ($export ? 'true' : 'false') . ", Per Page: $per_page");
 
-            switch ($type) {
-                case 'option1':
-                    return $this->handle_option1($paged, $export, $params, $per_page);
-                case 'option2':
-                    return $this->handle_option2($paged, $export, $params, $per_page);
-                case 'option3':
-                    return $this->handle_option3($paged, $export, $params, $per_page);
-                case 'option4':
-                    return $this->handle_abnormal_emails($paged, $export, $params, $per_page);
-                default:
-                    error_log("Invalid query type: $type");
-                    return ['total' => 0, 'results' => [], 'output' => 'Invalid query type'];
+            // Delete any existing transient for this type
+            $cache_key = 'sync_' . $type . '_' . md5(serialize($params));
+            delete_transient($cache_key);
+            
+            error_log("Cache cleared for key: $cache_key");
+            
+            $args = $this->get_query_args($type, $params);
+            $user_query = new WP_User_Query($args);
+            $users = $user_query->get_results();
+            $total_users = $user_query->get_total();
+            error_log("Total users in database ($type): $total_users");
+            
+            $all_results = [];
+            foreach ($users as $user) {
+                $all_results[$user->ID] = [
+                    'user_id' => $user->ID,
+                    'user_email' => $user->user_email,
+                    'user_login' => $user->user_login,
+                    'user_registered' => $user->user_registered,
+                    'reason' => $this->get_user_reason($user, $type, $params['last_login'] ?? '', $params['user_registered'] ?? '')
+                ];
             }
+            
+            $all_results = array_values($all_results);
+            error_log("Total results ($type): " . count($all_results));
+            
+            return $this->process_results($all_results, $paged, $export, $per_page);
         } catch (Exception $e) {
             error_log("UserSync Error: " . $e->getMessage());
             return ['total' => 0, 'results' => [], 'output' => 'An error occurred'];
         }
-    }
-    
-    private function handle_option1($paged, $export, $params, $per_page) {
-        // Option 1: Inactive + Registered Before
-        $last_login = sanitize_text_field($params['last_login'] ?? '');
-        $user_registered = sanitize_text_field($params['user_registered'] ?? '');
-        
-        $cache_key = 'sync_option1_' . md5(serialize($params));
-        $cached = get_transient($cache_key);
-        
-        error_log("Checking cache with key: $cache_key");
-        if ($cached !== false) {
-            error_log("Cache hit. Cached results count: " . count($cached));
-            $all_results = $cached;
-        } else {
-            error_log("Cache miss or bypassed. Processing fresh data.");
-            
-            $args = [
-                'number' => -1,
-                'fields' => 'all_with_meta',
-            ];
-            
-            // Add date query for user registration
-            if (!empty($user_registered)) {
-                $args['date_query'] = [
-                    [
-                        'before' => $user_registered,
-                        'inclusive' => true,
-                    ],
-                ];
-            }
-            
-            // Add meta query for last login
-            if (!empty($last_login)) {
-                $args['meta_query'] = [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'last_login',
-                        'value' => $last_login,
-                        'compare' => '<',
-                        'type' => 'DATE',
-                    ],
-                    [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'account_status',
-                            'value' => 'archived',
-                            'compare' => '='
-                        ],
-                        [
-                            'key' => 'account_status',
-                            'compare' => 'EXISTS'
-                        ]
-                    ]
-                ];
-            } else {
-                // If no last_login date, assume inactive if last_login doesn't exist
-                $args['meta_query'] = [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'last_login',
-                        'compare' => 'NOT EXISTS',
-                    ],
-                    [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'account_status',
-                            'value' => 'archived',
-                            'compare' => '='
-                        ],
-                        [
-                            'key' => 'account_status',
-                            'compare' => 'EXISTS'
-                        ]
-                    ]
-                ];
-            }
-            
-            $user_query = new WP_User_Query($args);
-            $users = $user_query->get_results();
-            $total_users = $user_query->get_total();
-            error_log("Total users in database (option1): $total_users");
-            
-            $all_results = [];
-            foreach ($users as $user) {
-                $last_login_date = get_user_meta($user->ID, 'last_login', true) ?: 'Never';
-                $all_results[$user->ID] = [
-                    'user_id' => $user->ID,
-                    'user_email' => $user->user_email,
-                    'user_login' => $user->user_login,
-                    'user_registered' => $user->user_registered,
-                    'reason' => "Inactive (Last login: $last_login_date), Registered: {$user->user_registered}"
-                ];
-            }
-            
-            $all_results = array_values($all_results);
-            error_log("Total results (option1): " . count($all_results));
-            set_transient($cache_key, $all_results, HOUR_IN_SECONDS * 6);
-        }
-        
-        return $this->process_results($all_results, $paged, $export, $per_page);
-    }
-    
-    private function handle_option2($paged, $export, $params, $per_page) {
-        // Option 2: Active + No WP3 Access
-        $args = [
-            'number' => -1,
-            'fields' => 'all_with_meta',
-            'meta_query' => [
-                'relation' => 'AND',
-                [
-                    'key' => 'last_login',
-                    'compare' => 'EXISTS',
-                ],
-                [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'wp_3_access',
-                        'compare' => 'NOT EXISTS',
-                    ],
-                    [
-                        'key' => 'wp_3_access',
-                        'value' => 'N',
-                        'compare' => '='
-                    ]
-                ],
-                [
-                    'key' => 'account_status',
-                    'value' => 'active',
-                    'compare' => '='
-                ]
-            ],
-        ];
-        
-        $user_query = new WP_User_Query($args);
-        $users = $user_query->get_results();
-        $total_users = $user_query->get_total();
-        error_log("Total users in database (option2): $total_users");
-        
-        $all_results = [];
-        foreach ($users as $user) {
-            $last_login_date = get_user_meta($user->ID, 'last_login', true) ?: 'Unknown';
-            $all_results[] = [
-                'user_id' => $user->ID,
-                'user_email' => $user->user_email,
-                'user_login' => $user->user_login,
-                'user_registered' => $user->user_registered,
-                'reason' => "Active (Last login: $last_login_date), No WP3 Access"
-            ];
-        }
-        
-        error_log("Total results (option2): " . count($all_results));
-        
-        // For display, paginate the results
-        $offset = ($paged - 1) * $per_page;
-        $paged_results = array_slice($all_results, $offset, $per_page);
-        
-        // Convert stored data back to user objects for rendering
-        $paged_results_with_users = [];
-        foreach ($paged_results as $result) {
-            $user = get_user_by('id', $result['user_id']);
-            if ($user) {
-                $paged_results_with_users[] = [
-                    'user' => $user,
-                    'reason' => $result['reason']
-                ];
-            }
-        }
-        
-        if ($export) {
-            $this->export_csv($paged_results_with_users);
-            // No return needed since export_csv will exit
-        }
-        
-        return [
-            'total' => count($all_results),
-            'results' => $paged_results_with_users,
-            'output' => $this->render_html($paged_results_with_users, count($all_results), $paged)
-        ];
-    }
-    
-    private function handle_option3($paged, $export, $params, $per_page) {
-        // Option 3: Unconfirmed + Registered Before
-        $user_registered = sanitize_text_field($params['user_registered'] ?? '');
-        
-        $cache_key = 'sync_option3_' . md5(serialize($params));
-        $cached = get_transient($cache_key);
-        
-        error_log("Checking cache with key: $cache_key");
-        if ($cached !== false) {
-            error_log("Cache hit. Cached results count: " . count($cached));
-            $all_results = $cached;
-        } else {
-            error_log("Cache miss or bypassed. Processing fresh data.");
-            
-            $args = [
-                'number' => -1,
-                'fields' => 'all_with_meta',
-                'meta_query' => [
-                    'relation' => 'OR',
-                    array(
-                        'key' => 'user_confirmed',
-                        'compare' => 'NOT EXISTS'
-                    ),
-                    array(
-                        'key' => 'user_confirmed',
-                        'value' => 'N',
-                        'compare' => '='
-                    )
-                ],
-            ];
-            
-            // Add date query for user registration
-            if (!empty($user_registered)) {
-                $args['date_query'] = [
-                    [
-                        'before' => $user_registered,
-                        'inclusive' => true,
-                        'column' => 'user_registered'
-                    ]
-                ];
-            }
-            
-            $user_query = new WP_User_Query($args);
-            $users = $user_query->get_results();
-            $total_users = $user_query->get_total();
-            error_log("Total users in database (option3): $total_users");
-            
-            $all_results = [];
-            foreach ($users as $user) {
-                $all_results[$user->ID] = [
-                    'user_id' => $user->ID,
-                    'user_email' => $user->user_email,
-                    'user_login' => $user->user_login,
-                    'user_registered' => $user->user_registered,
-                    'reason' => "Unconfirmed, Registered: {$user->user_registered}"
-                ];
-            }
-            
-            $all_results = array_values($all_results);
-            error_log("Total results (option3): " . count($all_results));
-            set_transient($cache_key, $all_results, HOUR_IN_SECONDS * 6);
-        }
-        
-        return $this->process_results($all_results, $paged, $export, $per_page);
-    }
-    
-    private function handle_abnormal_emails($paged, $export, $params, $per_page) {
-        $cache_key = 'sync_flagged_users_' . md5(serialize($params));
-        $cached = get_transient($cache_key);
-        
-        error_log("Checking cache with key: $cache_key");
-        if ($cached !== false) {
-            error_log("Cache hit. Cached results count: " . count($cached));
-            $all_flagged = $cached;
-        } else {
-            error_log("Cache miss or bypassed. Processing fresh data.");
-            $bad_words = $this->load_bad_words();
-            $whitelist_domains = $this->get_whitelist_domains($params);
-            $burner_domains = $this->load_burner_domains();
-            $spammy_patterns = ['asdf', 'qwerty', 'zxcvbn', 'abc123', 'password'];
-            
-            error_log("Bad words count: " . count($bad_words));
-            error_log("Whitelist domains: " . implode(', ', $whitelist_domains));
-            error_log("Burner domains count: " . count($burner_domains));
-            
-            $all_flagged = [];
-            
-            $user_query = new WP_User_Query([
-                'number' => -1,
-                'fields' => 'all_with_meta',
-            ]);
-            
-            $users = $user_query->get_results();
-            $total_users = $user_query->get_total();
-            error_log("Total users in database: $total_users");
-            
-            if ($total_users == 0) {
-                error_log("No users found in wp_users table.");
-            }
-            
-            foreach ($users as $user) {
-                error_log("Analyzing user ID {$user->ID}: Email: {$user->user_email}");
-                $flags = $this->analyze_user($user, $bad_words, $whitelist_domains, $burner_domains, $spammy_patterns);
-                if (!empty($flags)) {
-                    $all_flagged[$user->ID] = [
-                        'user_id' => $user->ID,
-                        'user_email' => $user->user_email,
-                        'user_login' => $user->user_login,
-                        'user_registered' => $user->user_registered,
-                        'reason' => implode(', ', $flags)
-                    ];
-                    error_log("Flagged user ID {$user->ID}: " . $user->user_email . " - Reasons: " . implode(', ', $flags));
-                } else {
-                    error_log("User ID {$user->ID} not flagged.");
-                }
-            }
-            
-            $all_flagged = array_values($all_flagged);
-            error_log("Total flagged users: " . count($all_flagged));
-            set_transient($cache_key, $all_flagged, HOUR_IN_SECONDS * 6);
-        }
-        
-        return $this->process_results($all_flagged, $paged, $export, $per_page);
     }
     
     private function process_results($all_results, $paged, $export, $per_page) {
