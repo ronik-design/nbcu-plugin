@@ -118,16 +118,9 @@ class UserSyncHandler {
                         'compare' => 'EXISTS',
                     ],
                     [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'wp3_access',
-                            'compare' => 'NOT EXISTS',
-                        ],
-                        [
-                            'key' => 'wp3_access',
-                            'value' => 'N',
-                            'compare' => '='
-                        ]
+                        'key' => 'wp3_access',
+                        'value' => 'N',
+                        'compare' => '='
                     ],
                     [
                         'key' => 'account_status',
@@ -140,11 +133,6 @@ class UserSyncHandler {
             case 'option3':
                 // Unconfirmed + Registered Before
                 $args['meta_query'] = [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'user_confirmed',
-                        'compare' => 'NOT EXISTS'
-                    ],
                     [
                         'key' => 'user_confirmed',
                         'value' => 'N',
