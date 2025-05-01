@@ -86,19 +86,45 @@ class UserSyncHandler {
                 }
                 if (!empty($last_login)) {
                     $args['meta_query'] = [
+                        'relation' => 'AND',
                         [
                             'key' => 'last_login',
                             'value' => $last_login,
                             'compare' => '<',
                             'type' => 'DATE',
                         ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'account_status',
+                                'value' => 'archived',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'account_status',
+                                'compare' => 'EXISTS'
+                            ]
+                        ]
                     ];
                 } else {
                     $args['meta_query'] = [
+                        'relation' => 'AND',
                         [
                             'key' => 'last_login',
                             'compare' => 'NOT EXISTS',
                         ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'account_status',
+                                'value' => 'archived',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'account_status',
+                                'compare' => 'EXISTS'
+                            ]
+                        ]
                     ];
                 }
                 break;
@@ -112,28 +138,53 @@ class UserSyncHandler {
                         'compare' => 'EXISTS',
                     ],
                     [
-                        'key' => 'wp3_access',
-                        'compare' => 'NOT EXISTS',
+                        'relation' => 'OR',
+                        [
+                            'key' => 'wp3_access',
+                            'compare' => 'NOT EXISTS',
+                        ],
+                        [
+                            'key' => 'wp3_access',
+                            'value' => 'N',
+                            'compare' => '='
+                        ]
                     ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'active',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
                 ];
                 break;
 
             case 'option3':
                 // Unconfirmed + Registered Before
                 $args['meta_query'] = [
-                    [
-                        'key' => 'email_verified',
-                        'compare' => 'NOT EXISTS',
-                    ],
+                    'relation' => 'OR',
+                    array(
+                        'key' => 'user_confirmed',
+                        'compare' => 'NOT EXISTS'
+                    ),
+                    array(
+                        'key' => 'user_confirmed',
+                        'value' => 'N',
+                        'compare' => '='
+                    )
                 ];
-                if (!empty($user_registered)) {
-                    $args['date_query'] = [
-                        [
-                            'before' => $user_registered,
-                            'inclusive' => true,
-                        ],
-                    ];
-                }
+                $args['date_query'] = array(
+                    array(
+                        'before' => $user_registered,
+                        'inclusive' => true,
+                        'column' => 'user_registered'
+                    )
+                );
                 break;
 
             case 'option4':
@@ -281,20 +332,46 @@ class UserSyncHandler {
             // Add meta query for last login
             if (!empty($last_login)) {
                 $args['meta_query'] = [
+                    'relation' => 'AND',
                     [
                         'key' => 'last_login',
                         'value' => $last_login,
                         'compare' => '<',
                         'type' => 'DATE',
                     ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'archived',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'compare' => 'EXISTS'
+                        ]
+                    ]
                 ];
             } else {
                 // If no last_login date, assume inactive if last_login doesn't exist
                 $args['meta_query'] = [
+                    'relation' => 'AND',
                     [
                         'key' => 'last_login',
                         'compare' => 'NOT EXISTS',
                     ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'archived',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'compare' => 'EXISTS'
+                        ]
+                    ]
                 ];
             }
             
@@ -335,9 +412,29 @@ class UserSyncHandler {
                     'compare' => 'EXISTS',
                 ],
                 [
-                    'key' => 'wp3_access',
-                    'compare' => 'NOT EXISTS',
+                    'relation' => 'OR',
+                    [
+                        'key' => 'wp3_access',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key' => 'wp3_access',
+                        'value' => 'N',
+                        'compare' => '='
+                    ]
                 ],
+                [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'account_status',
+                        'value' => 'active',
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'account_status',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
             ],
         ];
         
@@ -406,10 +503,16 @@ class UserSyncHandler {
                 'number' => -1,
                 'fields' => 'all_with_meta',
                 'meta_query' => [
-                    [
-                        'key' => 'email_verified',
-                        'compare' => 'NOT EXISTS',
-                    ],
+                    'relation' => 'OR',
+                    array(
+                        'key' => 'user_confirmed',
+                        'compare' => 'NOT EXISTS'
+                    ),
+                    array(
+                        'key' => 'user_confirmed',
+                        'value' => 'N',
+                        'compare' => '='
+                    )
                 ],
             ];
             
@@ -419,7 +522,8 @@ class UserSyncHandler {
                     [
                         'before' => $user_registered,
                         'inclusive' => true,
-                    ],
+                        'column' => 'user_registered'
+                    ]
                 ];
             }
             
