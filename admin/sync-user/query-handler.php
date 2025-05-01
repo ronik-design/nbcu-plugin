@@ -198,6 +198,12 @@ class UserSyncHandler {
                         ]
                     ]
                 ];
+
+                // Debug logging
+                error_log("Option1 Query Parameters:");
+                error_log("user_registered: " . ($params['user_registered'] ?? 'not set'));
+                error_log("last_login: " . ($params['last_login'] ?? 'not set'));
+                error_log("Query Args: " . print_r($args, true));
                 break;
 
             case 'option2':
