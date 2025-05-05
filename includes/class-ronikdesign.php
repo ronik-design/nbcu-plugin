@@ -181,9 +181,14 @@ class Ronikdesign
 		$this->loader->add_action('init', $plugin_admin, 'ronikdesigns_visitor_auditor_functions', 99);
 		$this->loader->add_action('init', $plugin_admin, 'ronikdesigns_sync_user_functions', 99);
 
-		$this->loader->add_action('update option', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
-		$this->loader->add_action('save_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
-		$this->loader->add_action('delete_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+		// $this->loader->add_action('update option', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+        // $this->loader->add_action('save_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+        // $this->loader->add_action('delete_post', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
+		// Add daily cron job
+		if (!wp_next_scheduled('ronikdesigns_daily_csp_cleanup')) {
+			wp_schedule_event(strtotime('tomorrow 00:00:00'), 'daily', 'ronikdesigns_daily_csp_cleanup');
+		}
+		$this->loader->add_action('ronikdesigns_daily_csp_cleanup', $plugin_admin, 'ronikdesigns_delete_custom_csp_transient');
 
 		// $this->loader->add_action('admin_menu', $plugin_admin, 'remove_menus', 99);
 		$this->loader->add_filter('upload_mimes', $plugin_admin, 'roniks_add_svg_mime_types', 99);
