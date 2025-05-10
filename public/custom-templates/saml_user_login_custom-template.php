@@ -53,11 +53,37 @@ $is_local = str_contains($current_host, 'localhost') || str_contains($current_ho
 
 // Handle redirect path
 $sso_post_login_redirect_cookie = null;
+// if (isset($_GET['r']) && $_GET['r']) {
+//     $sso_post_login_redirect_cookie = urldecode($_GET['r']);
+//     // Remove full domain if present, keep path only
+//     $sso_post_login_redirect_cookie = preg_replace('#^https?://[^/]+#', '', $sso_post_login_redirect_cookie);
+// }
+
+
+$sso_post_login_redirect_cookie = null;
+
 if (isset($_GET['r']) && $_GET['r']) {
-    $sso_post_login_redirect_cookie = urldecode($_GET['r']);
-    // Remove full domain if present, keep path only
-    $sso_post_login_redirect_cookie = preg_replace('#^https?://[^/]+#', '', $sso_post_login_redirect_cookie);
+    $raw_redirect = urldecode($_GET['r']);
+    error_log("Original GET r parameter: '$raw_redirect'");
+
+    // Just use the raw value as-is (optional: strip protocol if present)
+    $raw_redirect = preg_replace('#^https?://#', '', $raw_redirect); // optional cleanup
+
+    // Strip trailing slashes or extra junk if needed (optional)
+    $raw_redirect = trim($raw_redirect, '/');
+
+    // Only set if it's still a valid string
+    if (!empty($raw_redirect)) {
+        $sso_post_login_redirect_cookie = $raw_redirect;
+    }
 }
+
+error_log('sso_post_login_redirect_cookie');
+error_log($sso_post_login_redirect_cookie ?? '[NULL]');
+
+
+
+
 
 // Handle wl-register cookie logic
 if (isset($_GET['wl-register']) && $_GET['wl-register']) {

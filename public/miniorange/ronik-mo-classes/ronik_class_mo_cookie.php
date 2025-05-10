@@ -6,7 +6,7 @@ class RonikMoHelperCookieProcessor {
             error_log("⚠️ Headers already sent in $file on line $line");
         }
 
-        
+
         error_log(print_r('cookieSsoGenerator', true));
         error_log(print_r($sso_post_login_redirect_site_origin, true));
         error_log(print_r($sso_post_login_redirect_cookie, true));
@@ -41,12 +41,12 @@ class RonikMoHelperCookieProcessor {
             false, // secure
             false  // httponly
         );
-        
+
         error_log("Cookie set success: " . ($success ? 'YES' : 'NO'));
 
-        
 
-        
+
+
 
 
 
