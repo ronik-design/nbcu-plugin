@@ -419,20 +419,42 @@ class Ronikdesign_Public
 				$_GET[$key] = array_map('sanitize_text_field', $value);
 			} else {
 				switch ($key) {
+
 					case 'r':
-						// Allow relative URLs, sanitize otherwise
+						$value = trim($value);
+					
+						// If it's a relative path (starts with slash), allow it
 						if (strpos($value, '/') === 0) {
-							// It's a relative URL, allow it but escape it to ensure no malicious content
 							$_GET[$key] = esc_url_raw($value, ['http', 'https', '']);
-						} else {
-							// It's a full URL, sanitize it
+						}
+						// If it explicitly starts with http(s), validate it
+						elseif (preg_match('#^https?://#i', $value)) {
 							$_GET[$key] = esc_url_raw($value);
 							if (!filter_var($_GET[$key], FILTER_VALIDATE_URL)) {
-								// Handle invalid full URL
 								$_GET[$key] = '';
 							}
 						}
+						// Otherwise: treat as slug (e.g., 'nbc-sports-landing-page-exp'), sanitize as plain text
+						else {
+							$_GET[$key] = sanitize_title($value);
+						}
 						break;
+
+					
+					// case 'r':
+					// 	// Allow relative URLs, sanitize otherwise
+					// 	if (strpos($value, '/') === 0) {
+					// 		// It's a relative URL, allow it but escape it to ensure no malicious content
+					// 		$_GET[$key] = esc_url_raw($value, ['http', 'https', '']);
+					// 	} else {
+					// 		// It's a full URL, sanitize it
+					// 		$_GET[$key] = esc_url_raw($value);
+					// 		if (!filter_var($_GET[$key], FILTER_VALIDATE_URL)) {
+					// 			// Handle invalid full URL
+					// 			$_GET[$key] = '';
+					// 		}
+					// 	}
+					// 	break;
 					default:
 						// Sanitize general text fields
 						$_GET[$key] = sanitize_text_field($value);
