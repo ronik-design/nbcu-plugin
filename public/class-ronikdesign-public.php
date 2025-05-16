@@ -93,7 +93,7 @@ class Ronikdesign_Public
 
 		 $assets = new Ronikdesign_Assets($this->plugin_name, $this->version, 'public');
 		 $assets->enqueue_style('2', 'assets/dist/main.min.css');
-		 
+
 		// wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/ronikdesign-public.css', array(), $this->version, 'all');
 		// wp_enqueue_style($this->plugin_name . '2', plugin_dir_url(__FILE__) . 'assets/dist/main.min.css', array(), $this->version, 'all');
 	}
@@ -422,7 +422,7 @@ class Ronikdesign_Public
 
 					case 'r':
 						$value = trim($value);
-					
+
 						// If it's a relative path (starts with slash), allow it
 						if (strpos($value, '/') === 0) {
 							$_GET[$key] = esc_url_raw($value, ['http', 'https', '']);
@@ -440,7 +440,7 @@ class Ronikdesign_Public
 						}
 						break;
 
-					
+
 					// case 'r':
 					// 	// Allow relative URLs, sanitize otherwise
 					// 	if (strpos($value, '/') === 0) {
@@ -1056,6 +1056,7 @@ class Ronikdesign_Public
 		}
 		$r_redirect = '/password-reset/?' . http_build_query($f_value, '', '&amp;');
 		wp_redirect(esc_url(home_url($r_redirect)));
+
 		exit;
 	}
 
@@ -1234,7 +1235,7 @@ class Ronikdesign_Public
 					$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
 					wp_redirect(esc_url(home_url($r_redirect)));
 					exit;
-					
+
 				}
 			}
 		}
@@ -1248,7 +1249,7 @@ class Ronikdesign_Public
 				update_user_meta($f_user_id, 'sms_user_phone', $_POST['change-phone-number']);
 
 				error_log(print_r($_POST['bypass-auth-redirect'] , true));
-				
+
 				if (isset($_POST['bypass-auth-redirect']) && $_POST['bypass-auth-redirect']) {
 					// $f_value['auth-select'] = "reset";
 					// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
@@ -1362,11 +1363,11 @@ class Ronikdesign_Public
 							// $r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
 							wp_redirect(home_url($_POST['bypass-auth-redirect']));
 							exit;
-						} else {	
+						} else {
 							// We build a query and redirect back to auth route.
 							$f_value['auth-select'] = "reset";
 							$r_redirect = '/auth/?' . http_build_query($f_value, '', '&amp;');
-			
+
 							// Handle AJAX redirect
 							if (isset($_POST['re-auth-js']) && $_POST['re-auth-js'] == 'RESET') {
 								// Return the redirect URL in the AJAX response
@@ -1375,10 +1376,10 @@ class Ronikdesign_Public
 							// For regular form submissions, use wp_redirect
 							wp_redirect(esc_url(home_url($r_redirect)));
 							exit;
-						}						
+						}
 					}
 				}
-		
+
 
 
 
@@ -1533,7 +1534,7 @@ class Ronikdesign_Public
 				$r_redirect = '/2fa/?' . http_build_query($f_value, '', '&amp;');
 				// We build a query and redirect back to 2fa route.
 				wp_redirect(esc_url(home_url($r_redirect)));
-				exit;	
+				exit;
 			}
 
 			// This is critical we try and catch exceptions. Pretty much this will protect us from critical site errors.

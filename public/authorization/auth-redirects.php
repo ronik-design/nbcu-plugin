@@ -24,22 +24,38 @@ function timeValidationExcution(){
             timeValidationAjax('invalid', 'invalid', 'invalid', true);
             // Throttle the execution.
             setTimeout(() => {
+                let videoPlayState = {
+                    isPlaying: false,
+                    lastTrackedTime: 0
+                };
+
+                function trackVideoPlay(videoName) {
+                    // Prevent duplicate events within 2 seconds
+                    const now = Date.now();
+                    if (now - videoPlayState.lastTrackedTime < 2000) {
+                        return;
+                    }
+                    
+                    if (mixpanel) {
+                        var mp_params = $.extend( true, {}, _mp_page_parms );
+                        mp_params['Video Name'] = videoName;
+                        mixpanel.track('Video Play Started', mp_params);
+                        videoPlayState.lastTrackedTime = now;
+                    }
+                }
+
                 function videoIframeValidation($target){
                     var iframe = $target;
                     var videoPlayer = new Vimeo.Player(iframe);
                     videoPlayer.on('play', function() {
                         console.log('Video is playing');
-                        if (mixpanel) {
-                            var mp_params = $.extend( true, {}, _mp_page_parms );
-                                mp_params['Video Name'] = $('.modal-media__title').text();
-                            mixpanel.track('Video Play Started', mp_params);
-                        }
-                        // alert('Video is playing');
+                        videoPlayState.isPlaying = true;
+                        trackVideoPlay($('.modal-media__title').text());
                         timeValidationAjax('invalid', 'invalid', 'valid', true);
                     });
                     videoPlayer.on('pause', function() {
                         console.log('Video is paused');
-                        // alert('Video is paused');
+                        videoPlayState.isPlaying = false;
                         timeValidationAjax('invalid', 'invalid', 'invalid', true);
                     });
                 }
@@ -77,13 +93,9 @@ function timeValidationExcution(){
                                         let currentClassState = mutation.target.classList.contains(activeClassTarget);
                                         if(prevClassState !== currentClassState)    {
                                             prevClassState = currentClassState;
-                                            if(currentClassState){
+                                            if(currentClassState && videoPlayState.isPlaying){
                                                 console.log("Video is playing");
-                                                if (mixpanel) {
-                                                    var mp_params = $.extend( true, {}, _mp_page_parms );
-                                                        mp_params['Video Name'] = $('.modal-media__title').text();
-                                                    mixpanel.track('Video Play Started', mp_params);
-                                                }
+                                                trackVideoPlay($('.modal-media__title').text());
                                                 timeValidationAjax('invalid', 'invalid', 'valid', true);
                                             } else{
                                                 console.log("Video is not playing");
