@@ -192,7 +192,7 @@ function ronikdesigns_wpb_login_logo()
         }
     </style>
     <div class="video">
-        <iframe id="background-video" src="https://player.vimeo.com/video/391604277?background=1"></iframe>
+        <!-- <iframe id="background-video" src="https://player.vimeo.com/video/391604277?background=1"></iframe> -->
     </div>
 <?php }
 add_action('login_enqueue_scripts', 'ronikdesigns_wpb_login_logo');
