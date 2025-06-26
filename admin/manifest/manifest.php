@@ -14,13 +14,17 @@
     }
     if(!$f_manifest_icons_512x512){
         // Store var as blanks to avoid errors...
-        $f_manifest_icons_512x512['url'] = '';
-        $f_manifest_icons_512x512['mime_type'] = '';
+        $f_manifest_icons_512x512 = array(
+            'url' => '',
+            'mime_type' => ''
+        );
     }
     if(!$f_manifest_icons_144x144){
         // Store var as blanks to avoid errors...
-        $f_manifest_icons_144x144['url'] = '';
-        $f_manifest_icons_144x144['mime_type'] = '';
+        $f_manifest_icons_144x144 = array(
+            'url' => '',
+            'mime_type' => ''
+        );
     }
     $f_array = array(
         "name" => $f_manifest_app_name, 
