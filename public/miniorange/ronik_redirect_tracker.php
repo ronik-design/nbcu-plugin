@@ -1,6 +1,4 @@
-
-<?php 
-
+<?php
 // This creates the cookie bridge page for redirect after setting SSO cookie
 function ronikdesigns_add_sso_cookie_bridge_page() {
     if ( !ronikdesigns_get_page_by_title('sso_cookie_bridge') ) {
