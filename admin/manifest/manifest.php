@@ -57,4 +57,3 @@
     );
     fwrite($random_file, json_encode($f_array, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
     fclose($random_file);
-?>
