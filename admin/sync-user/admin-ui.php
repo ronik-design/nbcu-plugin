@@ -67,6 +67,198 @@ function ronikdesigns_sync_user_admin_page() {
             return;
         }
         
+        // Check if this is the initial query for delete process
+        if (isset($_POST['delete_results']) && $_POST['delete_results'] === 'false') {
+            // This is the initial query to get total users for delete process
+            // Remove delete_results from params to prevent actual deletion
+            $query_params = $_POST;
+            unset($query_params['delete_results']);
+            
+            // Just get the count without processing results
+            $args = [
+                'number' => -1,
+                'fields' => 'all_with_meta',
+            ];
+            
+            // Add type-specific query args
+            switch ($query_params['type']) {
+                case 'option1':
+                    // Inactive + Registered Before
+                    if (!empty($query_params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $query_params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+                    
+                    $args['meta_query'] = [
+                        'relation' => 'AND',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'archived',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $query_params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ]
+                    ];
+                    break;
+
+                case 'option2':
+                    // Active + No WP3 Access
+                    if (!empty($query_params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $query_params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+                    
+                    $args['meta_query'] = [
+                        'relation' => 'AND',
+                        [
+                            'key' => 'wp_3_access',
+                            'value' => 'N',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'account_status',
+                                'value' => 'active',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'account_status',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ]
+                    ];
+                    
+                    if (!empty($query_params['last_login'])) {
+                        $args['meta_query'][] = [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $query_params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ];
+                    }
+                    break;
+
+                case 'option3':
+                    // Unconfirmed + Registered Before
+                    if (!empty($query_params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $query_params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+                    
+                    $args['meta_query'] = [
+                        'relation' => 'AND',
+                        [
+                            'key' => 'user_confirmed',
+                            'value' => 'N',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $query_params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ]
+                    ];
+                    break;
+
+                case 'option4':
+                    // Abnormal Email Patterns - no date filtering needed
+                    $args['number'] = -1;
+                    break;
+
+                case 'option5':
+                    // Target only Archived users
+                    if (!empty($query_params['last_login'])) {
+                        $args['meta_query'] = [
+                            'relation' => 'AND',
+                            [
+                                'key' => 'account_status',
+                                'value' => 'archived',
+                                'compare' => '='
+                            ],
+                            [
+                                'relation' => 'OR',
+                                [
+                                    'key' => 'last_login',
+                                    'value' => $query_params['last_login'],
+                                    'compare' => '<',
+                                    'type' => 'DATE',
+                                ],
+                                [
+                                    'key' => 'last_login',
+                                    'compare' => 'NOT EXISTS',
+                                ]
+                            ]
+                        ];
+                    } else {
+                        $args['meta_query'] = [
+                            [
+                                'key' => 'account_status',
+                                'value' => 'archived',
+                                'compare' => '='
+                            ]
+                        ];
+                    }
+                    break;
+            }
+            
+            $user_query = new WP_User_Query($args);
+            $total_users = $user_query->get_total();
+            
+            // Display the results in the expected format for JavaScript to parse
+            if ($total_users > 0) {
+                echo '<div class="notice notice-info" style="padding:20px; border-left: 4px solid #2271b1; background: #f0f8ff;" data-total-users="' . esc_attr($total_users) . '">';
+                echo '<strong>Found ' . $total_users . ' users for deletion</strong>';
+                echo '</div>';
+            } else {
+                echo '<div class="notice notice-warning" style="padding:20px; border-left: 4px solid #ffb900; background: #fff8e5;">';
+                echo '<strong>No users found matching the criteria</strong>';
+                echo '</div>';
+            }
+            return;
+        }
+        
         // Only run the query if we're not deleting
         $result = $handler->process_sync($_POST);
     }
@@ -113,11 +305,17 @@ function ronikdesigns_sync_user_admin_page() {
             <?php endif; ?>
 
             <div id="date-fields">
+            <?php var_dump($type); ?>
                 <?php if ($type === 'option2') : ?>
                     <p>
                         <label for="last_login">Last Login Before:</label><br>
                         <input type="date" name="last_login" id="last_login" value="<?php echo esc_attr($last_login); ?>">
                     </p>
+                    <p>
+                        <label for="user_registered">User Registered Before:</label><br>
+                        <input type="date" name="user_registered" id="user_registered" value="<?php echo esc_attr($user_registered); ?>">
+                    </p>
+                    
                 <?php else : ?>
                     <p>
                         <label for="last_login">Last Login Before:</label><br>
@@ -205,7 +403,7 @@ function ronikdesigns_sync_user_admin_page() {
                     registeredInput.value = '';
                 } else {
                     dateFields.style.display = 'block';
-                    if (selected === 'option2' || selected === 'option5') {
+                    if (selected === 'option5') {
                         // For option2 and option5, only show last_login field
                         lastLoginInput.parentElement.style.display = 'block';
                         registeredInput.parentElement.style.display = 'none';
@@ -224,7 +422,7 @@ function ronikdesigns_sync_user_admin_page() {
 
             form.addEventListener('submit', function (e) {
                 // Handle type field visibility
-                if (typeField.value === 'option2' || typeField.value === 'option4') {
+                if (typeField.value === 'option4') {
                     lastLoginInput.removeAttribute('name');
                     registeredInput.removeAttribute('name');
                 }
@@ -237,24 +435,40 @@ function ronikdesigns_sync_user_admin_page() {
                     const formData = new FormData(form);
                     formData.append('delete_results', 'false'); // Ensure we don't delete yet
                     
+                    console.log('Initial query form data:', Object.fromEntries(formData.entries()));
+                    console.log('About to make fetch request to:', window.location.href);
+                    
                     // Show progress bar immediately
                     progressDiv.style.display = 'block';
                     progressStatus.textContent = 'Running query to get total users...';
                     
-                    fetch(window.location.href, {
-                        method: 'POST',
-                        body: formData
+                    try {
+                        fetch(window.location.href, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                        console.log('Initial query response status:', response.status);
+                        console.log('Initial query response ok:', response.ok);
+                        console.log('Initial query response headers:', Object.fromEntries(response.headers.entries()));
+                        return response.text();
                     })
-                    .then(response => response.text())
                     .then(html => {
+                        console.log('Initial query response HTML length:', html.length);
+                        console.log('Initial query response HTML:', html.substring(0, 1000)); // First 1000 chars
+                        
                         // Create a temporary div to parse the response
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = html;
                         
                         // Get the total users from the response
                         const noticeElement = tempDiv.querySelector('.notice-info');
+                        console.log('Found notice element:', noticeElement);
+                        
                         if (noticeElement) {
                             const totalUsers = parseInt(noticeElement.getAttribute('data-total-users')) || 0;
+                            console.log('Total users from data attribute:', totalUsers);
+                            
                             if (totalUsers > 0) {
                                 totalUsersInput.value = totalUsers;
                                 console.log('Found total users:', totalUsers);
@@ -265,13 +479,19 @@ function ronikdesigns_sync_user_admin_page() {
                             }
                         } else {
                             console.error('Could not find results in response');
+                            console.log('All elements in response:', tempDiv.querySelectorAll('*'));
                             progressStatus.textContent = 'Error: Could not find results in response';
                         }
                     })
                     .catch(error => {
                         console.error('Error running query:', error);
+                        console.error('Error details:', error);
                         progressStatus.textContent = 'Error: ' + error.message;
                     });
+                    } catch (syncError) {
+                        console.error('Synchronous error before fetch:', syncError);
+                        progressStatus.textContent = 'Error: ' + syncError.message;
+                    }
                 }
             });
 
@@ -279,7 +499,8 @@ function ronikdesigns_sync_user_admin_page() {
                 const totalUsers = parseInt(totalUsersInput.value);
                 const batchSize = 100;
                 
-                if (processed >= totalUsers) {
+                // Only check if we've processed all users if we have a valid total
+                if (totalUsers > 0 && processed >= totalUsers) {
                     progressStatus.textContent = 'Deletion completed!';
                     return;
                 }
@@ -323,6 +544,8 @@ function ronikdesigns_sync_user_admin_page() {
                 })
                 .then(data => {
                     console.log('Parsed response:', data);
+                    console.log('Response success:', data.success);
+                    console.log('Response data:', data.data);
                     if (data.success) {                        
                         // Get the total deleted from the response
                         const totalDeleted = parseInt(data.data?.total_deleted || 0);
@@ -335,7 +558,7 @@ function ronikdesigns_sync_user_admin_page() {
 
 
                         // Calculate progress based on the total users that will be deleted
-                        const totalToDelete = parseInt(data.data?.batch_size || totalUsers);
+                        const totalToDelete = totalUsers; // Use the actual total users, not batch_size
                         const progress = Math.min(100, Math.round((newProcessed / totalUsers) * 100));
                         
 
