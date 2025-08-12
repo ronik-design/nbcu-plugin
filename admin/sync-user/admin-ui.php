@@ -8,7 +8,8 @@ if (!defined('ABSPATH')) {
 add_action('admin_menu', 'ronikdesigns_sync_user_admin_menu');
 add_action('admin_init', 'ronikdesigns_handle_csv_export');
 
-function ronikdesigns_sync_user_admin_menu() {
+function ronikdesigns_sync_user_admin_menu()
+{
     add_menu_page(
         'User Sync Tool',
         'User Sync',
@@ -20,7 +21,8 @@ function ronikdesigns_sync_user_admin_menu() {
     );
 }
 
-function ronikdesigns_handle_csv_export() {
+function ronikdesigns_handle_csv_export()
+{
     // Check for export condition early in the WordPress lifecycle
     if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && isset($_POST['export']) && $_POST['export'] === 'true') {
         // Check user permissions
@@ -37,7 +39,8 @@ function ronikdesigns_handle_csv_export() {
     }
 }
 
-function ronikdesigns_sync_user_admin_page() {
+function ronikdesigns_sync_user_admin_page()
+{
     // Normal page rendering (non-export case)
     $type = $_POST['type'] ?? 'option1';
     $last_login = $_POST['last_login'] ?? '2022-03-27';
@@ -66,20 +69,20 @@ function ronikdesigns_sync_user_admin_page() {
             // Don't run the query again after deletion
             return;
         }
-        
+
         // Check if this is the initial query for delete process
         if (isset($_POST['delete_results']) && $_POST['delete_results'] === 'false') {
             // This is the initial query to get total users for delete process
             // Remove delete_results from params to prevent actual deletion
             $query_params = $_POST;
             unset($query_params['delete_results']);
-            
+
             // Just get the count without processing results
             $args = [
                 'number' => -1,
                 'fields' => 'all_with_meta',
             ];
-            
+
             // Add type-specific query args
             switch ($query_params['type']) {
                 case 'option1':
@@ -93,7 +96,7 @@ function ronikdesigns_sync_user_admin_page() {
                             ]
                         ];
                     }
-                    
+
                     $args['meta_query'] = [
                         'relation' => 'AND',
                         [
@@ -128,7 +131,7 @@ function ronikdesigns_sync_user_admin_page() {
                             ]
                         ];
                     }
-                    
+
                     $args['meta_query'] = [
                         'relation' => 'AND',
                         [
@@ -149,7 +152,7 @@ function ronikdesigns_sync_user_admin_page() {
                             ]
                         ]
                     ];
-                    
+
                     if (!empty($query_params['last_login'])) {
                         $args['meta_query'][] = [
                             'relation' => 'OR',
@@ -178,7 +181,7 @@ function ronikdesigns_sync_user_admin_page() {
                             ]
                         ];
                     }
-                    
+
                     $args['meta_query'] = [
                         'relation' => 'AND',
                         [
@@ -241,11 +244,187 @@ function ronikdesigns_sync_user_admin_page() {
                         ];
                     }
                     break;
+
+
+                case 'option6':
+                    // Target Incomplete Users
+                    if (!empty($query_params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $query_params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+
+
+                    $args['meta_query'] = [
+                        'relation' => 'AND',
+
+
+                        [
+                            'key' => 'user_confirmed',
+                            'value' => 'N',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'account_status',
+                                'value' => 'active',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'account_status',
+                                'value' => 'archived',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'account_status',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ],
+                        [
+                            'relation' => 'AND',
+                            [
+                                'relation' => 'OR',
+                                [
+                                    'key' => 'first_name',
+                                    'compare' => 'NOT EXISTS'
+                                ],
+                                [
+                                    'key' => 'first_name',
+                                    'value' => '',
+                                    'compare' => '='
+                                ]
+                            ],
+                            [
+                                'relation' => 'OR',
+                                [
+                                    'key' => 'last_name',
+                                    'compare' => 'NOT EXISTS'
+                                ],
+                                [
+                                    'key' => 'last_name',
+                                    'value' => '',
+                                    'compare' => '='
+                                ]
+                            ],
+                            [
+                                'relation' => 'OR',
+                                [
+                                    'key' => 'user_title',
+                                    'compare' => 'NOT EXISTS'
+                                ],
+                                [
+                                    'key' => 'user_title',
+                                    'value' => '',
+                                    'compare' => '='
+                                ]
+                            ]
+                        ]
+                    ];
+
+                    if (!empty($query_params['last_login'])) {
+                        $args['meta_query'][] = [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $query_params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ];
+                    }
+                    break;
+
+
+
+
+
+
+
+
+                case 'option7':
+                    // Target Incomplete Users
+                    if (!empty($query_params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $query_params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+
+                    $args['meta_query'] = [
+
+                        'relation' => 'AND',
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'first_name',
+                                'compare' => 'NOT EXISTS'
+                            ],
+                            [
+                                'key' => 'first_name',
+                                'value' => '',
+                                'compare' => '='
+                            ]
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_name',
+                                'compare' => 'NOT EXISTS'
+                            ],
+                            [
+                                'key' => 'last_name',
+                                'value' => '',
+                                'compare' => '='
+                            ]
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'user_title',
+                                'compare' => 'NOT EXISTS'
+                            ],
+                            [
+                                'key' => 'user_title',
+                                'value' => '',
+                                'compare' => '='
+                            ]
+                        ]
+
+                    ];
+
+                    if (!empty($query_params['last_login'])) {
+                        $args['meta_query'][] = [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $query_params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ];
+                    }
+                    break;
             }
-            
+
             $user_query = new WP_User_Query($args);
             $total_users = $user_query->get_total();
-            
+
             // Display the results in the expected format for JavaScript to parse
             if ($total_users > 0) {
                 echo '<div class="notice notice-info" style="padding:20px; border-left: 4px solid #2271b1; background: #f0f8ff;" data-total-users="' . esc_attr($total_users) . '">';
@@ -258,7 +437,7 @@ function ronikdesigns_sync_user_admin_page() {
             }
             return;
         }
-        
+
         // Only run the query if we're not deleting
         $result = $handler->process_sync($_POST);
     }
@@ -293,6 +472,8 @@ function ronikdesigns_sync_user_admin_page() {
                     <option value="option3" <?php selected($type, 'option3'); ?>>Unconfirmed + Registered Before</option>
                     <option value="option4" <?php selected($type, 'option4'); ?>>Abnormal Email Patterns</option>
                     <option value="option5" <?php selected($type, 'option5'); ?>>Target Archived Users</option>
+                    <option value="option6" <?php selected($type, 'option6'); ?>>Target Incomplete Users | Unconfirmed + Registered Before</option>
+                    <option value="option7" <?php selected($type, 'option7'); ?>>Target Incomplete Users</option>
                 </select>
             </p>
 
@@ -305,7 +486,7 @@ function ronikdesigns_sync_user_admin_page() {
             <?php endif; ?>
 
             <div id="date-fields">
-            <?php var_dump($type); ?>
+                <?php var_dump($type); ?>
                 <?php if ($type === 'option2') : ?>
                     <p>
                         <label for="last_login">Last Login Before:</label><br>
@@ -315,7 +496,7 @@ function ronikdesigns_sync_user_admin_page() {
                         <label for="user_registered">User Registered Before:</label><br>
                         <input type="date" name="user_registered" id="user_registered" value="<?php echo esc_attr($user_registered); ?>">
                     </p>
-                    
+
                 <?php else : ?>
                     <p>
                         <label for="last_login">Last Login Before:</label><br>
@@ -328,7 +509,7 @@ function ronikdesigns_sync_user_admin_page() {
                     </p>
 
                     <small style="color: #666;">
-                        Example Query: <code>last_login < '2018-03-01'</code> and <code>user_registered < '2017-03-01'</code>
+                        Example Query: <code>last_login < '2018-03-01' </code> and <code>user_registered < '2017-03-01' </code>
                     </small>
                 <?php endif; ?>
             </div>
@@ -336,15 +517,15 @@ function ronikdesigns_sync_user_admin_page() {
             <p>
                 <label><input type="checkbox" name="export" value="true" <?php checked($export, 'true'); ?>> Export as CSV</label>
             </p>
-  
+
             <p>
                 <label><input type="checkbox" name="delete_results" value="true" id="delete-results"> Delete results after display</label>
             </p>
-            
+
             <p id="backup-checkbox-container" style="display: none;">
                 <label><input type="checkbox" name="create_backup" value="true" <?php checked(isset($_POST['create_backup']) && $_POST['create_backup'] === 'true', true); ?>> Create backup SQL before deletion</label>
             </p>
-            
+
             <p class="submit">
                 <input type="submit" name="submit" id="submit" class="button button-primary" value="Run Query">
             </p>
@@ -378,7 +559,7 @@ function ronikdesigns_sync_user_admin_page() {
     </div>
 
     <script>
-        (function () {
+        (function() {
             const typeField = document.getElementById('type');
             const form = document.getElementById('sync-form');
             const dateFields = document.getElementById('date-fields');
@@ -420,7 +601,7 @@ function ronikdesigns_sync_user_admin_page() {
             typeField.addEventListener('change', toggleDateFields);
             toggleDateFields();
 
-            form.addEventListener('submit', function (e) {
+            form.addEventListener('submit', function(e) {
                 // Handle type field visibility
                 if (typeField.value === 'option4') {
                     lastLoginInput.removeAttribute('name');
@@ -430,64 +611,64 @@ function ronikdesigns_sync_user_admin_page() {
                 // Handle delete process
                 if (deleteResultsCheckbox.checked) {
                     e.preventDefault();
-                    
+
                     // First run the query to get results
                     const formData = new FormData(form);
                     formData.append('delete_results', 'false'); // Ensure we don't delete yet
-                    
+
                     console.log('Initial query form data:', Object.fromEntries(formData.entries()));
                     console.log('About to make fetch request to:', window.location.href);
-                    
+
                     // Show progress bar immediately
                     progressDiv.style.display = 'block';
                     progressStatus.textContent = 'Running query to get total users...';
-                    
+
                     try {
                         fetch(window.location.href, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => {
-                        console.log('Initial query response status:', response.status);
-                        console.log('Initial query response ok:', response.ok);
-                        console.log('Initial query response headers:', Object.fromEntries(response.headers.entries()));
-                        return response.text();
-                    })
-                    .then(html => {
-                        console.log('Initial query response HTML length:', html.length);
-                        console.log('Initial query response HTML:', html.substring(0, 1000)); // First 1000 chars
-                        
-                        // Create a temporary div to parse the response
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = html;
-                        
-                        // Get the total users from the response
-                        const noticeElement = tempDiv.querySelector('.notice-info');
-                        console.log('Found notice element:', noticeElement);
-                        
-                        if (noticeElement) {
-                            const totalUsers = parseInt(noticeElement.getAttribute('data-total-users')) || 0;
-                            console.log('Total users from data attribute:', totalUsers);
-                            
-                            if (totalUsers > 0) {
-                                totalUsersInput.value = totalUsers;
-                                console.log('Found total users:', totalUsers);
-                                processBatch(0, 0);
-                            } else {
-                                console.error('No users found to delete');
-                                progressStatus.textContent = 'Error: No users found to delete';
-                            }
-                        } else {
-                            console.error('Could not find results in response');
-                            console.log('All elements in response:', tempDiv.querySelectorAll('*'));
-                            progressStatus.textContent = 'Error: Could not find results in response';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error running query:', error);
-                        console.error('Error details:', error);
-                        progressStatus.textContent = 'Error: ' + error.message;
-                    });
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => {
+                                console.log('Initial query response status:', response.status);
+                                console.log('Initial query response ok:', response.ok);
+                                console.log('Initial query response headers:', Object.fromEntries(response.headers.entries()));
+                                return response.text();
+                            })
+                            .then(html => {
+                                console.log('Initial query response HTML length:', html.length);
+                                console.log('Initial query response HTML:', html.substring(0, 1000)); // First 1000 chars
+
+                                // Create a temporary div to parse the response
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = html;
+
+                                // Get the total users from the response
+                                const noticeElement = tempDiv.querySelector('.notice-info');
+                                console.log('Found notice element:', noticeElement);
+
+                                if (noticeElement) {
+                                    const totalUsers = parseInt(noticeElement.getAttribute('data-total-users')) || 0;
+                                    console.log('Total users from data attribute:', totalUsers);
+
+                                    if (totalUsers > 0) {
+                                        totalUsersInput.value = totalUsers;
+                                        console.log('Found total users:', totalUsers);
+                                        processBatch(0, 0);
+                                    } else {
+                                        console.error('No users found to delete');
+                                        progressStatus.textContent = 'Error: No users found to delete';
+                                    }
+                                } else {
+                                    console.error('Could not find results in response');
+                                    console.log('All elements in response:', tempDiv.querySelectorAll('*'));
+                                    progressStatus.textContent = 'Error: Could not find results in response';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error running query:', error);
+                                console.error('Error details:', error);
+                                progressStatus.textContent = 'Error: ' + error.message;
+                            });
                     } catch (syncError) {
                         console.error('Synchronous error before fetch:', syncError);
                         progressStatus.textContent = 'Error: ' + syncError.message;
@@ -498,7 +679,7 @@ function ronikdesigns_sync_user_admin_page() {
             function processBatch(offset, processed) {
                 const totalUsers = parseInt(totalUsersInput.value);
                 const batchSize = 100;
-                
+
                 // Only check if we've processed all users if we have a valid total
                 if (totalUsers > 0 && processed >= totalUsers) {
                     progressStatus.textContent = 'Deletion completed!';
@@ -526,85 +707,85 @@ function ronikdesigns_sync_user_admin_page() {
                 });
 
                 fetch(ajaxurl, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-                    return response.text().then(text => {
-                        console.log('Raw response:', text);
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            console.error('Failed to parse JSON:', e);
-                            throw new Error('Invalid JSON response: ' + text);
-                        }
-                    });
-                })
-                .then(data => {
-                    console.log('Parsed response:', data);
-                    console.log('Response success:', data.success);
-                    console.log('Response data:', data.data);
-                    if (data.success) {                        
-                        // Get the total deleted from the response
-                        const totalDeleted = parseInt(data.data?.total_deleted || 0);
-                        const newProcessed = processed + totalDeleted;
-
-
-                        console.log('test');
-                        console.log(totalDeleted);
-                        console.log(newProcessed);
-
-
-                        // Calculate progress based on the total users that will be deleted
-                        const totalToDelete = totalUsers; // Use the actual total users, not batch_size
-                        const progress = Math.min(100, Math.round((newProcessed / totalUsers) * 100));
-                        
-
-
-                        console.log(totalToDelete);
-
-
-
-
-                        console.log('Batch result:', {
-                            totalDeleted,
-                            newProcessed,
-                            progress,
-                            totalToDelete,
-                            response: data
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                        return response.text().then(text => {
+                            console.log('Raw response:', text);
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.error('Failed to parse JSON:', e);
+                                throw new Error('Invalid JSON response: ' + text);
+                            }
                         });
+                    })
+                    .then(data => {
+                        console.log('Parsed response:', data);
+                        console.log('Response success:', data.success);
+                        console.log('Response data:', data.data);
+                        if (data.success) {
+                            // Get the total deleted from the response
+                            const totalDeleted = parseInt(data.data?.total_deleted || 0);
+                            const newProcessed = processed + totalDeleted;
 
-                        // Update UI
-                        progressFill.style.width = `${progress}%`;
-                        progressStatus.textContent = `Processing... ${newProcessed} of ${totalToDelete} users deleted (${progress}%)`;
-                        deletedCount.textContent = newProcessed;
-                        
-                        if (data.data?.continue) {
-                            // Add a small delay between batches
-                            setTimeout(() => {
-                                processBatch(data.data.next_offset, newProcessed);
-                            }, 1000);
+
+                            console.log('test');
+                            console.log(totalDeleted);
+                            console.log(newProcessed);
+
+
+                            // Calculate progress based on the total users that will be deleted
+                            const totalToDelete = totalUsers; // Use the actual total users, not batch_size
+                            const progress = Math.min(100, Math.round((newProcessed / totalUsers) * 100));
+
+
+
+                            console.log(totalToDelete);
+
+
+
+
+                            console.log('Batch result:', {
+                                totalDeleted,
+                                newProcessed,
+                                progress,
+                                totalToDelete,
+                                response: data
+                            });
+
+                            // Update UI
+                            progressFill.style.width = `${progress}%`;
+                            progressStatus.textContent = `Processing... ${newProcessed} of ${totalToDelete} users deleted (${progress}%)`;
+                            deletedCount.textContent = newProcessed;
+
+                            if (data.data?.continue) {
+                                // Add a small delay between batches
+                                setTimeout(() => {
+                                    processBatch(data.data.next_offset, newProcessed);
+                                }, 1000);
+                            } else {
+                                progressStatus.textContent = 'Deletion completed!';
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 2000);
+                            }
                         } else {
-                            progressStatus.textContent = 'Deletion completed!';
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 2000);
+                            console.error('Error in batch:', data);
+                            progressStatus.textContent = 'Error: ' + (data.data?.message || data.message || 'Unknown error occurred');
                         }
-                    } else {
-                        console.error('Error in batch:', data);
-                        progressStatus.textContent = 'Error: ' + (data.data?.message || data.message || 'Unknown error occurred');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    progressStatus.textContent = 'Error: ' + error.message;
-                    // Retry after 5 seconds on error
-                    setTimeout(() => {
-                        processBatch(offset, processed);
-                    }, 5000);
-                });
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        progressStatus.textContent = 'Error: ' + error.message;
+                        // Retry after 5 seconds on error
+                        setTimeout(() => {
+                            processBatch(offset, processed);
+                        }, 5000);
+                    });
             }
 
             // Add event listener for delete results checkbox

@@ -151,6 +151,12 @@ class UserSyncHandler
             case 'option5':
                 return "Archived User";
 
+            case 'option6':
+                return "Incomplete User";
+
+            case 'option7':
+                return "Incomplete User | No First Name, Last Name, or Title";
+
             default:
                 return 'Unknown reason';
         }
@@ -340,6 +346,112 @@ class UserSyncHandler
                     ]
                 ];
                 break;
+
+            case 'option6':
+                // Target only Incomplete users - Optimized for performance
+                if (!empty($params['user_registered'])) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $params['user_registered'],
+                            'inclusive' => true,
+                            'column' => 'user_registered'
+                        ]
+                    ];
+                }
+
+                // Simplified meta query for better performance
+                $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'user_confirmed',
+                        'value' => 'N',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'account_status',
+                            'value' => 'active',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'value' => 'archived',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
+                ];
+
+                // Add last_login check if provided
+                if (!empty($params['last_login'])) {
+                    $args['meta_query'][] = [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'last_login',
+                            'value' => $params['last_login'],
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ]
+                    ];
+                }
+
+
+
+                break;
+
+
+
+
+
+
+
+
+
+
+
+
+            case 'option7':
+                // Target only Incomplete users - Optimized for performance
+                if (!empty($params['user_registered'])) {
+                    $args['date_query'] = [
+                        [
+                            'before' => $params['user_registered'],
+                            'inclusive' => true,
+                            'column' => 'user_registered'
+                        ]
+                    ];
+                }
+
+                // Simplified meta query for better performance
+                // No complex meta query - we'll filter in PHP after the initial query
+                $args['meta_query'] = [];
+
+                // Add last_login check if provided
+                if (!empty($params['last_login'])) {
+                    $args['meta_query'][] = [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'last_login',
+                            'value' => $params['last_login'],
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ]
+                    ];
+                }
+
+                break;
         }
 
         return $args;
@@ -368,6 +480,34 @@ class UserSyncHandler
             $users = $user_query->get_results();
             $total_users = $user_query->get_total();
             error_log("Total users in database ($type): $total_users");
+
+            // For option6 and option7, filter for incomplete profiles after the initial query
+            if ($type === 'option6' || $type === 'option7') {
+                $filtered_users = [];
+                error_log("Filtering users for $type");
+
+                error_log("Users: " . print_r(count($users), true));
+
+                if (!empty($users)) {
+                    error_log("Users: " . print_r($users[0], true));
+                }
+
+                foreach ($users as $user) {
+                    $first_name = get_user_meta($user->ID, 'first_name', true);
+                    $last_name = get_user_meta($user->ID, 'last_name', true);
+                    // $user_title = get_user_meta($user->ID, 'user_title', true);
+
+                    // Check if ALL THREE fields are missing or empty
+                    if ((empty($first_name) || $first_name === '') &&
+                        (empty($last_name) || $last_name === '')
+                    ) {
+                        $filtered_users[] = $user;
+                    }
+                }
+                $users = $filtered_users;
+                $total_users = count($users);
+                error_log("After profile filtering ($type): $total_users users with incomplete profiles");
+            }
 
             $all_results = [];
             foreach ($users as $user) {
