@@ -157,6 +157,9 @@ class UserSyncHandler
             case 'option7':
                 return "Incomplete User | No First Name, Last Name, or Title";
 
+            case 'option8':
+                return "Active User | Confirmed + WP3 Access + Registered Before";
+
             default:
                 return 'Unknown reason';
         }
@@ -452,6 +455,67 @@ class UserSyncHandler
                 }
 
                 break;
+
+
+
+                case 'option8':
+                    // Active + Registered Before
+                    if (!empty($params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+
+                    $args['meta_query'] = [
+                        'relation' => 'AND',
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'user_confirmed',
+                                'value' => 'Y',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'user_confirmed',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'wp_3_access',
+                                'value' => 'Y',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'wp_3_access',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'value' => 'active',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ]
+                    ];
+                    break;
         }
 
         return $args;
@@ -516,6 +580,10 @@ class UserSyncHandler
                     'user_email' => $user->user_email,
                     'user_login' => $user->user_login,
                     'user_registered' => $user->user_registered,
+                    'user_confirmed' => $user->user_confirmed,
+                    'wp_3_access' => $user->wp_3_access,
+                    'account_status' => $user->account_status,
+                    'last_login' => $user->last_login,
                     'reason' => $this->get_user_reason($user, $type, $params['last_login'] ?? '', $params['user_registered'] ?? '')
                 ];
             }
@@ -986,7 +1054,7 @@ class UserSyncHandler
         }
 
         // Write CSV headers
-        fputcsv($out, ['ID', 'Email', 'Username', 'Registered', 'Reason', 'User Whitelisted', 'Account Status']);
+        fputcsv($out, ['ID', 'Email', 'Username', 'Registered', 'Confirmed', 'WP3 Access', 'Account Status', 'Last Login', 'Reason', 'User Whitelisted', 'Account Status']);
 
         // Write each user row
         foreach ($results as $entry) {
@@ -996,6 +1064,10 @@ class UserSyncHandler
                 $user->user_email,
                 $user->user_login,
                 $user->user_registered,
+                $user->user_confirmed,
+                $user->wp_3_access,
+                $user->account_status,
+                $user->last_login,
                 $entry['reason'],
                 'Whitelisted: ' . $user->user_whitelisted . ' wp_3_access: ' . $user->wp_3_access,
                 ($user->account_status) ? ($user->account_status) : ('Active')
@@ -1012,7 +1084,7 @@ class UserSyncHandler
         $output = "<strong>Found $total matching users</strong><br><br>";
         if (!empty($results)) {
             $output .= "<table class='widefat fixed striped'><thead><tr>";
-            $output .= "<th>ID</th><th>Email</th><th>Username</th><th>Registered</th><th>Reason</th><th>User Whitelisted</th><th>Account Status </th></tr></thead><tbody>";
+            $output .= "<th>ID</th><th>Email</th><th>Username</th><th>Registered</th><th>Confirmed</th><th>WP3 Access</th><th>Account Status</th><th>Last Login</th><th>Reason</th><th>User Whitelisted</th><th>Account Status </th></tr></thead><tbody>";
             foreach ($results as $entry) {
                 $user = $entry['user'];
                 $reason_html = "<span style='color:red;font-weight:bold;'>" . esc_html($entry['reason']) . "</span>";
@@ -1021,6 +1093,10 @@ class UserSyncHandler
                 $output .= "<td>" . esc_html($user->user_email) . "</td>";
                 $output .= "<td>" . esc_html($user->user_login) . "</td>";
                 $output .= "<td>" . esc_html($user->user_registered) . "</td>";
+                $output .= "<td>" . esc_html($user->user_confirmed) . "</td>";
+                $output .= "<td>" . esc_html($user->wp_3_access) . "</td>";
+                $output .= "<td>" . esc_html($user->account_status) . "</td>";
+                $output .= "<td>" . esc_html($user->last_login) . "</td>";
                 $output .= "<td>$reason_html</td>";
                 $output .= "<td>" . esc_html('Whitelisted: ' . $user->user_whitelisted . '
                     wp_3_access: ' . $user->wp_3_access) . "</td>";

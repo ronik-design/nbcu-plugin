@@ -420,6 +420,65 @@ function ronikdesigns_sync_user_admin_page()
                         ];
                     }
                     break;
+
+                case 'option8':
+                    // Active + Registered Before
+                    if (!empty($query_params['user_registered'])) {
+                        $args['date_query'] = [
+                            [
+                                'before' => $query_params['user_registered'],
+                                'inclusive' => true,
+                                'column' => 'user_registered'
+                            ]
+                        ];
+                    }
+
+                    $args['meta_query'] = [
+                        'relation' => 'AND',
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'user_confirmed',
+                                'value' => 'Y',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'user_confirmed',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'wp_3_access',
+                                'value' => 'Y',
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'wp_3_access',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ],
+                        [
+                            'key' => 'account_status',
+                            'value' => 'active',
+                            'compare' => '='
+                        ],
+                        [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'last_login',
+                                'value' => $query_params['last_login'],
+                                'compare' => '<',
+                                'type' => 'DATE',
+                            ],
+                            [
+                                'key' => 'last_login',
+                                'compare' => 'NOT EXISTS',
+                            ]
+                        ]
+                    ];
+                    break;
             }
 
             $user_query = new WP_User_Query($args);
@@ -474,6 +533,8 @@ function ronikdesigns_sync_user_admin_page()
                     <option value="option5" <?php selected($type, 'option5'); ?>>Target Archived Users</option>
                     <option value="option6" <?php selected($type, 'option6'); ?>>Target Incomplete Users | Unconfirmed + Registered Before</option>
                     <option value="option7" <?php selected($type, 'option7'); ?>>Target Incomplete Users</option>
+                    <option value="option8" <?php selected($type, 'option8'); ?>>Active + Confirmed + WP3 Access + Registered Before</option>
+
                 </select>
             </p>
 
