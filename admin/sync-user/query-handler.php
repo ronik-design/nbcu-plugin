@@ -470,51 +470,55 @@ class UserSyncHandler
                         ];
                     }
 
-                    $args['meta_query'] = [
-                        'relation' => 'AND',
+                                    $args['meta_query'] = [
+                    'relation' => 'AND',
+                    [
+                        'relation' => 'OR',
                         [
-                            'relation' => 'OR',
-                            [
-                                'key' => 'user_confirmed',
-                                'value' => 'Y',
-                                'compare' => '='
-                            ],
-                            [
-                                'key' => 'user_confirmed',
-                                'compare' => 'NOT EXISTS'
-                            ]
-                        ],
-                        [
-                            'relation' => 'OR',
-                            [
-                                'key' => 'wp_3_access',
-                                'value' => 'Y',
-                                'compare' => '='
-                            ],
-                            [
-                                'key' => 'wp_3_access',
-                                'compare' => 'NOT EXISTS'
-                            ]
-                        ],
-                        [
-                            'key' => 'account_status',
-                            'value' => 'active',
+                            'key' => 'user_confirmed',
+                            'value' => 'Y',
                             'compare' => '='
                         ],
                         [
-                            'relation' => 'OR',
-                            [
-                                'key' => 'last_login',
-                                'value' => $params['last_login'],
-                                'compare' => '<',
-                                'type' => 'DATE',
-                            ],
-                            [
-                                'key' => 'last_login',
-                                'compare' => 'NOT EXISTS',
-                            ]
+                            'key' => 'user_confirmed',
+                            'compare' => 'NOT EXISTS'
                         ]
-                    ];
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'wp_3_access',
+                            'value' => 'Y',
+                            'compare' => '='
+                        ],
+                        [
+                            'key' => 'wp_3_access',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ],
+                    [
+                        'key' => 'account_status',
+                        'value' => 'active',
+                        'compare' => '='
+                    ],
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'last_login',
+                            'value' => $params['last_login'],
+                            'compare' => '<',
+                            'type' => 'DATE',
+                        ],
+                        [
+                            'key' => 'last_login',
+                            'compare' => 'NOT EXISTS',
+                        ]
+                    ],
+                    [
+                        'key' => 'nbcu_sso_id',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ];
                     break;
         }
 

@@ -476,6 +476,10 @@ function ronikdesigns_sync_user_admin_page()
                                 'key' => 'last_login',
                                 'compare' => 'NOT EXISTS',
                             ]
+                        ],
+                        [
+                            'key' => 'nbcu_sso_id',
+                            'compare' => 'NOT EXISTS'
                         ]
                     ];
                     break;
