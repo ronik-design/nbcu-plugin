@@ -113,10 +113,22 @@ class RonikMoHelper{
                 update_user_meta($user_id, 'user_phone', $phone);
             }
         }
-        // Update SSO ID if not already set
-        if (empty(get_user_meta($user_id, 'nbcu_sso_id', true))) {
+
+        // Update SSO ID if it's different
+        $current_sso = get_user_meta($user_id, 'nbcu_sso_id', true);    
+        if (empty($current_sso) || $current_sso !== $sso_id) {
             update_user_meta($user_id, 'nbcu_sso_id', $sso_id);
         }
+        // Update first and last name if they are empty or different
+        $current_first_name = get_user_meta($user_id, 'first_name', true);
+        if (empty($current_first_name) || $current_first_name !== $firstname) {
+            update_user_meta($user_id, 'first_name', $firstname);
+        }
+        $current_last_name = get_user_meta($user_id, 'last_name', true);
+        if (empty($current_last_name) || $current_last_name !== $lastname) {
+            update_user_meta($user_id, 'last_name', $lastname);
+        }
+
     }
 
 
@@ -127,7 +139,9 @@ class RonikMoHelper{
             update_user_meta($user_id, "user_company", $user_data["company"]);
             update_user_meta($user_id, "nbcu_sso_id", $sso_id);
             update_user_meta($user_id, "user_title", $user_data["title"]);
-            update_user_meta($user_id, "user_phone", $user_data["phone"]);
+            update_user_meta($user_id, "user_phone", $user_data["phone"]);            
+            update_user_meta($user_id, "first_name", $user_data["firstname"]);
+            update_user_meta($user_id, "last_name", $user_data["lastname"]);
         }
         return $user_id;
     }
