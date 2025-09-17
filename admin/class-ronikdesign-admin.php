@@ -57,8 +57,8 @@ class Ronikdesign_Admin
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
-		        // Include UserSyncHandler early to ensure it's available for admin_init
-				require_once dirname(__FILE__) . '/sync-user/query-handler.php';
+		// Include UserSyncHandler early to ensure it's available for admin_init
+		require_once dirname(__FILE__) . '/sync-user/query-handler.php';
 	}
 
 	/**
@@ -89,7 +89,6 @@ class Ronikdesign_Admin
 		$admin_css_version = file_exists($admin_css_path) ? filemtime($admin_css_path) : $this->version;
 
 		wp_enqueue_style($this->plugin_name, $admin_css_url, [], $admin_css_version, 'all');
-
 	}
 
 	/**
@@ -173,13 +172,11 @@ class Ronikdesign_Admin
 		if (!wp_script_is('jquery', 'enqueued')) {
 			wp_enqueue_script($this->plugin_name . 'jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js', [], null, true);
 			$scriptName = $this->plugin_name . 'jquery';
-		
+
 			$assets->enqueue_script('-acf', 'js/acf/admin.js', [$scriptName], false);
 		} else {
 			$assets->enqueue_script('-acf', 'js/acf/admin.js', [], false);
 		}
-		
-
 	}
 
 
@@ -218,46 +215,49 @@ class Ronikdesign_Admin
 	}
 
 	//* delete transient
-	function ronikdesigns_delete_custom_csp_transient(){
+	function ronikdesigns_delete_custom_csp_transient()
+	{
 		delete_transient('csp_allow_fonts_scripts_santized');
 		delete_transient('csp_allow_scripts_santized');
 	}
 
 
 
-	    /**
-     * Handle CSV export early in the WordPress lifecycle.
-     *
-     * @since    1.0.0
-     */
-    public function ronikdesigns_handle_csv_export() {
-        // Check for export condition early in the WordPress lifecycle
-        if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && !empty($_POST['export'])) {
-            // Check user permissions
-            if (!current_user_can('manage_options')) {
-                wp_die('Unauthorized access.');
-            }
+	/**
+	 * Handle CSV export early in the WordPress lifecycle.
+	 *
+	 * @since    1.0.0
+	 */
+	public function ronikdesigns_handle_csv_export()
+	{
+		// Check for export condition early in the WordPress lifecycle
+		if (is_admin() && isset($_POST['page']) && $_POST['page'] === 'ronikdesigns-sync-user' && !empty($_POST['export'])) {
+			// Check user permissions
+			if (!current_user_can('manage_options')) {
+				wp_die('Unauthorized access.');
+			}
 
-            $handler = new UserSyncHandler();
-            $handler->process_sync($_POST);
-            // The export_csv method will handle the output and exit
-            exit;
-        }
-    }
+			$handler = new UserSyncHandler();
+			$handler->process_sync($_POST);
+			// The export_csv method will handle the output and exit
+			exit;
+		}
+	}
 
-    /**
-     * Include sync-user functions.
-     *
-     * @since    1.0.0
-     */
-    public function ronikdesigns_sync_user_functions() {
-        // Include the sync-user files, excluding query-handler.php since it's already included
-        foreach (glob(dirname(__FILE__) . '/sync-user/*.php') as $file) {
-            if (basename($file) !== 'query-handler.php') {
-                include_once $file;
-            }
-        }
-    }
+	/**
+	 * Include sync-user functions.
+	 *
+	 * @since    1.0.0
+	 */
+	public function ronikdesigns_sync_user_functions()
+	{
+		// Include the sync-user files, excluding query-handler.php since it's already included
+		foreach (glob(dirname(__FILE__) . '/sync-user/*.php') as $file) {
+			if (basename($file) !== 'query-handler.php') {
+				include_once $file;
+			}
+		}
+	}
 
 
 	function ronikdesigns_visitor_auditor_functions()
@@ -345,9 +345,219 @@ class Ronikdesign_Admin
 	}
 
 
+	// https://together.nbcudev.local/wp-admin/admin-ajax.php?action=ronikdesigns_admin_user_nbcu_decommission
+	function ronikdesigns_admin_user_nbcu_decommission()
+	{
+		// Check if user is logged in.
+		if (!is_user_logged_in()) {
+			return;
+		}
+		// Check if user is a super admin.
+		if (!is_super_admin(get_current_user_id())) {
+			return;
+		}
+		$helper = new RonikHelper;
+		
+		// Get pagination parameters
+		$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+		$per_page = 1000; // Process 1000 users at a time
+		$offset = ($page - 1) * $per_page;
+		
+		// Template should be csv file two columns first column old email and second column new email.
+		$target_files = glob(dirname(__FILE__) . '/nbcu-decommission/dead-nbcu.csv');
+		error_log('Target files found: ' . print_r($target_files, true));
+		
+		if ($target_files) {
+			$user_array = array();
+			$csv_users_not_in_wp = array();
+			
+			// First, get all WordPress users for comparison
+			$all_wp_users = get_users(array(
+				'fields' => array('ID', 'user_email'),
+				'number' => -1 // Get all users
+			));
+			error_log('WordPress users loaded: ' . count($all_wp_users));
+			
+			// Create array of WP user emails for quick lookup
+			$wp_user_emails = array();
+			foreach ($all_wp_users as $wp_user) {
+				$wp_user_emails[] = strtolower($wp_user->user_email);
+			}
+			
+			foreach ($target_files as $i => $target_file) {
+				error_log('Processing file: ' . $target_file);
+				$file = fopen($target_file, 'r');
+				if (!$file) {
+					error_log('Could not open file: ' . $target_file);
+					continue;
+				}
+				
+				$line_number = 0;
+				$valid_emails_count = 0;
+				while (($line = fgetcsv($file)) !== FALSE) {
+					$line_number++;
+					
+					// Skip header row
+					if ($line[0] === 'ID') continue;
+					
+					// Check if line has at least 2 columns
+					if (count($line) < 2) {
+						error_log('Invalid line format at line ' . $line_number . ': ' . print_r($line, true));
+						continue;
+					}
+					
+					// We validate the email address before storing into the array.
+					if (filter_var($line[1], FILTER_VALIDATE_EMAIL)) {
+						$valid_emails_count++;
+						// Check if this CSV user exists in WordPress
+						if (in_array(strtolower($line[1]), $wp_user_emails)) {
+							$user_array[] = $line;
+						} else {
+							// User from CSV doesn't exist in WordPress - log it but don't process
+							$csv_users_not_in_wp[] = array(
+								'email' => $line[1],
+								'id' => $line[0],
+								'status' => 'not_in_wp'
+							);
+							error_log('CSV user not found in WordPress: ' . $line[1] . ' (CSV ID: ' . $line[0] . ') - SKIPPING');
+						}
+					} else {
+						error_log('Invalid email at line ' . $line_number . ': ' . $line[1]);
+					}
+				}
+				fclose($file);
+				error_log('Processed ' . $line_number . ' lines, found ' . $valid_emails_count . ' valid emails');
+			}
+			
+			error_log('CSV users that exist in WordPress: ' . count($user_array));
+			error_log('CSV users NOT in WordPress (skipped): ' . count($csv_users_not_in_wp));
+	
+			if ($user_array) {
+				global $wpdb;
+				$success_user_list = array();
+				$failed_user_list = array();
+				$not_found_list = array();
+				
+				// Calculate pagination for CSV users only
+				$total_csv_users = count($user_array);
+				$total_pages = ceil($total_csv_users / $per_page);
+				$current_batch = array_slice($user_array, $offset, $per_page);
+				
+				error_log("Processing batch $page of $total_pages (CSV users: " . count($current_batch) . ")");
+	
+				// Process CSV users that exist in WordPress
+				foreach ($current_batch as $j => $user) {
+					// We get the user by email from the second column
+					$f_get_user_data = get_user_by('email', $user[1]);
+	
+					// We check if the f_get_user_data is not empty!
+					if (! empty($f_get_user_data)) {
+						error_log('Processing CSV user: ' . $f_get_user_data->user_email . ' (ID: ' . $f_get_user_data->ID . ')');
+						
+						// Delete user and reassign content to user ID 79304
+						if (wp_delete_user($f_get_user_data->ID, 79304)) {
+							$success_user_list[] = array(
+								'email' => $f_get_user_data->user_email,
+								'id' => $f_get_user_data->ID,
+								'status' => 'deleted',
+								'source' => 'csv'
+							);
+							error_log('Successfully deleted CSV user: ' . $f_get_user_data->user_email);
+						} else {
+							$failed_user_list[] = array(
+								'email' => $f_get_user_data->user_email,
+								'id' => $f_get_user_data->ID,
+								'status' => 'failed',
+								'source' => 'csv'
+							);
+							error_log('Failed to delete CSV user: ' . $f_get_user_data->user_email);
+						}
+					} else {
+						// User doesn't exist - just log and continue to next user
+						$not_found_list[] = array(
+							'email' => $user[1],
+							'id' => 'not_found',
+							'status' => 'user_not_found',
+							'source' => 'csv'
+						);
+						error_log('CSV user not found: ' . $user[1] . ' - skipping to next user');
+						// Continue to next user without stopping the batch
+						continue;
+					}
+				}
+	
+				// Return results with pagination info
+				wp_send_json_success(array(
+					'response_counter' => count($success_user_list),
+					'success_users' => $success_user_list,
+					'failed_users' => $failed_user_list,
+					'found_users' => $not_found_list,
+					'csv_users_not_in_wp' => $csv_users_not_in_wp,
+					'pagination' => array(
+						'current_page' => $page,
+						'total_pages' => $total_pages,
+						'per_page' => $per_page,
+						'total_csv_users' => $total_csv_users,
+						'processed_in_batch' => count($current_batch),
+						'has_next_page' => $page < $total_pages,
+						'next_page' => $page < $total_pages ? $page + 1 : null
+					),
+					'batch_info' => array(
+						'offset' => $offset,
+						'start_user' => $offset + 1,
+						'end_user' => min($offset + $per_page, $total_csv_users)
+					),
+					'summary' => array(
+						'deleted_csv' => count($success_user_list),
+						'failed' => count($failed_user_list),
+						'found' => count($not_found_list),
+						'csv_users_skipped_not_in_wp' => count($csv_users_not_in_wp),
+						'total_processed' => count($current_batch)
+					)
+				), 200);
+			} else {
+				error_log('No CSV users found that exist in WordPress');
+				// Return success response with information about skipped users
+				wp_send_json_success(array(
+					'response_counter' => 0,
+					'success_users' => array(),
+					'failed_users' => array(),
+					'found_users' => array(),
+					'pagination' => array(
+						'current_page' => $page,
+						'total_pages' => 0,
+						'per_page' => $per_page,
+						'total_csv_users' => 0,
+						'processed_in_batch' => 0,
+						'has_next_page' => false,
+						'next_page' => null
+					),
+					'batch_info' => array(
+						'offset' => $offset,
+						'start_user' => 0,
+						'end_user' => 0
+					),
+					'summary' => array(
+						'deleted_csv' => 0,
+						'failed' => 0,
+						'found' => 0,
+						'csv_users_skipped_not_in_wp' => count($csv_users_not_in_wp),
+						'total_processed' => 0
+					),
+					'message' => 'No CSV users found that exist in WordPress. All CSV users were skipped.'
+				), 200);
+			}
+		} else {
+			error_log('CSV file not found at path: ' . dirname(__FILE__) . '/nbcu-decommission/dead-nbcu.csv');
+			wp_send_json_error('CSV File Not Found at expected path: ' . dirname(__FILE__) . '/nbcu-decommission/dead-nbcu.csv', '400');
+		}
+	}
+
+
 	// https://together.nbcudev.local/wp-admin/admin-ajax.php?action=ronikdesigns_admin_user_email_swap&search=hard&type=soft
 	// https://together.nbcudev.local/wp-admin/admin-ajax.php?action=ronikdesigns_admin_user_email_swap&search=soft&type=medium
-	function ronikdesigns_admin_user_email_swap(){
+	function ronikdesigns_admin_user_email_swap()
+	{
 		// Check if user is logged in.
 		if (!is_user_logged_in()) {
 			return;
@@ -360,11 +570,11 @@ class Ronikdesign_Admin
 
 		// Template should be csv file two columns first column old email and second column new email.
 		$target_files = glob(dirname(__FILE__) . '/email-swapper/email-swapper.csv');
-		if($target_files){
+		if ($target_files) {
 			$user_array = array();
-			foreach($target_files as $i => $target_file){
+			foreach ($target_files as $i => $target_file) {
 				$file = fopen($target_file, 'r');
-				while ( ($line = fgetcsv($file)) !== FALSE) {
+				while (($line = fgetcsv($file)) !== FALSE) {
 					// We validate the email address before storing into the array.
 					if (filter_var($line[0], FILTER_VALIDATE_EMAIL) && filter_var($line[1], FILTER_VALIDATE_EMAIL)) {
 						$user_array[] = $line;
@@ -374,18 +584,18 @@ class Ronikdesign_Admin
 			}
 
 
-			if( $user_array ){
+			if ($user_array) {
 				global $wpdb;
 				$success_user_list = array();
 				$search_level = isset($_GET['search']) && $_GET['search'] ? $_GET['search'] : "soft";
 				$swap_level = isset($_GET['type']) && $_GET['type'] ? $_GET['type'] : "soft";
 
-				foreach($user_array as $j => $user){
+				foreach ($user_array as $j => $user) {
 					// We get the first value from the array.
-					$f_get_user_data = get_user_by( 'email', $user[0] );
+					$f_get_user_data = get_user_by('email', $user[0]);
 
 					// We check if the f_get_user_data is not empty!
-					if ( ! empty( $f_get_user_data ) ) {
+					if (! empty($f_get_user_data)) {
 						// Old Email
 						$f_old_user_email = $user[0];
 						// New Email
@@ -394,64 +604,72 @@ class Ronikdesign_Admin
 						$f_user_id = $f_get_user_data->data->ID;
 
 						//
-						if( $search_level == 'hard' ){
+						if ($search_level == 'hard') {
 							// Update the wp_3_postmeta
-							$meta_key_target_0 = $helper->ronik_database_update('wp_3_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
-                            $meta_key_target_0b = $helper->ronik_database_update('wp_6_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
-                        } else {
+							$meta_key_target_0 = $helper->ronik_database_update('wp_3_postmeta', 'meta_key', 'meta_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+							$meta_key_target_0b = $helper->ronik_database_update('wp_6_postmeta', 'meta_key', 'meta_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+						} else {
 							$meta_key_target_0 = ' Database Table wp_3_postmeta: Not Synced!';
-                            $meta_key_target_0b = ' Database Table wp_6_postmeta: Not Synced!';
+							$meta_key_target_0b = ' Database Table wp_6_postmeta: Not Synced!';
 						}
 
-						if($swap_level == 'hard'){
-							$meta_key_target_0 = $helper->ronik_database_update('wp_3_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
-                            $meta_key_target_0b = $helper->ronik_database_update('wp_6_postmeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
-                        }
+						if ($swap_level == 'hard') {
+							$meta_key_target_0 = $helper->ronik_database_update('wp_3_postmeta', 'meta_key', 'meta_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+							$meta_key_target_0b = $helper->ronik_database_update('wp_6_postmeta', 'meta_key', 'meta_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, true, $swap_level);
+						}
 
 						// Update the wp_usermeta
-						$meta_key_target_1 = $helper->ronik_database_update('wp_usermeta', 'meta_key', 'meta_value' , 'user_id', $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+						$meta_key_target_1 = $helper->ronik_database_update('wp_usermeta', 'meta_key', 'meta_value', 'user_id', $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
 
 						// Update the wp_sitemeta
-						$meta_key_target_2 = $helper->ronik_database_update('wp_sitemeta', 'meta_key', 'meta_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+						$meta_key_target_2 = $helper->ronik_database_update('wp_sitemeta', 'meta_key', 'meta_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
 
 						// Update the wp_3_options
-						$meta_key_target_3 = $helper->ronik_database_update('wp_3_options', 'option_name', 'option_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+						$meta_key_target_3 = $helper->ronik_database_update('wp_3_options', 'option_name', 'option_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
 
 						// Update the wp_6_options
-						$meta_key_target_4 = $helper->ronik_database_update('wp_6_options', 'option_name', 'option_value' , false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
+						$meta_key_target_4 = $helper->ronik_database_update('wp_6_options', 'option_name', 'option_value', false, $f_user_id, $f_old_user_email, $f_new_user_email, false, $swap_level);
 
-                        if($swap_level == 'hard' || $swap_level == 'medium'){
+						if ($swap_level == 'hard' || $swap_level == 'medium') {
 							// Target the do_users table!
 							// We have to target this way since its a custom table
 							$wpdb->query(
 								$wpdb->prepare(
-									"UPDATE do_users SET user_login = %s ,user_email = %s WHERE ID = %d", $f_new_user_email, $f_new_user_email, $f_user_id
+									"UPDATE do_users SET user_login = %s ,user_email = %s WHERE ID = %d",
+									$f_new_user_email,
+									$f_new_user_email,
+									$f_user_id
 								)
 							);
-                            $wp_meta_datas = $wpdb->get_results("select * from do_users where user_account_updates LIKE '%$f_old_user_email%'");
-                            if($wp_meta_datas){
-                                // Loop through all the rows.
-                                foreach($wp_meta_datas  as $key =>  $wp_meta_data){
-                                    $f_meta_value = $wp_meta_data->user_account_updates;
-                                    if($helper->ronik_compare_like_compare($f_meta_value , $f_old_user_email)){
-                                        if (str_contains($f_meta_value, ';s:')) {
-                                            $f_meta_value_mod = str_replace( 's:'.strlen($f_old_user_email).':"'.$f_old_user_email.'"', 's:'.strlen($f_new_user_email).':"'.$f_new_user_email.'"', $f_meta_value);
-                                        } else{
-                                            $f_meta_value_mod = str_replace( $f_old_user_email, $f_new_user_email, $f_meta_value);
-                                        }
+							$wp_meta_datas = $wpdb->get_results("select * from do_users where user_account_updates LIKE '%$f_old_user_email%'");
+							if ($wp_meta_datas) {
+								// Loop through all the rows.
+								foreach ($wp_meta_datas  as $key =>  $wp_meta_data) {
+									$f_meta_value = $wp_meta_data->user_account_updates;
+									if ($helper->ronik_compare_like_compare($f_meta_value, $f_old_user_email)) {
+										if (str_contains($f_meta_value, ';s:')) {
+											$f_meta_value_mod = str_replace('s:' . strlen($f_old_user_email) . ':"' . $f_old_user_email . '"', 's:' . strlen($f_new_user_email) . ':"' . $f_new_user_email . '"', $f_meta_value);
+										} else {
+											$f_meta_value_mod = str_replace($f_old_user_email, $f_new_user_email, $f_meta_value);
+										}
 
-                                        $wpdb->query(
-                                            $wpdb->prepare(
-                                                "UPDATE do_users SET user_account_updates = %s WHERE ID = %d", $f_meta_value_mod, $f_user_id
-                                            )
-                                        );
-                                    }
-                                }
-                            }
+										$wpdb->query(
+											$wpdb->prepare(
+												"UPDATE do_users SET user_account_updates = %s WHERE ID = %d",
+												$f_meta_value_mod,
+												$f_user_id
+											)
+										);
+									}
+								}
+							}
 							// Update the
 							$wpdb->query(
 								$wpdb->prepare(
-									"UPDATE wp_users SET user_login = %s ,user_email = %s WHERE ID = %d", $f_new_user_email, $f_new_user_email, $f_user_id
+									"UPDATE wp_users SET user_login = %s ,user_email = %s WHERE ID = %d",
+									$f_new_user_email,
+									$f_new_user_email,
+									$f_user_id
 								)
 							);
 						}
@@ -459,15 +677,15 @@ class Ronikdesign_Admin
 					}
 				}
 
-				if( !empty($success_user_list) ){
-					wp_send_json_success( array(
+				if (!empty($success_user_list)) {
+					wp_send_json_success(array(
 						'response_counter' => count($success_user_list),
 						'response' => $success_user_list,
-					), 200 );
+					), 200);
 				} else {
-					wp_send_json_success( array(
+					wp_send_json_success(array(
 						'response' => 'No users were updated!',
-					), 200 );
+					), 200);
 				}
 			} else {
 				wp_send_json_error('CSV File could not be parsed', '400');
@@ -535,11 +753,11 @@ class Ronikdesign_Admin
 	/**
 	 * Handle the AJAX request for processing user batches
 	 */
-	public function ajax_process_user_batch() {
+	public function ajax_process_user_batch()
+	{
 		// Include the UserSyncHandler class
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/sync-user/query-handler.php';
 		$handler = new UserSyncHandler();
 		$handler->ajax_process_user_batch();
 	}
-
 }
